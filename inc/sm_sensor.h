@@ -1,0 +1,36 @@
+#ifndef __SM_SENSOR_H__
+#define __SM_SENSOR_H__
+
+#include <stdlib.h>
+#include <sensor.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct
+{
+	sensor_type_e type;
+	sensor_h handle;
+	sensor_listener_h listener;
+
+	float value_min;		/**< Minimal value */
+	float value_max;		/**< Maximal value */
+	float value_range;		/**< Values range */
+
+}sensor_info;
+
+sensor_info* sensor_init(sensor_type_e sensor_type);
+void sensor_start(sensor_info* sensor);
+void sensor_stop(sensor_info* sensor);
+void sensor_deinit(sensor_info* sensor);
+void sensor_listen_pause(sensor_info* sensor);
+void sensor_listen_resume(sensor_info* sensor);
+void reset_measure();
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __SM_SENSOR_H__ //

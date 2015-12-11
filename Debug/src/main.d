@@ -220,7 +220,9 @@ src/main.d: ../src/main.c E:\tizen\workspace\stretchme\inc\main.h \
   E:/tizen/tizen-sdk/tools/smart-build-interface/../../platforms/wearable-2.3.1/rootstraps/wearable-2.3.1-device.core/usr/include/efl-extension/common/efl_extension_rotary_selector.h \
   E:/tizen/tizen-sdk/tools/smart-build-interface/../../platforms/wearable-2.3.1/rootstraps/wearable-2.3.1-device.core/usr/include/efl-extension/common/efl_extension_more_option.h \
   E:\tizen\workspace\stretchme\inc/logger.h \
-  E:\tizen\workspace\stretchme\inc\action_icon.h
+  E:\tizen\workspace\stretchme\inc\action_icon.h \
+  E:\tizen\workspace\stretchme\inc\sm_sensor.h \
+  E:/tizen/tizen-sdk/tools/smart-build-interface/../../platforms/wearable-2.3.1/rootstraps/wearable-2.3.1-device.core/usr/include/sensor\sensor.h
 
 E:\tizen\workspace\stretchme\inc\main.h:
 
@@ -667,3 +669,7 @@ E:/tizen/tizen-sdk/tools/smart-build-interface/../../platforms/wearable-2.3.1/ro
 E:\tizen\workspace\stretchme\inc/logger.h:
 
 E:\tizen\workspace\stretchme\inc\action_icon.h:
+
+E:\tizen\workspace\stretchme\inc\sm_sensor.h:
+
+E:/tizen/tizen-sdk/tools/smart-build-interface/../../platforms/wearable-2.3.1/rootstraps/wearable-2.3.1-device.core/usr/include/sensor\sensor.h:
