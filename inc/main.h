@@ -28,3 +28,14 @@
 
 #define FORMAT "%d/%b/%Y%H:%M"
 #define ICON_DIR "/opt/usr/apps/org.example.stretchme/res/images"
+
+
+// Callback functions -------------------------------------------------------------------------------------------------
+static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+
+static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
+static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
+static void Result_cb(void *data, Evas_Object *obj, void *event_info);
+static void Reward_cb(void *data, Evas_Object *obj, void *event_info);

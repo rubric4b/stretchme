@@ -1,7 +1,5 @@
 #include "main.h"
 #include "action_icon.h"
-#include "sm_sensor.h"
-
 #include "logger.h"
 
 typedef struct appdata {
@@ -10,12 +8,6 @@ typedef struct appdata {
 	Evas_Object *datetime;
 	Eext_Circle_Surface *circle_surface;
 	struct tm saved_time;
-
-	// sensor
-	sensor_info* accel_sensor;
-	sensor_info* gyro_sensor;
-
-	Eina_Bool sensing :1;
 } appdata_s;
 
 #define FORMAT "%d/%b/%Y%H:%M"
@@ -46,78 +38,9 @@ label_text_set(Evas_Object *label, struct tm t)
 	elm_object_text_set(label, text_buf);
 }
 
+// Callbacks here -----------------------------------------------------------------------------------------------------
 static void
-sensor_control(void *data, Eina_Bool start)
-{
-	appdata_s *ad = data;
-
-	static Eina_Bool initialized = EINA_FALSE;
-
-	if(start && ad->sensing == EINA_FALSE)
-	{
-		// first start
-		if(initialized == EINA_FALSE)
-		{
-			// sensor
-			ad->accel_sensor = sensor_init(SENSOR_ACCELEROMETER);
-
-			if(ad->accel_sensor)
-			{
-				sensor_start(ad->accel_sensor);
-			}
-
-			ad->gyro_sensor = sensor_init(SENSOR_GYROSCOPE);
-
-			if(ad->gyro_sensor)
-			{
-				sensor_start(ad->gyro_sensor);
-			}
-			initialized = EINA_TRUE;
-		}
-		else
-		{
-			// resume
-			reset_measure();
-
-			if(ad->accel_sensor)
-			{
-				sensor_listen_resume(ad->accel_sensor);
-			}
-
-			if(ad->gyro_sensor)
-			{
-				sensor_listen_resume(ad->gyro_sensor);
-			}
-		}
-
-		ad->sensing = EINA_TRUE;
-	}
-	else if(start == EINA_FALSE && ad->sensing)
-	{
-		if(initialized == EINA_FALSE)
-		{
-			return;
-		}
-		else
-		{
-			// pause
-			if(ad->accel_sensor)
-			{
-				sensor_listen_pause(ad->accel_sensor);
-			}
-
-			if(ad->gyro_sensor)
-			{
-				sensor_listen_pause(ad->gyro_sensor);
-			}
-		}
-
-		ad->sensing = EINA_FALSE;
-	}
-}
-
-static void
-check_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
+set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	appdata_s *ad = data;
 
@@ -127,19 +50,300 @@ check_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 
 	//View changed to main view.
 	elm_naviframe_item_pop(ad->nf);
-
-	//SENSOR CONTROL : stop
-	sensor_control(data, EINA_FALSE);
 }
 
+// Entrance the stretching - Now testing here for adding label
 static void
-start_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
+Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Unfolding_Animation, *button;
+
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	//elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	elm_layout_theme_set(layout, "layout", "application", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Unfolding_Animation = elm_image_add(layout);
+	//elm_object_style_set(Unfolding_Animation, "center");
+	elm_image_file_set(Unfolding_Animation, ICON_DIR "/Unfolding_twin.gif", NULL);
+	evas_object_show(Unfolding_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.content", Unfolding_Animation);
+
+	// Animation availability check
+	if (elm_image_animated_available_get(Unfolding_Animation)) {
+		action_icon_set(Unfolding_Animation, true);
+		action_icon_play_set(Unfolding_Animation, true, true, true);
+	}
+	else
+	{
+		DBG("Animation is NOT available\n");
+	}
+
+	// Add label
+	Evas_Object* lab;
+	lab = elm_label_add(Unfolding_Animation);
+	evas_object_size_hint_weight_set(lab, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	elm_object_text_set(lab, "Text Input");
+	elm_object_part_content_set(Unfolding_Animation, NULL, lab);
+	evas_object_show(lab);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+	elm_object_text_set(button, "Testing!");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+
+	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Peak of the stretching - Holding posture
+static void
+Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Hold_Animation, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Hold_Animation = elm_image_add(layout);
+	elm_object_style_set(Hold_Animation, "center");
+	elm_image_file_set(Hold_Animation, ICON_DIR "/Blink.gif", NULL);
+	evas_object_show(Hold_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.content", Hold_Animation);
+
+	// Animation availability check
+	if (elm_image_animated_available_get(Hold_Animation)) {
+		action_icon_set(Hold_Animation, true);
+		action_icon_play_set(Hold_Animation, true, true, true);
+	}
+	else
+	{
+		DBG("Animation is NOT available\n");
+	}
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "Holding!");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", Fold_Stretch_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Folding step of the stretching
+static void
+Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Fold_Animation, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Fold_Animation = elm_image_add(layout);
+	elm_object_style_set(Fold_Animation, "center");
+	elm_image_file_set(Fold_Animation, ICON_DIR "/Folding_bg.gif", NULL);
+	evas_object_show(Fold_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.content", Fold_Animation);
+
+	// Animation availability check
+	if (elm_image_animated_available_get(Fold_Animation)) {
+		action_icon_set(Fold_Animation, true);
+		action_icon_play_set(Fold_Animation, true, true, true);
+	}
+	else
+	{
+		DBG("Animation is NOT available\n");
+	}
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "Folding");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", Success_Strecth_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Success
+static void
+Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Success_image, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Success_image = elm_image_add(layout);
+	elm_object_style_set(Success_image, "center");
+	elm_image_file_set(Success_image, ICON_DIR "/Success.png", NULL);
+	evas_object_show(Success_image);
+	elm_object_part_content_set(layout, "elm.swallow.content", Success_image);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "한 번 더 하기");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", Fail_Strecth_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Fail
+static void
+Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Fail_image, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Fail_image = elm_image_add(layout);
+	elm_object_style_set(Fail_image, "center");
+	elm_image_file_set(Fail_image, ICON_DIR "/Fail.png", NULL);
+	evas_object_show(Fail_image);
+	elm_object_part_content_set(layout, "elm.swallow.content", Fail_image);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "다시 시도");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", Result_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Result
+static void
+Result_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Result_image, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Result_image = elm_image_add(layout);
+	elm_object_style_set(Result_image, "center");
+	elm_image_file_set(Result_image, ICON_DIR "/Result.png", NULL);
+	evas_object_show(Result_image);
+	elm_object_part_content_set(layout, "elm.swallow.content", Result_image);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "종료");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", Reward_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Reward
+static void
+Reward_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	struct appdata *ad = data;
+	Evas_Object *layout, *Reward_image, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	layout = elm_layout_add(ad->nf);
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	evas_object_show(layout);
+
+	// Add animation
+	Reward_image = elm_image_add(layout);
+	elm_object_style_set(Reward_image, "center");
+	elm_image_file_set(Reward_image, ICON_DIR "/Reward.png", NULL);
+	evas_object_show(Reward_image);
+	elm_object_part_content_set(layout, "elm.swallow.content", Reward_image);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "종료");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_smart_callback_add(button, "clicked", set_clicked_cb, ad);
+	evas_object_show(button);
+
+	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+// Timer display - Not visited in current flow
+static void
+time_set_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
 	Evas_Object *button, *icon, *layout, *circle_datetime;
 	Elm_Object_Item *nf_it = NULL;
-
-	// TODO: make GUI for stretching
 
 	layout = elm_layout_add(ad->nf);
 	elm_layout_theme_set(layout, "layout", "circle", "datetime");
@@ -154,7 +358,7 @@ start_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_show(icon);
 
 	elm_object_part_content_set(layout, "elm.swallow.btn", button);
-	evas_object_smart_callback_add(button, "clicked", check_button_clicked_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", set_clicked_cb, ad);
 
 	elm_object_part_text_set(layout, "elm.text", "Set Time");
 
@@ -173,11 +377,6 @@ start_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Time picker", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, EINA_FALSE, EINA_FALSE);
-
-
-	//SENSOR CONTROL : reset & start
-	sensor_control(data, EINA_TRUE);
-
 }
 
 static void
@@ -192,6 +391,7 @@ create_main_view(appdata_s *ad)
 
 	layout = elm_layout_add(ad->nf);
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
 	evas_object_show(layout);
 
@@ -204,9 +404,11 @@ create_main_view(appdata_s *ad)
 	evas_object_show(ad->label);
 	elm_object_part_content_set(layout, "elm.swallow.content", ad->label);
 #else
+
 	Evas_Object* actionIcon;
 	//Image add for stretching action icon.
 	actionIcon= elm_image_add(layout);
+
 	elm_image_file_set(actionIcon, ICON_DIR "/Up_stretching.gif", NULL);
 	evas_object_show(actionIcon);
 	elm_object_part_content_set(layout, "elm.swallow.content", actionIcon);
@@ -225,10 +427,11 @@ create_main_view(appdata_s *ad)
 	elm_object_style_set(button, "bottom");
 	elm_object_text_set(button, "Start!!");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", start_button_clicked_cb, ad);
+	//evas_object_smart_callback_add(button, "clicked", time_set_button_clicked_cb, ad);	// For bypass Timer display
+	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
 	evas_object_show(button);
 
-	nf_it = elm_naviframe_item_push(ad->nf, "Stretch UP", NULL, NULL, layout, NULL);
+	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
