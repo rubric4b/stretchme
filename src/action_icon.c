@@ -18,6 +18,13 @@ struct anim_data {
 
 static void _action_icon_data_deleted_cb(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
+	struct anim_data *anim_data = evas_object_data_get(obj, _data_key);
+
+	if (anim_data && anim_data->anim_timer) {
+		ecore_timer_del(anim_data->anim_timer);
+		anim_data->anim_timer = NULL;
+	}
+
 	struct anim_data *d = evas_object_data_del(obj, _data_key);
 	if (d != NULL) {
 		free(d);
