@@ -1,6 +1,7 @@
 #include "main.h"
 #include "action_icon.h"
 #include "logger.h"
+#include <app.h>
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -12,6 +13,15 @@ typedef struct appdata {
 
 #define FORMAT "%d/%b/%Y%H:%M"
 
+static void
+app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max)
+{
+	char *res_path = app_get_resource_path();
+	if (res_path) {
+		snprintf(edj_path_out, edj_path_max, "%s%s", res_path, edj_file_in);
+		free(res_path);
+	}
+}
 
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
@@ -61,19 +71,23 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	Elm_Object_Item *nf_it = NULL;
 
+	char edj_path[PATH_MAX] = {0, };
+	/* Base Layout */
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
 	layout = elm_layout_add(ad->nf);
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
+	elm_object_part_text_set(layout, "text", "Hello EFL");
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	//elm_layout_theme_set(layout, "layout", "bottom_button", "default");
-	elm_layout_theme_set(layout, "layout", "application", "default");
 	evas_object_show(layout);
+
 
 	// Add animation
 	Unfolding_Animation = elm_image_add(layout);
 	//elm_object_style_set(Unfolding_Animation, "center");
 	elm_image_file_set(Unfolding_Animation, ICON_DIR "/Unfolding_twin.gif", NULL);
 	evas_object_show(Unfolding_Animation);
-	elm_object_part_content_set(layout, "elm.swallow.content", Unfolding_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.animation", Unfolding_Animation);
 
 	// Animation availability check
 	if (elm_image_animated_available_get(Unfolding_Animation)) {
@@ -84,23 +98,18 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	{
 		DBG("Animation is NOT available\n");
 	}
+	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
-	// Add label
-	Evas_Object* lab;
-	lab = elm_label_add(Unfolding_Animation);
-	evas_object_size_hint_weight_set(lab, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	elm_object_text_set(lab, "Text Input");
-	elm_object_part_content_set(Unfolding_Animation, NULL, lab);
-	evas_object_show(lab);
-
+/**
+ *  button can be used with ""anim_img_and_center_text_with_bottom_btn" layout theme
+ *
 	// Add button
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 	elm_object_text_set(button, "Testing!");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-
-	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 	evas_object_show(button);
+*/
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);

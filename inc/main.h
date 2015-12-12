@@ -26,6 +26,9 @@
 #define PACKAGE "org.example.stretchme"
 #endif
 
+#define EDJ_FILE "edje/stretch_ui_layout.edj"
+#define GRP_MAIN "main"
+
 #define FORMAT "%d/%b/%Y%H:%M"
 #define ICON_DIR "/opt/usr/apps/org.example.stretchme/res/images"
 
