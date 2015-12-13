@@ -42,3 +42,4 @@ static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
 static void Result_cb(void *data, Evas_Object *obj, void *event_info);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
+static void Strecth_Guile_cb(void *data, Evas_Object *obj, void *event_info);

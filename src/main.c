@@ -2,6 +2,7 @@
 #include "action_icon.h"
 #include "logger.h"
 #include <app.h>
+#include <device/haptic.h>
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -20,6 +21,21 @@ app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max)
 	if (res_path) {
 		snprintf(edj_path_out, edj_path_max, "%s%s", res_path, edj_file_in);
 		free(res_path);
+	}
+}
+
+static void vibrate(int duration, int feedback)
+{
+	haptic_device_h haptic_handle;
+	haptic_effect_h effect_handle;
+
+	if(device_haptic_open(0, &haptic_handle) == DEVICE_ERROR_NONE) {
+
+		LOGI("Connection to vibrator established");
+
+		if(device_haptic_vibrate(haptic_handle, duration, feedback, &effect_handle) == DEVICE_ERROR_NONE) {
+			LOGI("Device vibrates!");
+		}
 	}
 }
 
@@ -62,6 +78,31 @@ set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop(ad->nf);
 }
 
+// Wheel event test
+// https://developer.tizen.org/ko/development/ui-practices/native-application/efl/hardware-input-handling/managing-rotary-events
+static void
+Wheel_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	appdata_s *ad = data;
+	Evas_Object *win, *slider;
+
+   // Window
+   win = elm_win_util_standard_add(NULL, "extension sample");
+   elm_win_autodel_set(win, EINA_TRUE);
+   evas_object_smart_callback_add(win, "delete,request", win_delete_request_cb, NULL);
+
+   // Slider
+   slider = elm_slider_add(win);
+   evas_object_size_hint_weight_set(slider, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+   elm_slider_min_max_set(slider, 0, 50);
+   elm_slider_step_set(slider, 1.0);
+   evas_object_show(slider);
+   elm_win_resize_object_add(win, slider);
+
+   // Show the window after the base GUI is set up
+   evas_object_show(win);
+}
+
 // Entrance the stretching - Now testing here for adding label
 static void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
@@ -71,12 +112,16 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	Elm_Object_Item *nf_it = NULL;
 
-	char edj_path[PATH_MAX] = {0, };
 	/* Base Layout */
+	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
-	elm_object_part_text_set(layout, "text", "Hello EFL");
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
+
+	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고");
+	elm_object_part_text_set(layout, "text2", "머리 위로 뻗으세요");
+
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_show(layout);
@@ -85,7 +130,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// Add animation
 	Unfolding_Animation = elm_image_add(layout);
 	//elm_object_style_set(Unfolding_Animation, "center");
-	elm_image_file_set(Unfolding_Animation, ICON_DIR "/Unfolding_twin.gif", NULL);
+	elm_image_file_set(Unfolding_Animation, ICON_DIR "/Unfolding_High.gif", NULL);
 	evas_object_show(Unfolding_Animation);
 	elm_object_part_content_set(layout, "elm.swallow.animation", Unfolding_Animation);
 
@@ -120,41 +165,40 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	vibrate(500, 99);
+
 	struct appdata *ad = data;
 	Evas_Object *layout, *Hold_Animation, *button;
 	Elm_Object_Item *nf_it = NULL;
 
+	/* Base Layout */
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
-	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
 	evas_object_show(layout);
+
+	elm_object_part_text_set(layout, "text", "현재 자세를 유지하세요");
 
 	// Add animation
 	Hold_Animation = elm_image_add(layout);
 	elm_object_style_set(Hold_Animation, "center");
-	elm_image_file_set(Hold_Animation, ICON_DIR "/Blink.gif", NULL);
+	elm_image_file_set(Hold_Animation, ICON_DIR "/Hold_count.gif", NULL);
 	evas_object_show(Hold_Animation);
-	elm_object_part_content_set(layout, "elm.swallow.content", Hold_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.animation", Hold_Animation);
 
 	// Animation availability check
 	if (elm_image_animated_available_get(Hold_Animation)) {
 		action_icon_set(Hold_Animation, true);
-		action_icon_play_set(Hold_Animation, true, true, true);
+		action_icon_play_set(Hold_Animation, true, false, true);
 	}
 	else
 	{
 		DBG("Animation is NOT available\n");
 	}
 
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-
-	elm_object_text_set(button, "Holding!");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Fold_Stretch_cb, ad);
-	evas_object_show(button);
+	evas_object_smart_callback_add(Hold_Animation, "clicked", Fold_Stretch_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
@@ -165,43 +209,48 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	vibrate(500, 99);
+
 	struct appdata *ad = data;
-	Evas_Object *layout, *Fold_Animation, *button;
+	Evas_Object *layout, *Folding_Animation, *button;
+
 	Elm_Object_Item *nf_it = NULL;
 
+	/* Base Layout */
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
+
+	elm_object_part_text_set(layout, "text", "천천히 심호흡하며");
+	elm_object_part_text_set(layout, "text2", "원래 자세로 돌아가세요");
+
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
 	evas_object_show(layout);
 
+
 	// Add animation
-	Fold_Animation = elm_image_add(layout);
-	elm_object_style_set(Fold_Animation, "center");
-	elm_image_file_set(Fold_Animation, ICON_DIR "/Folding_bg.gif", NULL);
-	evas_object_show(Fold_Animation);
-	elm_object_part_content_set(layout, "elm.swallow.content", Fold_Animation);
+	Folding_Animation = elm_image_add(layout);
+	//elm_object_style_set(Folding_Animation, "center");
+	elm_image_file_set(Folding_Animation, ICON_DIR "/Folding_High.gif", NULL);
+	evas_object_show(Folding_Animation);
+	elm_object_part_content_set(layout, "elm.swallow.animation", Folding_Animation);
 
 	// Animation availability check
-	if (elm_image_animated_available_get(Fold_Animation)) {
-		action_icon_set(Fold_Animation, true);
-		action_icon_play_set(Fold_Animation, true, true, true);
+	if (elm_image_animated_available_get(Folding_Animation)) {
+		action_icon_set(Folding_Animation, true);
+		action_icon_play_set(Folding_Animation, true, true, true);
 	}
 	else
 	{
 		DBG("Animation is NOT available\n");
 	}
 
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
+	evas_object_smart_callback_add(Folding_Animation, "clicked", Success_Strecth_cb, ad);
 
-	elm_object_text_set(button, "Folding");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Success_Strecth_cb, ad);
-	evas_object_show(button);
-
-	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
+	nf_it = elm_naviframe_item_push(ad->nf, "Folding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
@@ -239,6 +288,10 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+
+	vibrate(100, 99);
+	sleep(1);
+	vibrate(100, 99);
 }
 
 // Fail
@@ -274,6 +327,12 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+
+	vibrate(500, 99);
+	sleep(1);
+	vibrate(100, 99);
+	sleep(1);
+	vibrate(100, 99);
 }
 
 // Result
@@ -389,8 +448,9 @@ time_set_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 }
 
 static void
-create_main_view(appdata_s *ad)
+Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	struct appdata *ad = data;
 	Elm_Object_Item *nf_it;
 	Evas_Object *button, *layout;
 	time_t local_time = time(NULL);
@@ -398,29 +458,34 @@ create_main_view(appdata_s *ad)
 
 	ad->saved_time = *time_info;
 
+	/* Base Layout */
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
-	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
+	elm_layout_file_set(layout, edj_path, "guide_with_btn"); // custom theme
+
+	//layout = elm_layout_add(ad->nf);
+	//evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	//evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	//elm_layout_theme_set(layout, "layout", "bottom_button", "default");
 	evas_object_show(layout);
 
-	ad->label = elm_label_add(layout);
-	evas_object_size_hint_weight_set(ad->label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-
-#if 0
-	label_text_set(ad->label, ad->saved_time);
-
-	evas_object_show(ad->label);
-	elm_object_part_content_set(layout, "elm.swallow.content", ad->label);
-#else
+	//ad->label = elm_label_add(layout);
+	//evas_object_size_hint_weight_set(ad->label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 
 	Evas_Object* actionIcon;
 	//Image add for stretching action icon.
 	actionIcon= elm_image_add(layout);
 
 	elm_image_file_set(actionIcon, ICON_DIR "/Up_stretching.gif", NULL);
+
+	// resizeing
+	//evas_object_size_hint_weight_set(actionIcon, 0.5, 0.5);
+	//evas_object_size_hint_padding_set(actionIcon, 0,0,0,200);
+
 	evas_object_show(actionIcon);
-	elm_object_part_content_set(layout, "elm.swallow.content", actionIcon);
+	elm_object_part_content_set(layout, "elm.swallow.animation", actionIcon);
 
 	if (elm_image_animated_available_get(actionIcon)) {
 		action_icon_set(actionIcon, true);
@@ -430,7 +495,9 @@ create_main_view(appdata_s *ad)
 	{
 		DBG("Animation is NOT available\n");
 	}
-#endif
+
+	elm_object_part_text_set(layout, "text", "팔을 위로 뻗어서");
+	elm_object_part_text_set(layout, "text2", "스트레칭 해보세요");
 
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
@@ -441,7 +508,66 @@ create_main_view(appdata_s *ad)
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+
+static void
+create_main_view(appdata_s *ad)
+{
+	Evas_Object *layout, *bg, *button;
+	Elm_Object_Item *nf_it = NULL;
+
+	vibrate(1000, 99);
+
+	time_t local_time = time(NULL);
+	struct tm *time_info = localtime(&local_time);
+	ad->saved_time = *time_info;
+
+	/* Base Layout */
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
+	layout = elm_layout_add(ad->nf);
+	elm_layout_file_set(layout, edj_path, "strech_main"); // custom theme
+
+	// Text setting
+	elm_object_part_text_set(layout, "text", "팔을 뻗어서");
+	elm_object_part_text_set(layout, "text2", "스트레칭을 해보세요");
+
+	char text3string[50];
+	strcpy(text3string, "마지막 스트레칭 :");
+	strcat(text3string, "45 분전");
+
+	elm_object_part_text_set(layout, "text3", text3string);
+
+	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	evas_object_show(layout);
+
+	// Add background
+	bg = elm_image_add(layout);
+	elm_image_file_set(bg, ICON_DIR "/Entrance.png", NULL);
+	evas_object_show(bg);
+	elm_object_part_content_set(layout, "elm.swallow.content", bg);
+
+	// Add button
+	button = elm_button_add(layout);
+	elm_object_style_set(button, "bottom");
+
+	elm_object_text_set(button, "스트레칭 시작");
+	elm_object_part_content_set(layout, "elm.swallow.button", button);
+	evas_object_show(button);
+
+	// Set next display as callback function
+	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
+	//evas_object_smart_callback_add(button, "clicked", Wheel_cb, ad);
+
+
+	// Display current page
+	nf_it = elm_naviframe_item_push(ad->nf, "Enter the stretching", NULL, NULL, layout, NULL);
+	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 }
 
 static void

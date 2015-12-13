@@ -5,4 +5,7 @@
         <label>stretchme</label>
         <icon>stretchme.png</icon>
     </ui-application>
+    <privileges>
+        <privilege>http://tizen.org/privilege/haptic</privilege>
+    </privileges>
 </manifest>
