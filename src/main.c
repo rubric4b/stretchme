@@ -495,9 +495,36 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	{
 		DBG("Animation is NOT available\n");
 	}
-
+#if 0
 	elm_object_part_text_set(layout, "text", "팔을 위로 뻗어서");
 	elm_object_part_text_set(layout, "text2", "스트레칭 해보세요");
+#else
+
+	Evas_Object* circle_scroller, *scroller, *label;
+
+	scroller = elm_scroller_add(layout);
+	evas_object_show(scroller);
+
+	elm_object_part_content_set(layout, "elm.swallow.text_scroller", scroller);
+
+	/* Create Circle Scroller */
+	circle_scroller = eext_circle_object_scroller_add(scroller, ad->circle_surface);
+
+	/* Set Scroller Policy */
+	eext_circle_object_scroller_policy_set(circle_scroller, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO);
+
+	/* Activate Rotary Event */
+	eext_rotary_object_event_activated_set(circle_scroller, EINA_TRUE);
+
+	label = elm_label_add(scroller);
+	elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
+	elm_object_text_set(label, "팔을 위로 뻗어서 스트레칭 해보세요. "
+								"양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
+								"신호에 맞추어 기다렸다가 내리세요.");
+	elm_object_content_set(scroller, label);
+	evas_object_show(label);
+
+#endif
 
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
