@@ -78,7 +78,6 @@ set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop(ad->nf);
 }
 
-<<<<<<< .merge_file_a09936
 // Wheel event test
 // https://developer.tizen.org/ko/development/ui-practices/native-application/efl/hardware-input-handling/managing-rotary-events
 static void
@@ -102,55 +101,6 @@ Wheel_cb(void *data, Evas_Object *obj, void *event_info)
 
    // Show the window after the base GUI is set up
    evas_object_show(win);
-=======
-// Entrance display of StrechMe
-static void
-Enter_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
-{
-	struct appdata *ad = data;
-	Evas_Object *layout, *bg, *button;
-
-	Elm_Object_Item *nf_it = NULL;
-
-	char edj_path[PATH_MAX] = {0, };
-
-	/* Base Layout */
-	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
-
-	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "anim_img_and_center_quadruple_text_with_button"); // custom theme
-
-	// Text setting
-	elm_object_part_text_set(layout, "text", "팔을 뻗어서");
-	elm_object_part_text_set(layout, "text2", "스트레칭을 해보세요");
-	elm_object_part_text_set(layout, "text3", "마지막 스트레칭");
-
-	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	evas_object_show(layout);
-
-	// Add background
-	bg = elm_image_add(layout);
-	elm_image_file_set(bg, ICON_DIR "/Entrance.png", NULL);
-	evas_object_show(bg);
-	elm_object_part_content_set(layout, "elm.swallow.content", bg);
-
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-
-	elm_object_text_set(button, "스트레칭 시작");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_show(button);
-
-	// Set next display as callback function
-	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
-
-	// Display current page
-	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
-	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
->>>>>>> .merge_file_a09820
 }
 
 // Entrance the stretching - Now testing here for adding label
@@ -162,11 +112,6 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	Elm_Object_Item *nf_it = NULL;
 
-<<<<<<< .merge_file_a09936
-=======
-	char edj_path[PATH_MAX] = {0, };
-
->>>>>>> .merge_file_a09820
 	/* Base Layout */
 	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
@@ -619,61 +564,6 @@ create_main_view(appdata_s *ad)
 	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 	//evas_object_smart_callback_add(button, "clicked", Wheel_cb, ad);
 
-
-	// Display current page
-	nf_it = elm_naviframe_item_push(ad->nf, "Enter the stretching", NULL, NULL, layout, NULL);
-	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-}
-
-
-static void
-create_main_view(appdata_s *ad)
-{
-	Evas_Object *layout, *bg, *button;
-	Elm_Object_Item *nf_it = NULL;
-
-	time_t local_time = time(NULL);
-	struct tm *time_info = localtime(&local_time);
-	ad->saved_time = *time_info;
-
-	char edj_path[PATH_MAX] = {0, };
-
-	/* Base Layout */
-	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
-
-	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "strech_main"); // custom theme
-
-	// Text setting
-	elm_object_part_text_set(layout, "text", "팔을 뻗어서");
-	elm_object_part_text_set(layout, "text2", "스트레칭을 해보세요");
-
-	char text3string[50];
-	strcpy(text3string, "마지막 스트레칭 :");
-	strcat(text3string, "n 분전");
-
-	elm_object_part_text_set(layout, "text3", text3string);
-
-	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	evas_object_show(layout);
-
-	// Add background
-	bg = elm_image_add(layout);
-	elm_image_file_set(bg, ICON_DIR "/Entrance.png", NULL);
-	evas_object_show(bg);
-	elm_object_part_content_set(layout, "elm.swallow.content", bg);
-
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-
-	elm_object_text_set(button, "스트레칭 시작");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_show(button);
-
-	// Set next display as callback function
-	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 
 	// Display current page
 	nf_it = elm_naviframe_item_push(ad->nf, "Enter the stretching", NULL, NULL, layout, NULL);
