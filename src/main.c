@@ -1,8 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include <app.h>
+#include <device/haptic.h>
+
 #include "main.h"
 #include "action_icon.h"
 #include "logger.h"
-#include <app.h>
-#include <device/haptic.h>
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -145,20 +150,13 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
-/**
- *  button can be used with ""anim_img_and_center_text_with_bottom_btn" layout theme
- *
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-	elm_object_text_set(button, "Testing!");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_show(button);
-*/
-
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+}
+
+static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
+{
+	Fold_Stretch_cb(data, NULL, NULL);
 }
 
 // Peak of the stretching - Holding posture
@@ -192,17 +190,17 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	if (elm_image_animated_available_get(Hold_Animation)) {
 		action_icon_set(Hold_Animation, true);
 		action_icon_play_set(Hold_Animation, true, false, true);
+
+		// when holding animation is finished, go to next
+		action_icon_finish_callback_add(Hold_Animation, Hold_Stretch_Anim_Finish_Cb, data);
 	}
 	else
 	{
 		DBG("Animation is NOT available\n");
 	}
 
-	evas_object_smart_callback_add(Hold_Animation, "clicked", Fold_Stretch_cb, ad);
-
 	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Folding step of the stretching
@@ -252,7 +250,6 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Folding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Success
@@ -287,7 +284,6 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(100, 99);
 	sleep(1);
@@ -326,7 +322,6 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(500, 99);
 	sleep(1);
@@ -367,7 +362,6 @@ Result_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Reward
@@ -402,7 +396,6 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Timer display - Not visited in current flow
@@ -518,9 +511,9 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	label = elm_label_add(scroller);
 	elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
-	elm_object_text_set(label, "팔을 위로 뻗어서 스트레칭 해보세요. "
-								"양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
-								"신호에 맞추어 기다렸다가 내리세요.");
+	elm_object_text_set(label, "<align=center><font_size=38>팔을 위로 뻗어서 스트레칭 해보세요.</font_size> <BR> "
+								"<font_size=30 color=#999999>양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
+								"신호에 맞추어 기다렸다가 내리세요.</font_size></align>");
 	elm_object_content_set(scroller, label);
 	evas_object_show(label);
 
@@ -528,7 +521,7 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
-	elm_object_text_set(button, "Start!!");
+	elm_object_text_set(button, "시작하기"); // Start!
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	//evas_object_smart_callback_add(button, "clicked", time_set_button_clicked_cb, ad);	// For bypass Timer display
 	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
@@ -536,7 +529,6 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
-	//elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 
@@ -545,6 +537,16 @@ create_main_view(appdata_s *ad)
 {
 	Evas_Object *layout, *bg, *button;
 	Elm_Object_Item *nf_it = NULL;
+
+	// it has randomly 3 types for time that user had stretched before.
+	srandom(time(NULL));
+	int type = random() % 3;
+
+	int colors[3][4] = {
+		{112, 198, 19, 255}, // green
+		{239, 188, 69, 255}, // yellow
+		{252, 116, 75, 255} // red
+	};
 
 	vibrate(1000, 99);
 
@@ -560,14 +562,12 @@ create_main_view(appdata_s *ad)
 	elm_layout_file_set(layout, edj_path, "strech_main"); // custom theme
 
 	// Text setting
-	elm_object_part_text_set(layout, "text", "팔을 뻗어서");
-	elm_object_part_text_set(layout, "text2", "스트레칭을 해보세요");
+	elm_object_part_text_set(layout, "text", "팔을 뻗어서<br>스트레칭 해보세요");
 
-	char text3string[50];
-	strcpy(text3string, "마지막 스트레칭 :");
-	strcat(text3string, "45 분전");
+	char text2string[50];
+	snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", (type+1), "시간 전");
 
-	elm_object_part_text_set(layout, "text3", text3string);
+	elm_object_part_text_set(layout, "text2", text2string);
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -575,7 +575,8 @@ create_main_view(appdata_s *ad)
 
 	// Add background
 	bg = elm_image_add(layout);
-	elm_image_file_set(bg, ICON_DIR "/Entrance.png", NULL);
+	elm_image_file_set(bg, ICON_DIR "/Circle_White_10px.png", NULL);
+	evas_object_color_set(bg, colors[type][0], colors[type][1], colors[type][2], colors[type][3]);
 	evas_object_show(bg);
 	elm_object_part_content_set(layout, "elm.swallow.content", bg);
 
@@ -595,6 +596,9 @@ create_main_view(appdata_s *ad)
 	// Display current page
 	nf_it = elm_naviframe_item_push(ad->nf, "Enter the stretching", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app when the 1st depth is poped
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 static void
