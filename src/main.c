@@ -108,6 +108,9 @@ Wheel_cb(void *data, Evas_Object *obj, void *event_info)
    evas_object_show(win);
 }
 
+static void
+Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
+
 // Entrance the stretching - Now testing here for adding label
 static void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
@@ -165,7 +168,7 @@ static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 static void
 Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	vibrate(500, 99);
+	vibrate(300, 99);
 
 	struct appdata *ad = data;
 	Evas_Object *layout, *Hold_Animation, *button;
@@ -212,7 +215,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	vibrate(500, 99);
+	vibrate(300, 99);
 
 	struct appdata *ad = data;
 	Evas_Object *layout, *Folding_Animation, *button;
@@ -251,10 +254,9 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 
 	// randomly success for demo
-	srandom(time(NULL));
-	int type = random() % 2;
+	int type = random() % 10;
 
-	if(type)
+	if(type < 5)
 		evas_object_smart_callback_add(Folding_Animation, "clicked", Success_Strecth_cb, ad);
 	else
 		evas_object_smart_callback_add(Folding_Animation, "clicked", Fail_Strecth_cb, ad);
@@ -271,21 +273,114 @@ static void
 Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
-	Evas_Object *layout, *Success_image, *button;
+	Evas_Object *layout, *bg, *Success_image, *button;
 	Elm_Object_Item *nf_it = NULL;
 
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
+	elm_layout_file_set(layout, edj_path, "stretch_success"); // custom theme
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
 	evas_object_show(layout);
 
-	// Add animation
-	Success_image = elm_image_add(layout);
-	elm_object_style_set(Success_image, "center");
-	elm_image_file_set(Success_image, ICON_DIR "/Success.png", NULL);
-	evas_object_show(Success_image);
-	elm_object_part_content_set(layout, "elm.swallow.content", Success_image);
+	// Add bg
+	bg = elm_image_add(layout);
+	elm_object_style_set(bg, "center");
+	elm_image_file_set(bg, ICON_DIR "/Circle_White_10px.png", NULL);
+	evas_object_color_set(bg, 35, 202, 224, 255); // blue
+
+	evas_object_show(bg);
+	elm_object_part_content_set(layout, "elm.swallow.bg", bg);
+
+
+	// Add Scroller
+	Evas_Object* circle_scroller, *scroller;
+
+	scroller = elm_scroller_add(layout);
+	evas_object_size_hint_min_set(scroller, 360, 360);
+	evas_object_show(scroller);
+
+	elm_object_part_content_set(layout, "elm.swallow.content", scroller);
+
+	/* Create Circle Scroller */
+	circle_scroller = eext_circle_object_scroller_add(scroller, ad->circle_surface);
+
+	/* Set Scroller Policy */
+	eext_circle_object_scroller_policy_set(circle_scroller, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO);
+
+	/* Activate Rotary Event */
+	eext_rotary_object_event_activated_set(circle_scroller, EINA_TRUE);
+
+#if 1
+#if 1
+
+// USE 1 IMAGE
+
+	// result image
+	Evas_Object* result;
+
+	result = elm_image_add(scroller);
+	elm_object_style_set(result, "center");
+	elm_image_file_set(result, ICON_DIR "/Success_long.png", NULL);
+	elm_image_no_scale_set(result, EINA_TRUE);
+	evas_object_show(result);
+
+	elm_object_content_set(scroller, result);
+
+#else
+
+// USE BOX
+
+	Evas_Object* box, *icon, *present;
+
+	box = elm_box_add(scroller);
+	elm_box_horizontal_set(box, EINA_FALSE);
+	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	evas_object_show(box);
+
+	icon = elm_image_add(box);
+	elm_object_style_set(icon, "center");
+	elm_image_file_set(icon, ICON_DIR "/Success_Picto.png", NULL);
+	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+//	elm_image_no_scale_set(icon, EINA_TRUE);
+	evas_object_show(icon);
+
+	elm_box_pack_end(box, icon);
+
+	present = elm_image_add(box);
+	elm_object_style_set(present, "center");
+	elm_image_file_set(present, ICON_DIR "/Success_long.png", NULL);
+//	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+//	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	elm_image_no_scale_set(present, EINA_TRUE);
+	evas_object_show(present);
+
+	elm_box_pack_end(box, present);
+
+	elm_object_content_set(scroller, box);
+
+#endif
+
+#else
+
+// USE LAYOUT
+
+	Evas_Object* scroll_layout;
+
+	scroll_layout = elm_layout_add(scroller);
+	elm_layout_file_set(scroll_layout, edj_path, "stretch_success_content"); // custom theme
+//	evas_object_size_hint_weight_set(scroll_layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+//	evas_object_size_hint_align_set(scroll_layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
+	evas_object_resize(scroll_layout, 360, 720);
+	evas_object_show(scroll_layout);
+
+	elm_object_content_set(scroller, scroll_layout);
+
+#endif
 
 	// Add button
 	button = elm_button_add(layout);
@@ -293,7 +388,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	elm_object_text_set(button, "한 번 더 하기");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Result_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
@@ -303,7 +398,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(100, 99);
-	sleep(1);
+	sleep(0.5f);
 	vibrate(100, 99);
 }
 
@@ -334,7 +429,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	elm_object_text_set(button, "다시 시도");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Result_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
@@ -343,11 +438,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	vibrate(500, 99);
-	sleep(1);
-	vibrate(100, 99);
-	sleep(1);
-	vibrate(100, 99);
+	vibrate(700, 99);
 }
 
 // Result
@@ -511,11 +602,8 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	{
 		DBG("Animation is NOT available\n");
 	}
-#if 0
-	elm_object_part_text_set(layout, "text", "팔을 위로 뻗어서");
-	elm_object_part_text_set(layout, "text2", "스트레칭 해보세요");
-#else
 
+	// Scroller
 	Evas_Object* circle_scroller, *scroller, *label;
 
 	scroller = elm_scroller_add(layout);
@@ -540,8 +628,7 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_object_content_set(scroller, label);
 	evas_object_show(label);
 
-#endif
-
+	// Button
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 	elm_object_text_set(button, "시작하기"); // Start!
@@ -571,7 +658,7 @@ create_main_view(appdata_s *ad)
 		{252, 116, 75, 255} // red
 	};
 
-	vibrate(1000, 99);
+	vibrate(300, 99);
 
 	time_t local_time = time(NULL);
 	struct tm *time_info = localtime(&local_time);

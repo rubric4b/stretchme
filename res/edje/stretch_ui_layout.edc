@@ -1,3 +1,10 @@
+
+images {
+   image: "Success_Picto.png" COMP;
+   image: "Fail_Picto.png" COMP;
+   image: "Reward_Picto.png" COMP;
+}
+
 collections {
 	group { name: "anim_img_and_center_text";
 
@@ -185,6 +192,7 @@ collections {
 			}
 			part { name: "text";
 				type: TEXT;
+				effect: SHADOW;
 				mouse_events: 0;
 				description { state: "default" 0.0;
 					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.5; }
@@ -207,4 +215,76 @@ collections {
 			}
 		} // parts
 	} // group
+
+	group { name: "stretch_success_content";
+
+		styles {
+		    style {
+		        name: "success_multiline_text";
+		        base: "font=Tizen:style=Regular text_class=tizen font_size=32 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-2 wrap=mixed";
+		        tag: "br" "\n";
+		    }
+		}
+
+	    parts {
+			part { name: "icon1";
+				type: IMAGE;
+				description { state: "default" 0.0;
+					image {
+						normal: "Success_Picto.png";
+						middle: 1;
+					}
+					rel1.relative: 0.0 0.0;
+					rel2.relative: 1.0 1.0;
+				}
+
+			}
+
+			part { name: "icon2";
+				type: IMAGE;
+				description { state: "default" 0.0;
+					image {
+						normal: "Reward_Picto.png";
+						middle: 1;
+					}
+					rel1.relative: 0.0 1.0;
+					rel2.relative: 1.0 2.0;
+				}
+			}
+
+		} // parts
+	} // group
+
+	group { name: "stretch_success";
+
+	    parts {
+
+			part { name: "elm.swallow.bg";
+				type: SWALLOW;
+				scale: 1;
+				description { state: "default" 0.0;
+				}
+			}
+
+			part { name: "elm.swallow.content";
+				type: SWALLOW;
+				scale: 1;
+				description { state: "default" 0.0;
+				}
+			}
+
+			part { name: "elm.swallow.button";
+				type: SWALLOW;
+				description { state: "default" 0.0;
+					rel1.relative: 0.0 1.0;
+					rel2.relative: 1.0 1.0;
+					align: 0.5 1.0;
+					fixed: 0 1;
+					visible: 1;
+				}
+			}
+
+		} // parts
+	} // group
+
 } // collections
