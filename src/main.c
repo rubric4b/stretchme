@@ -122,10 +122,9 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
 
 	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고");
-	elm_object_part_text_set(layout, "text2", "머리 위로 뻗으세요");
+	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 위로 뻗으세요");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -152,6 +151,9 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
@@ -174,7 +176,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
 
 	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
+	elm_layout_file_set(layout, edj_path, "anim_img_and_upper_text"); // custom theme
 	evas_object_show(layout);
 
 	elm_object_part_text_set(layout, "text", "현재 자세를 유지하세요");
@@ -201,6 +203,9 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Folding step of the stretching
@@ -219,10 +224,9 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
 
 	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "anim_img_and_center_dual_text"); // custom theme
+	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "천천히 심호흡하며");
-	elm_object_part_text_set(layout, "text2", "원래 자세로 돌아가세요");
+	elm_object_part_text_set(layout, "text", "천천히 심호흡하며<br>원래 자세로 돌아가세요");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -246,10 +250,20 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		DBG("Animation is NOT available\n");
 	}
 
-	evas_object_smart_callback_add(Folding_Animation, "clicked", Success_Strecth_cb, ad);
+	// randomly success for demo
+	srandom(time(NULL));
+	int type = random() % 2;
+
+	if(type)
+		evas_object_smart_callback_add(Folding_Animation, "clicked", Success_Strecth_cb, ad);
+	else
+		evas_object_smart_callback_add(Folding_Animation, "clicked", Fail_Strecth_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Folding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Success
@@ -279,11 +293,14 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	elm_object_text_set(button, "한 번 더 하기");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Fail_Strecth_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", Result_cb, ad);
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(100, 99);
 	sleep(1);
@@ -322,6 +339,9 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(500, 99);
 	sleep(1);
@@ -396,6 +416,9 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
 // Timer display - Not visited in current flow

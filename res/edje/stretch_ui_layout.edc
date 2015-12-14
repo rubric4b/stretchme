@@ -1,5 +1,14 @@
 collections {
 	group { name: "anim_img_and_center_text";
+
+		styles {
+		    style {
+		        name: "anim_multiline_text";
+		        base: "font=Tizen:style=Regular text_class=tizen font_size=28 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-5 wrap=mixed";
+		        tag: "br" "\n";
+		    }
+		}
+
 		parts {
 
 			part { name: "elm.swallow.animation";
@@ -10,21 +19,35 @@ collections {
 			}
 
 			part { name: "text";
-				type: TEXT;
+				scale: 1;
+				type: TEXTBLOCK;
+				multiline: 1;
 				mouse_events: 0;
 				description { state: "default" 0.0;
-					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.5; }
-					color: 255 255 255 255;
+					text {
+						style: "anim_multiline_text";
+						align: 0.5 0.5;
+						fit: 0 0;
+					}
 
-					rel1.relative: 0.0 0.0; // left top
-					rel2.relative: 1.0 1.0; // right bottom
+					rel1.relative: 0.1 0.15; // left top
+					rel2.relative: 0.9 0.85; // right bottom
 				}
 			}
 
 		} // parts
 	} // group
 
-	group { name: "anim_img_and_center_dual_text";
+	group { name: "anim_img_and_upper_text";
+
+		styles {
+		    style {
+		        name: "anim_multiline_text2";
+		        base: "font=Tizen:style=Regular text_class=tizen font_size=26 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-5 wrap=mixed";
+		        tag: "br" "\n";
+		    }
+		}
+
 		parts {
 
 			part { name: "elm.swallow.animation";
@@ -35,28 +58,21 @@ collections {
 			}
 
 			part { name: "text";
-				type: TEXT;
+				scale: 1;
+				type: TEXTBLOCK;
+				multiline: 1;
 				mouse_events: 0;
 				description { state: "default" 0.0;
-					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.4; }
-					color: 255 255 255 255;
+					text {
+						style: "anim_multiline_text2";
+						align: 0.5 0.5;
+						fit: 0 0;
+					}
 
-					rel1.relative: 0.0 0.0; // left top
-					rel2.relative: 1.0 1.0; // right bottom
+					rel1.relative: 0.1 0.15; // left top
+					rel2.relative: 0.9 0.6; // right bottom
 				}
 			}
-
-			part { name: "text2";
-				type: TEXT;
-				mouse_events: 0;
-				description { state: "default" 0.0;
-					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.6; }
-					color: 255 255 255 255 ;
-					rel1.relative: 0.0 0.0; // left top
-					rel2.relative: 1.0 1.0; // right bottom
-				}
-			}
-
 		} // parts
 	} // group
 
@@ -65,7 +81,7 @@ collections {
 
 		styles {
 		    style {
-		        name: "multiline_text";
+		        name: "main_anim_multiline_text";
 		        base: "font=Tizen:style=Regular text_class=tizen font_size=32 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-2 wrap=mixed";
 		        tag: "br" "\n";
 		    }
@@ -87,7 +103,7 @@ collections {
 				mouse_events: 0;
 				description { state: "default" 0.0;
 					text {
-						style: "multiline_text";
+						style: "main_anim_multiline_text";
 						align: 0.5 0.5;
 						fit: 0 0;
 					}
@@ -144,31 +160,7 @@ collections {
 				rel2.relative: 0.95 0.73 ;
 				}
 			}
-/*
-			part { name: "text";
-				type: TEXT;
-				mouse_events: 0;
-				description { state: "default" 0.0;
-					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.5; }
-					color: 255 255 255 255;
 
-					rel1.relative: 0.0 0.0; // left top
-					rel2.relative: 1.0 1.0; // right bottom
-				}
-			}
-
-			part { name: "text2";
-				type: TEXT;
-				mouse_events: 0;
-				description { state: "default" 0.0;
-					text { font: "Tizen:style=regular"; size: 30; min: 1 1; align: 0.5 0.6; }
-					color: 255 255 255 255;
-
-					rel1.relative: 0.0 0.0; // left top
-					rel2.relative: 1.0 1.0; // right bottom
-				}
-			}
-*/
 			part { name: "elm.swallow.button";
 				type: SWALLOW;
 				description { state: "default" 0.0;
