@@ -4,10 +4,12 @@
 
 #include <app.h>
 #include <device/haptic.h>
+#include <sensor/sensor.h>
 
 #include "main.h"
 #include "action_icon.h"
 #include "logger.h"
+#include "sm_sensor.h"
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -15,9 +17,26 @@ typedef struct appdata {
 	Evas_Object *datetime;
 	Eext_Circle_Surface *circle_surface;
 	struct tm saved_time;
+
+	sensor_info* accel;
+	sensor_info* gyro;
 } appdata_s;
 
 #define FORMAT "%d/%b/%Y%H:%M"
+
+
+static bool
+stop_sensor(void *data, Elm_Object_Item *it)
+{
+	appdata_s* ad = data;
+
+	sensor_listen_pause(ad->accel);
+	sensor_listen_pause(ad->gyro);
+
+	reset_measure();
+
+	return true;
+}
 
 static void
 app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max)
@@ -157,6 +176,12 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+
+	sensor_listen_resume(ad->accel);
+	sensor_listen_resume(ad->gyro);
+
+	elm_naviframe_item_pop_cb_set(nf_it, stop_sensor, ad);
+
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
@@ -749,6 +774,17 @@ app_create(void *data)
 		If this function returns true, the main loop of application starts
 		If this function returns false, the application is terminated */
 	appdata_s *ad = data;
+
+	ad->accel = sensor_init(SENSOR_ACCELEROMETER);
+	ad->gyro = sensor_init(SENSOR_GYROSCOPE);
+
+	sensor_start(ad->accel);
+	sensor_start(ad->gyro);
+
+	sensor_listen_pause(ad->accel);
+	sensor_listen_pause(ad->gyro);
+	reset_measure();
+
 
 	create_base_gui(ad);
 
