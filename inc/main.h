@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef __STRETCHME_H__
+#define __STRETCHME_H__
+
 #include <app.h>
 #include <Elementary.h>
 #include <system_settings.h>
@@ -27,19 +30,19 @@
 #endif
 
 #define EDJ_FILE "edje/stretch_ui_layout.edj"
-#define GRP_MAIN "main"
 
-#define FORMAT "%d/%b/%Y%H:%M"
 #define ICON_DIR "/opt/usr/apps/org.example.stretchme/res/images"
 
+typedef struct appdata {
+	Evas_Object *nf;
+	Evas_Object *label;
+	Evas_Object *datetime;
+	Eext_Circle_Surface *circle_surface;
+	struct tm saved_time;
+} appdata_s;
 
-// Callback functions -------------------------------------------------------------------------------------------------
-static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
-static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
-static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+void app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max);
+void vibrate(int duration, int feedback);
 
-static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
-static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
-static void Result_cb(void *data, Evas_Object *obj, void *event_info);
-static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
-static void Strecth_Guile_cb(void *data, Evas_Object *obj, void *event_info);
+#endif // __STRETCHME_H__
+

@@ -117,9 +117,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //			current.qAccelOrientation =
 //					current.qAccelOrientation.FromTwoVectors(current.acc, GRAVITY_VECTOR);
 
-			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n",
-				time_diff,
-				current.acc.x, current.acc.y, current.acc.z);
+//			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
 		}
 		break;
 
@@ -133,9 +131,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			current.gyro = adjust_error_vector(vec3(x_angle, y_angle, z_angle));
 			current.gyro_updated = true;
 
-			DBG("GYROSCOPE\t( %6d )\t%.2f\t%.2f\t%.2f\n",
-				time_diff,
-				current.gyro.x, current.gyro.y, current.gyro.z);
+//			DBG("GYROSCOPE\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
 		}
 		break;
 
@@ -209,9 +205,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		// subtract gravity from adjusted accelerometer
 //		vec3 adjustedAcc = current.qDeviceOrientation.inverse() * current.acc;
 		vec3 adjustedAcc = mat3_cast(current.orientation) * current.acc;
-		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",
-			time_diff,
-			adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
+//		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",	time_diff, adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
 
 		vec3 linearAcc = adjust_error_vector(adjustedAcc - GRAVITY_VECTOR);
 #else
