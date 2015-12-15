@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <ghmm/rng.h>
+
 #include <app.h>
 #include <device/haptic.h>
 #include <sensor/sensor.h>
@@ -10,6 +12,9 @@
 #include "action_icon.h"
 #include "logger.h"
 #include "sm_sensor.h"
+
+
+
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -854,6 +859,8 @@ ui_app_low_memory(app_event_info_h event_info, void *user_data)
 int
 main(int argc, char *argv[])
 {
+	ghmm_rng_init();
+
 	appdata_s ad = {0,};
 	int ret = 0;
 
