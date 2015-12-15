@@ -11,9 +11,9 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "pca/embedppca.h"
+#include "kalman_manager.h"
 
 #define UPDATE_RATE 20 // millisecond
-
 
 using namespace glm;
 
@@ -90,6 +90,8 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 	sensor_get_type(sensor, &type);
 
 
+	bool reset = false;
+
 	// initialize all
 	if(init_time == 0)
 	{
@@ -100,6 +102,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 
 		// skip the 1st data since it has accelerometer data only. We need correct pair of (accel & gyro)
 		//	   return;
+		reset = true;
 	}
 
    unsigned int time_diff = (unsigned int)(event->timestamp/1000 - init_time);
@@ -140,7 +143,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
    }
 
 	// the first time
-	if(time_diff < 2 && current.acc_updated)
+	if(reset && current.acc_updated)
 	{
 		current.timestamp = time_diff;
 		vec3 axis = cross(GRAVITY_VECTOR, current.acc);
@@ -160,6 +163,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		normalize(current.qAccelOrientation);
 
 		current.pos = vec3(0, 0, 0);
+		current.vel = vec3(0, 0, 0);
 
 		prev = current;
 
@@ -180,7 +184,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		// quaternion for gyroscope's angle
 		quat angleVelocity = quat(0, current.gyro.x, current.gyro.y, current.gyro.z);
 		angleVelocity = prev.orientation * angleVelocity;
-		angleVelocity *= 0.5;
+		angleVelocity *= 0.5f;
 		angleVelocity *= dt;
 
 		current.orientation = prev.orientation + angleVelocity;
@@ -215,16 +219,14 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		vec3 linearAcc = current.qDeviceOrientation.inverse() * tmpAcc;
 #endif
 
-		vec3 acc = linearAcc;
-
-		gLinearAcc.push_back(acc);
+		gLinearAcc.push_back(linearAcc);
 
 		DBG("LINEARACC\t( %6d )\t%.2f\t%.5f\t%.2f\n",
 			time_diff, linearAcc.x, linearAcc.y, linearAcc.z);
 
 		//1 Position
 		//3 : integrate linear acceleration
-#if 1
+#if 0
 		// using velocity
 
 		float scalar = linearAcc.length();
@@ -239,11 +241,21 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		current.pos = prev.pos + 0.5f * current.vel * dt;
 #else
 		// directly double integration
-		current.pos = prev.pos + 0.5 * linearAcc * dt * dt;
+		current.pos = prev.pos + 0.5f * linearAcc * dt * dt;
 #endif
-//		DBG("POSITION \t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.pos.x(), current.pos.y(), current.pos.z());
+//		DBG("POSITION_o \t( %6d )\t%.4f\t%.4f\t%.4f\n", time_diff, current.pos.x, current.pos.y, current.pos.z);
 
+#if 1
+		//1 using kalman
+		vec3 out_pos;
+		vec3 out_vel;
 
+		kalman(current.pos, linearAcc, out_pos, out_vel, false /* reset at the first time*/);
+		DBG("POSITION_k \t( %6d )\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", time_diff, current.pos.x, current.pos.y, current.pos.z, out_pos.x, out_pos.y, out_pos.z);
+
+//		current.pos = out_pos;
+//		current.vel = out_vel;
+#endif
 		//1 pca
 		#define PCA_DATA_NUM 5
 
