@@ -4,10 +4,12 @@
 
 #include <app.h>
 #include <device/haptic.h>
+#include <sensor/sensor.h>
 
 #include "main.h"
 #include "action_icon.h"
 #include "logger.h"
+#include "sm_sensor.h"
 
 typedef struct appdata {
 	Evas_Object *nf;
@@ -15,9 +17,23 @@ typedef struct appdata {
 	Evas_Object *datetime;
 	Eext_Circle_Surface *circle_surface;
 	struct tm saved_time;
+
+	sensor_info* accel;
+	sensor_info* gyro;
 } appdata_s;
 
-#define FORMAT "%d/%b/%Y%H:%M"
+static bool
+stop_sensor(void *data, Elm_Object_Item *it)
+{
+	appdata_s* ad = data;
+
+	sensor_listen_pause(ad->accel);
+	sensor_listen_pause(ad->gyro);
+
+	reset_measure();
+
+	return true;
+}
 
 static void
 app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max)
@@ -157,6 +173,12 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+
+	sensor_listen_resume(ad->accel);
+	sensor_listen_resume(ad->gyro);
+
+	elm_naviframe_item_pop_cb_set(nf_it, stop_sensor, ad);
+
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
@@ -323,7 +345,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	result = elm_image_add(scroller);
 	elm_object_style_set(result, "center");
-	elm_image_file_set(result, ICON_DIR "/Success_long.png", NULL);
+	elm_image_file_set(result, ICON_DIR "/Success_Reward.png", NULL);
 	elm_image_no_scale_set(result, EINA_TRUE);
 	evas_object_show(result);
 
@@ -512,48 +534,6 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
-// Timer display - Not visited in current flow
-static void
-time_set_button_clicked_cb(void *data, Evas_Object *obj, void *event_info)
-{
-	struct appdata *ad = data;
-	Evas_Object *button, *icon, *layout, *circle_datetime;
-	Elm_Object_Item *nf_it = NULL;
-
-	layout = elm_layout_add(ad->nf);
-	elm_layout_theme_set(layout, "layout", "circle", "datetime");
-
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-
-	//Image add for button icon.
-	icon = elm_image_add(button);
-	elm_image_file_set(icon, ICON_DIR "/check.png", NULL);
-	elm_object_content_set(button, icon);
-	evas_object_show(icon);
-
-	elm_object_part_content_set(layout, "elm.swallow.btn", button);
-	evas_object_smart_callback_add(button, "clicked", set_clicked_cb, ad);
-
-	elm_object_part_text_set(layout, "elm.text", "Set Time");
-
-	ad->datetime = elm_datetime_add(layout);
-
-	//eext circle datetime add for circular feature of datetime.
-	circle_datetime = eext_circle_object_datetime_add(ad->datetime, ad->circle_surface);
-	//eext rotary event activated to circle datetime for gets rotary event.
-	eext_rotary_object_event_activated_set(circle_datetime, EINA_TRUE);
-
-	elm_datetime_format_set(ad->datetime, FORMAT);
-	elm_datetime_value_set(ad->datetime, &ad->saved_time);
-
-	elm_object_style_set(ad->datetime, "timepicker/circle");
-	elm_object_part_content_set(layout, "elm.swallow.content", ad->datetime);
-
-	nf_it = elm_naviframe_item_push(ad->nf, "Time picker", NULL, NULL, layout, NULL);
-	elm_naviframe_item_title_enabled_set(nf_it, EINA_FALSE, EINA_FALSE);
-}
-
 static void
 Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 {
@@ -633,7 +613,6 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_object_style_set(button, "bottom");
 	elm_object_text_set(button, "시작하기"); // Start!
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	//evas_object_smart_callback_add(button, "clicked", time_set_button_clicked_cb, ad);	// For bypass Timer display
 	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
 	evas_object_show(button);
 
@@ -749,6 +728,18 @@ app_create(void *data)
 		If this function returns true, the main loop of application starts
 		If this function returns false, the application is terminated */
 	appdata_s *ad = data;
+
+	// sensor initialize
+	ad->accel = sensor_init(SENSOR_ACCELEROMETER);
+	ad->gyro = sensor_init(SENSOR_GYROSCOPE);
+
+	sensor_start(ad->accel);
+	sensor_start(ad->gyro);
+
+	sensor_listen_pause(ad->accel);
+	sensor_listen_pause(ad->gyro);
+	reset_measure();
+
 
 	create_base_gui(ad);
 

@@ -17,6 +17,9 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
 #define LOG_TAG "stretch"
 #include <dlog.h>
 
