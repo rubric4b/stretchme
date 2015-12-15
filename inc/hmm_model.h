@@ -16,15 +16,14 @@ typedef struct _Hmm_Model {
     double** transition_mat_rev;
     double** emission_mat;
 
-    int state_count;
-
 } Hmm_Model;
 
 
 void init_hmm();
 Hmm_Model* create_hmm_model(const int state_cnt, const int symbol_cnt);
 void free_hmm_model(Hmm_Model* hmm);
-
+void save_model(Hmm_Model* hmm, const char* file_name);
+Hmm_Model* read_model_from_file(const char* file_name);
 
 int test_model();
 
