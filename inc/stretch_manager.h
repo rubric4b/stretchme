@@ -19,6 +19,7 @@ typedef enum
 
 typedef enum
 {
+	STRETCH_STATE_NONE,
 	STRETCH_STATE_UNFOLD, // stretch the limbs
 	STRETCH_STATE_HOLD, // stretching at the maximum position
 	STRETCH_STATE_SWING_1, // swing left or up from holding position

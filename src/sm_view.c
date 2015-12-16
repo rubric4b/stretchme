@@ -17,6 +17,8 @@ static void Result_cb(void *data, Evas_Object *obj, void *event_info);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
 static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
+static StretchState stretch_cur_state = STRETCH_STATE_NONE;
+
 static void Stretch_Result_cb(StretchType type, StretchState state, StretchResult result, void *data)
 {
 	appdata_s *ad = data;
@@ -173,7 +175,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 
 	// TODO: remove this callback when HMM works well
-	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
+	//evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
@@ -183,6 +185,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// stretching result checking
 	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
+	stretch_cur_state = STRETCH_STATE_UNFOLD;
 
 	elm_naviframe_item_pop_cb_set(nf_it, stop_sensor, ad);
 
@@ -190,7 +193,8 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 {
-	Fold_Stretch_cb(data, NULL, NULL);
+	if(stretch_cur_state == STRETCH_STATE_HOLD)
+		Fold_Stretch_cb(data, NULL, NULL);
 }
 
 // Peak of the stretching - Holding posture
@@ -205,6 +209,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	stretching_stop();
 	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
+	stretch_cur_state = STRETCH_STATE_HOLD;
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
@@ -262,6 +267,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
+	stretch_cur_state = STRETCH_STATE_FOLD;
 
 	// set success since user succeed to keep hold time
 	ad->is_stretch_success = EINA_TRUE;
@@ -307,7 +313,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 //	else
 //		evas_object_smart_callback_add(Folding_Animation, "clicked", Fail_Strecth_cb, ad);
 #else
-	ad->fold_timer = ecore_timer_add(3.0f, folding_timer_cb, ad);
+	ad->fold_timer = ecore_timer_add(4.0f, folding_timer_cb, ad);
 #endif
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Folding", NULL, NULL, layout, NULL);
@@ -326,6 +332,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
+	stretch_cur_state = STRETCH_STATE_NONE;
 
 	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
@@ -460,6 +467,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
+	stretch_cur_state = STRETCH_STATE_NONE;
 
 	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
