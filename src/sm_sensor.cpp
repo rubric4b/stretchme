@@ -20,6 +20,10 @@ using namespace glm;
 SensorIntegration prev;
 SensorIntegration current;
 
+// sensor callback
+static Sensor_Cb sensor_callback_func = NULL;
+static void * sensor_callback_func_data = NULL;
+
 
 static void ResetSensorIntegration(SensorIntegration& si)
 {
@@ -310,6 +314,11 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			gLinearAcc.clear();
 		}
 
+		if(sensor_callback_func)
+		{
+			sensor_callback_func(sensor_callback_func_data);
+		}
+
 		current.acc_updated = false;
 		current.gyro_updated = false;
 		prev = current;
@@ -441,8 +450,13 @@ void reset_measure()
 	init_time = 0;
 }
 
-
 const SensorIntegration & get_current_sensor_data()
 {
 	return current;
 }
+void sensor_callback_register(Sensor_Cb func, void* data)
+{
+	sensor_callback_func = func,
+	sensor_callback_func_data = data;
+}
+

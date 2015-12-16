@@ -19,14 +19,47 @@ static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
 static void Stretch_Result_cb(StretchType type, StretchState state, StretchResult result, void *data)
 {
-	if(result == STRETCH_SUCCESS)
+	appdata_s *ad = data;
+
+	switch(state)
 	{
-		// TODO: go to success view
-	}
-	else
-	{
-		// TODO:  go to fail view
-	}
+		case STRETCH_STATE_UNFOLD:
+			if(result == STRETCH_SUCCESS)
+			{
+				// go to hold view
+				Hold_Stretch_cb(data, NULL, NULL);
+			}
+			else
+			{
+				// go to fail view
+				Fail_Strecth_cb(data, NULL, NULL);
+			}
+		break;
+
+		case STRETCH_STATE_HOLD :
+			if(result == STRETCH_SUCCESS)
+			{
+				// store the result at app_data
+				ad->is_stretch_success = EINA_TRUE;
+
+				// go to fold view
+				Fold_Stretch_cb(data, NULL, NULL);
+			}
+			else
+			{
+				// store the result at app_data
+				ad->is_stretch_success = EINA_FALSE;
+				// go to fail view
+				Fail_Strecth_cb(data, NULL, NULL);
+			}
+		break;
+
+		default:
+		{
+			;
+		}
+	
+}
 }
 
 static Eina_Bool
@@ -70,6 +103,30 @@ set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop(ad->nf);
 }
 
+static Eina_Bool folding_timer_cb(void* data)
+{
+	struct appdata *ad = data;
+
+	// go to success/fail view
+	if(ad->is_stretch_success)
+	{
+		Success_Strecth_cb(data, NULL, NULL);
+	}
+	else
+	{
+		Fail_Strecth_cb(data, NULL, NULL);
+	}
+
+	if(ad->fold_timer)
+	{
+		ecore_timer_del(ad->fold_timer);
+		ad->fold_timer = NULL;
+	}
+
+	return ECORE_CALLBACK_DONE;
+}
+
+
 static void
 Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
@@ -89,7 +146,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 위로 뻗으세요");
+	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 <font color=#FF00FF>위로</font> 뻗으세요");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -112,6 +169,8 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	{
 		DBG("Animation is NOT available\n");
 	}
+
+	// TODO: remove this callback when HMM works well
 	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
@@ -136,12 +195,13 @@ static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 static void
 Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	struct appdata *ad = data;
+
 	vibrate(300, 99);
 
 	stretching_stop();
-//	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
+	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
 
-	struct appdata *ad = data;
 	Evas_Object *layout, *Hold_Animation;
 	Elm_Object_Item *nf_it = NULL;
 
@@ -158,7 +218,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// Add animation
 	Hold_Animation = elm_image_add(layout);
 	elm_object_style_set(Hold_Animation, "center");
-	elm_image_file_set(Hold_Animation, ICON_DIR "/Hold_count.gif", NULL);
+	elm_image_file_set(Hold_Animation, ICON_DIR "/Hold_One_Color.gif", NULL);
 	evas_object_show(Hold_Animation);
 	elm_object_part_content_set(layout, "elm.swallow.animation", Hold_Animation);
 
@@ -168,7 +228,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		action_icon_play_set(Hold_Animation, true, false, true);
 
 		// when holding animation is finished, go to next
-		action_icon_finish_callback_add(Hold_Animation, Hold_Stretch_Anim_Finish_Cb, data);
+//		action_icon_finish_callback_add(Hold_Animation, Hold_Stretch_Anim_Finish_Cb, data);
 	}
 	else
 	{
@@ -194,7 +254,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
-//	stretching_start(STRETCH_STATE_FOLD, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
+//	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
 
 	/* Base Layout */
 	char edj_path[PATH_MAX] = {0, };
@@ -227,13 +287,17 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		DBG("Animation is NOT available\n");
 	}
 
+#if 0
 	// randomly success for demo
 	int type = random() % 10;
 
-	if(type < 5)
+//	if(type < 5)
 		evas_object_smart_callback_add(Folding_Animation, "clicked", Success_Strecth_cb, ad);
-	else
-		evas_object_smart_callback_add(Folding_Animation, "clicked", Fail_Strecth_cb, ad);
+//	else
+//		evas_object_smart_callback_add(Folding_Animation, "clicked", Fail_Strecth_cb, ad);
+#else
+	ad->fold_timer = ecore_timer_add(3.0f, folding_timer_cb, ad);
+#endif
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Folding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
@@ -256,7 +320,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
 
 	layout = elm_layout_add(ad->nf);
-	elm_layout_file_set(layout, edj_path, "stretch_success"); // custom theme
+	elm_layout_file_set(layout, edj_path, "stretch_result"); // custom theme
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_show(layout);
@@ -264,7 +328,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	// Add bg
 	bg = elm_image_add(layout);
 	elm_object_style_set(bg, "center");
-	elm_image_file_set(bg, ICON_DIR "/Circle_White_10px.png", NULL);
+	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
 	evas_object_color_set(bg, 35, 202, 224, 255); // blue
 
 	evas_object_show(bg);
@@ -381,21 +445,34 @@ static void
 Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
-	Evas_Object *layout, *Fail_image, *button;
+	Evas_Object *layout, *Fail_image, *button, *bg;
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
 
+	char edj_path[PATH_MAX] = {0, };
+	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
+
 	layout = elm_layout_add(ad->nf);
+	elm_layout_file_set(layout, edj_path, "stretch_result"); // custom theme
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
 	evas_object_show(layout);
 
-	// Add animation
+	// Add bg
+	bg = elm_image_add(layout);
+	elm_object_style_set(bg, "center");
+	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
+	evas_object_color_set(bg, 252, 116, 75, 255); // red
+
+	evas_object_show(bg);
+	elm_object_part_content_set(layout, "elm.swallow.bg", bg);
+
+
+	// Add icon
 	Fail_image = elm_image_add(layout);
 	elm_object_style_set(Fail_image, "center");
-	elm_image_file_set(Fail_image, ICON_DIR "/Fail.png", NULL);
+	elm_image_file_set(Fail_image, ICON_DIR "/Fail_Picto.png", NULL);
 	evas_object_show(Fail_image);
 	elm_object_part_content_set(layout, "elm.swallow.content", Fail_image);
 
@@ -618,7 +695,7 @@ create_main_view(appdata_s *ad)
 
 	// Add background
 	bg = elm_image_add(layout);
-	elm_image_file_set(bg, ICON_DIR "/Circle_White_10px.png", NULL);
+	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
 	evas_object_color_set(bg, colors[type][0], colors[type][1], colors[type][2], colors[type][3]);
 	evas_object_show(bg);
 	elm_object_part_content_set(layout, "elm.swallow.content", bg);
@@ -641,6 +718,5 @@ create_main_view(appdata_s *ad)
 	// exit app when the 1st depth is poped
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
-
 
 
