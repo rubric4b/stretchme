@@ -41,6 +41,10 @@ typedef struct
 SensorIntegration prev;
 SensorIntegration current;
 
+// sensor callback
+static Sensor_Cb sensor_callback_func = NULL;
+static void * sensor_callback_func_data = NULL;
+
 
 static void ResetSensorIntegration(SensorIntegration& si)
 {
@@ -120,7 +124,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //			current.qAccelOrientation =
 //					current.qAccelOrientation.FromTwoVectors(current.acc, GRAVITY_VECTOR);
 
-//			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+			DBG("ACCELEROM\t( %6d )\t%.4f\t%.4f\t%.4f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
 		}
 		break;
 
@@ -134,7 +138,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			current.gyro = adjust_error_vector(vec3(x_angle, y_angle, z_angle));
 			current.gyro_updated = true;
 
-//			DBG("GYROSCOPE\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
+			DBG("GYROSCOPE\t( %6d )\t%.4f\t%.4f\t%.4f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
 		}
 		break;
 
@@ -288,6 +292,10 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			gLinearAcc.clear();
 		}
 
+		if(sensor_callback_func)
+		{
+			sensor_callback_func(sensor_callback_func_data);
+		}
 
 		prev = current;
 		ResetSensorIntegration(current);
@@ -416,3 +424,10 @@ void reset_measure()
 {
 	init_time = 0;
 }
+
+void sensor_callback_register(Sensor_Cb func, void* data)
+{
+	sensor_callback_func = func,
+	sensor_callback_func_data = data;
+}
+

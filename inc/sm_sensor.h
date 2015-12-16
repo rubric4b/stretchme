@@ -20,6 +20,8 @@ typedef struct
 
 }sensor_info;
 
+typedef void (*Sensor_Cb)(void *data);
+
 sensor_info* sensor_init(sensor_type_e sensor_type);
 void sensor_start(sensor_info* sensor);
 void sensor_stop(sensor_info* sensor);
@@ -27,6 +29,11 @@ void sensor_deinit(sensor_info* sensor);
 void sensor_listen_pause(sensor_info* sensor);
 void sensor_listen_resume(sensor_info* sensor);
 void reset_measure();
+
+/**
+ * register ONE callback function which called when the sensor event comes
+ */
+void sensor_callback_register(Sensor_Cb func, void* data);
 
 
 #ifdef __cplusplus
