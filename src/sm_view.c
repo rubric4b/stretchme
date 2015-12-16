@@ -633,9 +633,9 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	label = elm_label_add(scroller);
 	elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
-	elm_object_text_set(label, "<align=center><font_size=38>팔을 위로 뻗어서 스트레칭 해보세요.</font_size> <BR> "
-								"<font_size=30 color=#999999>양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
-								"신호에 맞추어 기다렸다가 내리세요.</font_size></align>");
+	elm_object_text_set(label, "<align=center><font_size=38>팔을 <font color=#FF0000>위로</font color> 뻗어서 스트레칭 해보세요.</font_size> <BR> "
+			"<font_size=30 color=#999999>양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
+			"신호에 맞추어 기다렸다가 내리세요.</font_size></align>");
 	elm_object_content_set(scroller, label);
 	evas_object_show(label);
 
