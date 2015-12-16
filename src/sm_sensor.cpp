@@ -36,6 +36,9 @@ static void ResetSensorIntegration(SensorIntegration& si)
 
 	si.qDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
 
+	si.linearAcc.clear();
+	si.pcaAcc.clear();
+
 }
 
 #define ROUND_COEFFICIENT 100
@@ -282,7 +285,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //		current.vel = out_vel;
 #endif
 		//1 pca
-		#define PCA_DATA_NUM 5
+		#define PCA_DATA_NUM 10
 
 		if(gLinearAcc.size() >= PCA_DATA_NUM)
 		{
@@ -305,6 +308,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			pca.y = eigen(0, 1);
 			pca.z = eigen(0, 2);
 			gPC.push_back(pca);
+			current.pcaAcc.push_back(pca);
 
 			DBG("mean (%.2f, %.2f, %.2f), eigen (%.2f, %.2f, %.2f)\n",
 				mean(0, 0), mean(0, 1), mean(0, 2),
@@ -450,10 +454,11 @@ void reset_measure()
 	init_time = 0;
 }
 
-const SensorIntegration & get_current_sensor_data()
+SensorIntegration & get_current_sensor_data()
 {
 	return current;
 }
+
 void sensor_callback_register(Sensor_Cb func, void* data)
 {
 	sensor_callback_func = func,

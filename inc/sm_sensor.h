@@ -27,6 +27,7 @@ typedef struct
 	glm::vec3 pos;
 
 	std::vector<glm::vec3> linearAcc;
+	std::vector<glm::vec3> pcaAcc;
 
 }SensorIntegration;
 
@@ -50,7 +51,7 @@ void sensor_deinit(sensor_info* sensor);
 void sensor_listen_pause(sensor_info* sensor);
 void sensor_listen_resume(sensor_info* sensor);
 void reset_measure();
-const SensorIntegration & get_current_sensor_data();
+SensorIntegration & get_current_sensor_data();
 
 /**
  * register ONE callback function which called when the sensor event comes
