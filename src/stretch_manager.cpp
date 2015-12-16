@@ -95,6 +95,11 @@ static void stretching_sensor_cb(void* data)
 			// not moving
 			if (len < 2.0)
 			{
+				sMgr->is_progress = false;
+				// make false the progressing
+				stretching_stop();
+				double prob = 1.0;
+
 				Hmm_Model* hmm = read_model_from_file("hmm_up");
 
 				seq.CreateSymbols(si.linearAcc);
@@ -142,25 +147,34 @@ static void stretching_sensor_cb(void* data)
 				}
 #endif
 
-				ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, seq.mSymbols.size(), 1,  seq.mSymbols.size());
-				//ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols[0]), (seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH ? HMM_MODEL_MAX_LENGTH : seq.mSymbols.size()));
-				ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols.at(0)), seq.mSymbols.size() );
+				if(seq.mSymbols.size() > 3) {
+					if (seq.mSymbols.size() < HMM_MODEL_MAX_LENGTH) {
+						for (int i = seq.mSymbols.size(); i < HMM_MODEL_MAX_LENGTH; i++) {
+							seq.mSymbols.push_back(seq.mSymbols[i - 1]);
+						}
 
-				//free(temp);
+					}
 
-				// make false the progressing
-				sMgr->is_progress = false;
-				stretching_stop();
 
-				double prob = hmm_evaluate(hmm, test_seq);
-				if(prob > -150.0 && prob < 1)
-				{
+					ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, seq.mSymbols.size(), 1,
+																		 seq.mSymbols.size());
+					//ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols[0]), (seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH ? HMM_MODEL_MAX_LENGTH : seq.mSymbols.size()));
+					ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols.at(0)), seq.mSymbols.size());
+
+					//free(temp);
+
+					prob = hmm_evaluate(hmm, test_seq);
+				}
+
+
+				// Determine the success or fail.
+				if (prob > -150.0 && prob < 1) {
 					sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
 				}
-				else
-				{
+				else {
 					sMgr->func(sMgr->type, sMgr->state, STRETCH_FAIL, sMgr->func_data);
 				}
+
 
 			}
 
