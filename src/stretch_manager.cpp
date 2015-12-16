@@ -1,6 +1,7 @@
 #include <string.h>
 #include <sensor/sensor.h>
 #include <sm_sensor.h>
+#include <logger.h>
 
 #include "sequence.h"
 #include "stretch_manager.h"
@@ -18,6 +19,8 @@ typedef unsigned char bool;
 #define false 0
 #endif
 
+using namespace std;
+using namespace glm;
 
 typedef struct
 {
@@ -65,17 +68,48 @@ static void sensor_control(bool enable, bool reset)
 
 static void stretching_sensor_cb(void* data)
 {
-	// TODO: get sensor data
+	// get sensor data
+	SensorIntegration si = get_current_sensor_data();
+	Sequence seq;
+	Sequence seq_pca;
 
-	// TODO: decide whether the state is changed
+	if (si.linearAcc.size() > 200)
+	{
+		vector<vec3>::iterator itr = si.linearAcc.end();
 
-	// TODO: HMM
+		itr--;
+		float len = 0;
+		DBG("Sequence last11111 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+		len = length(*itr--);
+		DBG("Sequence last22222 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+		len += length(*itr--);
+		DBG("Sequence last33333 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+		len += length(*itr--);
 
-	// TODO: call sMgr->func with the result
+		DBG("Sequence tail length: %f\n", len);
+		// not moving
+		if (len < 2.0)
+		{
+
+			DBG("Sequence generate!\n");
+			seq.CreateSymbols(si.linearAcc);
+			seq.PrintSymbols();
+
+			DBG("Pca Sequence generate!\n");
+			seq_pca.CreateSymbols(si.pcaAcc);
+			seq_pca.PrintSymbols();
+
+			sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
+			// make false the progressing
+			sMgr->is_progress = false;
+			stretching_stop();
+		}
 
 
-	// make false the progressing
-	sMgr->is_progress = false;
+	}
+
+
+
 }
 
 static void stretch_manager_initialize()
@@ -141,8 +175,6 @@ void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb
 
 	// TODO: HMM
 	// get sequence
-	const SensorIntegration si = get_current_sensor_data();
-
 
 }
 
