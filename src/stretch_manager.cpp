@@ -105,7 +105,7 @@ static void stretching_sensor_cb(void* data)
 				seq_pca.CreateSymbols(si.pcaAcc);
 				seq_pca.PrintSymbols();
 
-				int* temp = (int*)malloc(sizeof(int)*HMM_MODEL_MAX_LENGTH);
+//				int* temp = (int*)malloc(sizeof(int)*HMM_MODEL_MAX_LENGTH);
 
 #if 0
 
@@ -120,7 +120,7 @@ static void stretching_sensor_cb(void* data)
 					memset(seq2, 26, 1172);
 					memcpy(seq2, &(seq.mSymbols[0]), 1172);
 				}
-#else
+
 				if(seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH)
 				{
 					for(int i = 0;
@@ -142,18 +142,18 @@ static void stretching_sensor_cb(void* data)
 				}
 #endif
 
-				ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, HMM_MODEL_MAX_LENGTH, 1,  HMM_MODEL_MAX_LENGTH);
+				ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, seq.mSymbols.size(), 1,  seq.mSymbols.size());
 				//ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols[0]), (seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH ? HMM_MODEL_MAX_LENGTH : seq.mSymbols.size()));
-				ghmm_dseq_copy(test_seq->seq[0], temp, HMM_MODEL_MAX_LENGTH);
+				ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols.at(0)), seq.mSymbols.size() );
 
-				free(temp);
+				//free(temp);
 
 				// make false the progressing
 				sMgr->is_progress = false;
 				stretching_stop();
 
 				double prob = hmm_evaluate(hmm, test_seq);
-				if(prob > -600.0 && prob < 1)
+				if(prob > -150.0 && prob < 1)
 				{
 					sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
 				}
@@ -168,7 +168,8 @@ static void stretching_sensor_cb(void* data)
 		}
 	} // unfold state
 	else if(sMgr->state == STRETCH_STATE_HOLD)
-	{
+	{
+
 		if(si.linearAcc.size() > 100)
 		{
 			vector<vec3>::iterator itr = si.linearAcc.end();

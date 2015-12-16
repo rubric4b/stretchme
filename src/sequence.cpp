@@ -14,7 +14,7 @@
 
 #include "sequence.h"
 
-#define NUM_CIRCLE_PTS 8
+#define NUM_CIRCLE_PTS 6
 
 using namespace std;
 using namespace glm;
@@ -85,7 +85,7 @@ int Sequence::GetRefNum(const vec3& v) {
 
     // stay
     if (length(v) < 1.0) {
-        return mRefVector.size();
+        return -1;
     }
 
 
@@ -118,15 +118,21 @@ struct comp_object {
 
 void Sequence::CreateSymbols(vector<vec3> vectors) {
 
+    int prev_num = -1;
+
     for(vector<vec3>::iterator itr = vectors.begin();
         itr != vectors.end(); itr++)
     {
-        mSymbols.push_back(GetRefNum(*itr));
+        int num = GetRefNum(*itr);
+        if(num >= 0 && prev_num != num)
+            mSymbols.push_back(num);
+
+        prev_num = num;
     }
 
 }
 
-void Sequence::PrintSymbols(    ) {
+void Sequence::PrintSymbols() {
     stringstream buff_s;
     int cnt = 0;
     for(vector<int>::iterator itr = mSymbols.begin();
