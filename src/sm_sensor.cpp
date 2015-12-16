@@ -7,8 +7,7 @@
 
 #include <limits>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <sm_sensor.h>
 
 #include "pca/embedppca.h"
 #include "kalman_manager.h"
@@ -17,25 +16,6 @@
 #define UPDATE_RATE 10 // millisecond
 
 using namespace glm;
-
-typedef struct
-{
-	unsigned int timestamp; // id
-
-	vec3 acc;
-	bool acc_updated;
-	vec3 gyro;
-	bool gyro_updated;
-
-//	quat qAccelOrientation; // Quaternion between accelerometer vector and GRAVITY_VECTOR vector
-	quat qDeviceOrientation; // Quaternion of device orientation
-
-	vec3 vel;
-	vec3 pos;
-
-	Sequence seq;
-
-}SensorIntegration;
 
 SensorIntegration prev;
 SensorIntegration current;
@@ -106,6 +86,8 @@ quat get_rotation_between(vec3 u, vec3 v)
 static void
 on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 {
+	sensor_info * si = static_cast<sensor_info *>(user_data);
+
 	static unsigned long long acc_cnt = 0;
 	static unsigned long long gyro_cnt = 0;
 
@@ -148,9 +130,9 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				acc_cnt = 0;
 
 
-			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
-			DBG("ACCELEROM\t length %f\n",length(current.acc));
-			DBG("ACCELEROM\t diff %f\n", diff);
+//			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+//			DBG("ACCELEROM\t length %f\n",length(current.acc));
+//			DBG("ACCELEROM\t diff %f\n", diff);
 		}
 		break;
 
@@ -160,10 +142,6 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			double x_angle = event->values[0] * (pi<double>() / 180.0); // degree to radian
 			double y_angle = event->values[1] * (pi<double>() / 180.0);
 			double z_angle = event->values[2] * (pi<double>() / 180.0);
-
-//			double x_angle = event->values[0];
-//			double y_angle = event->values[1];
-//			double z_angle = event->values[2];
 
 			current.gyro = adjust_error_vector( vec3(x_angle, y_angle, z_angle));
 			current.gyro_updated = true;
@@ -178,8 +156,8 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			else
 				gyro_cnt = 0;
 
-			DBG("GYROSCOPE\t( %6d )\t%f\t%f\t%f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
-			DBG("GYROSCOPE\t diff %f\n", diff);
+//			DBG("GYROSCOPE\t( %6d )\t%f\t%f\t%f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
+//			DBG("GYROSCOPE\t diff %f\n", diff);
 		}
 		break;
 
@@ -219,9 +197,9 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		acc_cnt = 0;
 		gyro_cnt = 0;
 
-		DBG("updated\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
-		DBG("updated\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
-			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
+//		DBG("updated\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+//		DBG("updated\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+//			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
 
 		current.acc_updated = false;
 		current.gyro_updated = false;
@@ -244,12 +222,12 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		angleVelocity *= dt;
 
 		current.qDeviceOrientation = prev.qDeviceOrientation + angleVelocity;
-		normalize(current.qDeviceOrientation);
+		current.qDeviceOrientation = normalize(current.qDeviceOrientation);
 
-		DBG("prevORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
-			prev.qDeviceOrientation.w, prev.qDeviceOrientation.x, prev.qDeviceOrientation.y, prev.qDeviceOrientation.z);
-		DBG("currORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
-			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
+//		DBG("prevORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+//			prev.qDeviceOrientation.w, prev.qDeviceOrientation.x, prev.qDeviceOrientation.y, prev.qDeviceOrientation.z);
+//		DBG("currORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+//			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
 
 		//1 Linear acceleration
 		//3 : Subtract gravity vector from adjusted accelerometer vector (rotated by inverse of device orientation)
@@ -257,14 +235,14 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		// current accel to world space
 		vec3 adjustedAcc = mat3_cast(current.qDeviceOrientation) * current.acc;
 
-		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",	time_diff, adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
+//		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",	time_diff, adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
 
 		vec3 linearAcc = adjust_error_vector(adjustedAcc - INIT_GRAVITY_VECTOR);
 
 		gLinearAcc.push_back(linearAcc);
+		current.linearAcc.push_back(linearAcc);
 
-		DBG("LINEARACC\t( %6d )\t%.2f\t%.5f\t%.2f\n",
-			time_diff, linearAcc.x, linearAcc.y, linearAcc.z);
+		DBG("LINEARACC\t( %6d )\t%.2f\t%.5f\t%.2f\n", time_diff, linearAcc.x, linearAcc.y, linearAcc.z);
 
 
 		//1 Position
@@ -328,7 +306,6 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				mean(0, 0), mean(0, 1), mean(0, 2),
 				eigen(0, 0), eigen(0,1), eigen(0,2));
 
-			current.seq.GetRefNum(vec3(eigen(0, 0), eigen(0,1), eigen(0,2)));
 
 			gLinearAcc.clear();
 		}
@@ -336,7 +313,6 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		current.acc_updated = false;
 		current.gyro_updated = false;
 		prev = current;
-//		ResetSensorIntegration(current);
 	}
 
 }
@@ -419,7 +395,7 @@ void sensor_listen_pause(sensor_info* sensor)
 void sensor_listen_resume(sensor_info* sensor)
 {
 	int error;
-	error = sensor_listener_set_event_cb(sensor->listener, UPDATE_RATE, on_sensor_event, NULL);
+	error = sensor_listener_set_event_cb(sensor->listener, UPDATE_RATE, on_sensor_event, sensor);
 
 	if(error)
 	{
@@ -456,9 +432,17 @@ void sensor_deinit(sensor_info* sensor)
 		ERR("sensor destory failed\n");
 		return;
 	}
+
+	free(sensor);
 }
 
 void reset_measure()
 {
 	init_time = 0;
+}
+
+
+const SensorIntegration & get_current_sensor_data()
+{
+	return current;
 }

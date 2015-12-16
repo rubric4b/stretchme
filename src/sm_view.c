@@ -194,7 +194,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
-	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
+//	stretching_start(STRETCH_STATE_FOLD, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
 
 	/* Base Layout */
 	char edj_path[PATH_MAX] = {0, };
