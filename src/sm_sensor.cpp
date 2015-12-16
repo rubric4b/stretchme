@@ -12,12 +12,11 @@
 
 #include "pca/embedppca.h"
 #include "kalman_manager.h"
+#include "sequence.h"
 
-#define UPDATE_RATE 20 // millisecond
+#define UPDATE_RATE 10 // millisecond
 
 using namespace glm;
-
-const vec3 GRAVITY_VECTOR(0, 0, 9.8f);
 
 typedef struct
 {
@@ -28,13 +27,13 @@ typedef struct
 	vec3 gyro;
 	bool gyro_updated;
 
-	quat qAccelOrientation; // Quaternion between accelerometer vector and GRAVITY_VECTOR vector
+//	quat qAccelOrientation; // Quaternion between accelerometer vector and GRAVITY_VECTOR vector
 	quat qDeviceOrientation; // Quaternion of device orientation
 
 	vec3 vel;
 	vec3 pos;
 
-	quat orientation;
+	Sequence seq;
 
 }SensorIntegration;
 
@@ -51,10 +50,8 @@ static void ResetSensorIntegration(SensorIntegration& si)
 	si.pos = vec3(0);
 	si.vel = vec3(0);
 
-	si.qAccelOrientation = quat(1.0, 0.0, 0.0, 0.0);
 	si.qDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
 
-	si.orientation = quat(1.0, 0.0, 0.0, 0.0);
 }
 
 #define ROUND_COEFFICIENT 100
@@ -78,17 +75,44 @@ static vec3 adjust_error_vector(vec3 v)
 
 static unsigned long long init_time = 0;
 
+const vec3 INIT_GRAVITY_VECTOR(-0.33, 0.33, 9.87);
+//const vec3 INIT_GRAVITY_VECTOR(0.0, 0.0, 9.9);
+
 std::vector<vec3> gLinearAcc;
 std::vector<vec3> gPC;
+
+double length_2(const vec3& in) {
+	double len = length(in);
+	return len * len;
+}
+
+quat get_rotation_between(vec3 u, vec3 v)
+{
+
+	double k_cos_theta = dot(u, v);
+	double k = sqrt(length_2(u) * length_2(v));
+
+	if( k_cos_theta / k == -1)
+	{
+		// 180 degree rotation around any orthogonal vector;
+		return quat(0, vec3(0));
+	}
+
+	return normalize(quat(k_cos_theta + k, cross(u, v)));
+
+}
+
 
 static void
 on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 {
+	static unsigned long long acc_cnt = 0;
+	static unsigned long long gyro_cnt = 0;
+
 	// Select a specific sensor with a sensor handle
 	// This example uses sensor type, assuming there is only 1 sensor for each type
 	sensor_type_e type;
 	sensor_get_type(sensor, &type);
-
 
 	bool reset = false;
 
@@ -112,15 +136,21 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		case SENSOR_ACCELEROMETER:
 		{
 			// Use sensor information
-			current.acc = adjust_error_vector(vec3(event->values[0],
-												   event->values[1],
-												   event->values[2]));
+			current.acc = vec3(event->values[0], event->values[1], event->values[2]);
 			current.acc_updated = true;
 
-//			current.qAccelOrientation =
-//					current.qAccelOrientation.FromTwoVectors(current.acc, GRAVITY_VECTOR);
+			double diff = abs(length(current.acc) - length(prev.acc)) / length(prev.acc);
+			diff *= 100.0;
 
-//			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+			if(diff < 2.0)
+				acc_cnt++;
+			else
+				acc_cnt = 0;
+
+
+			DBG("ACCELEROM\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+			DBG("ACCELEROM\t length %f\n",length(current.acc));
+			DBG("ACCELEROM\t diff %f\n", diff);
 		}
 		break;
 
@@ -131,10 +161,25 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			double y_angle = event->values[1] * (pi<double>() / 180.0);
 			double z_angle = event->values[2] * (pi<double>() / 180.0);
 
-			current.gyro = adjust_error_vector(vec3(x_angle, y_angle, z_angle));
+//			double x_angle = event->values[0];
+//			double y_angle = event->values[1];
+//			double z_angle = event->values[2];
+
+			current.gyro = adjust_error_vector( vec3(x_angle, y_angle, z_angle));
 			current.gyro_updated = true;
 
-//			DBG("GYROSCOPE\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
+			double curr_length = (length(current.gyro) == 0) ? 0.0001 : length(current.gyro);
+			double prev_length = (length(prev.gyro) == 0) ? 0.0001 : length(prev.gyro);
+			double diff = abs(curr_length - prev_length) / prev_length;
+			diff *= 100.0;
+
+			if(diff < 1.0)
+				gyro_cnt++;
+			else
+				gyro_cnt = 0;
+
+			DBG("GYROSCOPE\t( %6d )\t%f\t%f\t%f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
+			DBG("GYROSCOPE\t diff %f\n", diff);
 		}
 		break;
 
@@ -142,87 +187,85 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		break;
    }
 
+
 	// the first time
 	if(reset && current.acc_updated)
 	{
+//		ResetSensorIntegration(current);
+
 		current.timestamp = time_diff;
-		vec3 axis = cross(GRAVITY_VECTOR, current.acc);
-		vec3 gravity = GRAVITY_VECTOR;
-		vec3 curacc = current.acc;
-		float half_angle = dot(normalize(gravity), normalize(curacc));
-		half_angle = acos(half_angle) / 2.0f;
-
-		current.qDeviceOrientation =
-				quat(cos(half_angle), vec3(sin(half_angle)) * axis);
-
-//		current.qDeviceOrientation =
-//				current.qDeviceOrientation.FromTwoVectors(GRAVITY_VECTOR, current.acc);
-				// the first device orientation
-
-		normalize(current.qDeviceOrientation);
-		normalize(current.qAccelOrientation);
-
+		current.qDeviceOrientation = get_rotation_between(current.acc, INIT_GRAVITY_VECTOR);
 		current.pos = vec3(0, 0, 0);
 		current.vel = vec3(0, 0, 0);
+		current.acc_updated = false;
+		current.gyro_updated = false;
 
 		prev = current;
 
 //		DBG("initial ORIENTATA\t( %6d )\t%.2f\t%.5f\t%.2f\t%.2f\n", time_diff, current.qDeviceOrientation.w(), current.qDeviceOrientation.x(), current.qDeviceOrientation.y(), current.qDeviceOrientation.z());
 
-		ResetSensorIntegration(current);
 
 		return;
 	}
+
+
+	// Update rotation
+	if (acc_cnt > 20 && gyro_cnt > 20)
+	{
+
+		current.timestamp = time_diff;
+		current.qDeviceOrientation = get_rotation_between(current.acc, INIT_GRAVITY_VECTOR);
+
+		acc_cnt = 0;
+		gyro_cnt = 0;
+
+		DBG("updated\t( %6d )\t%.2f\t%.2f\t%.2f\n", time_diff, current.acc.x, current.acc.y, current.acc.z);
+		DBG("updated\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
+
+		current.acc_updated = false;
+		current.gyro_updated = false;
+
+		prev = current;
+
+		return;
+	}
+
 
 	if( current.acc_updated && current.gyro_updated )
 	{
 		current.timestamp = time_diff;
 		float dt = (float)(current.timestamp - prev.timestamp)/1000;
 
-//		vec3 deltaGyro = current.gyro * dt;
-
 		// quaternion for gyroscope's angle
-		quat angleVelocity = quat(0, current.gyro.x, current.gyro.y, current.gyro.z);
-		angleVelocity = prev.orientation * angleVelocity;
+		quat angleVelocity = quat(0, current.gyro);
+		angleVelocity = prev.qDeviceOrientation * angleVelocity;
 		angleVelocity *= 0.5f;
 		angleVelocity *= dt;
 
-		current.orientation = prev.orientation + angleVelocity;
+		current.qDeviceOrientation = prev.qDeviceOrientation + angleVelocity;
+		normalize(current.qDeviceOrientation);
 
-		current.orientation = normalize(current.orientation);
-
-//		DBG("FUCK QUAT! (%f, %f, %f, %f)\n", current.orientation.x, current.orientation.y, current.orientation.z, current.orientation.w );
-
-		float lenggg =sqrt(current.orientation.x * current.orientation.x +
-								   current.orientation.y * current.orientation.y +
-								   current.orientation.z * current.orientation.z +
-								   current.orientation.w * current.orientation.w
-								   );
-//		DBG("LENGTH! %f\n",lenggg);
-
-//		DBG("aORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff, prev.qDeviceOrientation.w(), prev.qDeviceOrientation.x(), prev.qDeviceOrientation.y(), prev.qDeviceOrientation.z());
-//		DBG("cORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff, current.qDeviceOrientation.w(), current.qDeviceOrientation.x(), current.qDeviceOrientation.y(), current.qDeviceOrientation.z());
+		DBG("prevORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+			prev.qDeviceOrientation.w, prev.qDeviceOrientation.x, prev.qDeviceOrientation.y, prev.qDeviceOrientation.z);
+		DBG("currORIENTATA\t( %6d )\t%.5f\t%.5f\t%.5f\t%.5f\n", time_diff,
+			current.qDeviceOrientation.w, current.qDeviceOrientation.x, current.qDeviceOrientation.y, current.qDeviceOrientation.z);
 
 		//1 Linear acceleration
 		//3 : Subtract gravity vector from adjusted accelerometer vector (rotated by inverse of device orientation)
-#if 1
 		// subtract gravity from adjusted accelerometer
-//		vec3 adjustedAcc = current.qDeviceOrientation.inverse() * current.acc;
-		vec3 adjustedAcc = mat3_cast(current.orientation) * current.acc;
-//		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",	time_diff, adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
+		// current accel to world space
+		vec3 adjustedAcc = mat3_cast(current.qDeviceOrientation) * current.acc;
 
-		vec3 linearAcc = adjust_error_vector(adjustedAcc - GRAVITY_VECTOR);
-#else
-		// subtract accelerometer from adjusted gravity
-		vec3 adjustGravity = current.qDeviceOrientation * GRAVITY_VECTOR;
-		vec3 tmpAcc = current.acc - adjustGravity;
-		vec3 linearAcc = current.qDeviceOrientation.inverse() * tmpAcc;
-#endif
+		DBG("ADJUSTEDACC\t( %6d )\t%.2f\t%.2f\t%.2f\n",	time_diff, adjustedAcc.x, adjustedAcc.y, adjustedAcc.z);
+
+		vec3 linearAcc = adjust_error_vector(adjustedAcc - INIT_GRAVITY_VECTOR);
 
 		gLinearAcc.push_back(linearAcc);
 
 		DBG("LINEARACC\t( %6d )\t%.2f\t%.5f\t%.2f\n",
 			time_diff, linearAcc.x, linearAcc.y, linearAcc.z);
+
 
 		//1 Position
 		//3 : integrate linear acceleration
@@ -285,12 +328,15 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				mean(0, 0), mean(0, 1), mean(0, 2),
 				eigen(0, 0), eigen(0,1), eigen(0,2));
 
+			current.seq.GetRefNum(vec3(eigen(0, 0), eigen(0,1), eigen(0,2)));
+
 			gLinearAcc.clear();
 		}
 
-
+		current.acc_updated = false;
+		current.gyro_updated = false;
 		prev = current;
-		ResetSensorIntegration(current);
+//		ResetSensorIntegration(current);
 	}
 
 }
