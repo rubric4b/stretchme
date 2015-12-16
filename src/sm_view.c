@@ -31,7 +31,7 @@ static void Stretch_Result_cb(StretchType type, StretchState state, StretchResul
 				// go to hold view
 				Hold_Stretch_cb(data, NULL, NULL);
 			}
-			else
+			else if(result == STRETCH_FAIL)
 			{
 				// go to fail view
 				Fail_Strecth_cb(data, NULL, NULL);
@@ -47,7 +47,7 @@ static void Stretch_Result_cb(StretchType type, StretchState state, StretchResul
 				// go to fold view
 				Fold_Stretch_cb(data, NULL, NULL);
 			}
-			else
+			else if(result == STRETCH_FAIL)
 			{
 				// store the result at app_data
 				ad->is_stretch_success = EINA_FALSE;
@@ -234,7 +234,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		action_icon_play_set(Hold_Animation, true, false, true);
 
 		// when holding animation is finished, go to next
-//		action_icon_finish_callback_add(Hold_Animation, Hold_Stretch_Anim_Finish_Cb, data);
+		action_icon_finish_callback_add(Hold_Animation, Hold_Stretch_Anim_Finish_Cb, data);
 	}
 	else
 	{
@@ -262,6 +262,9 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
+
+	// set success since user succeed to keep hold time
+	ad->is_stretch_success = EINA_TRUE;
 //	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
 
 	/* Base Layout */
