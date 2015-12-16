@@ -188,10 +188,6 @@ int test_model()
 
     printf("before learning -> log_p_forward: %f\n", log_p_forward);
 
-
-
-
-
     if(ghmm_dmodel_baum_welch(&hmm_up->model, my_output)) {
         fprintf(stdout, "error! \n");
     }
@@ -218,13 +214,31 @@ int test_model()
 
     save_model(hmm_up, "hmm_up");
 
-    read_model_from_file("hmm_up");
-
     ighmm_cmatrix_stat_free(&forward_alpha);
     ghmm_dseq_free(&my_output);
     free_hmm_model(hmm_up);
 
+    // read!
 
+    Hmm_Model* read_model = read_model_from_file("hmm_up");
+
+    ghmm_dseq *test_output = ghmm_dmodel_generate_sequences(&hmm_up->model, 1, 10, 1, 100);
+    ghmm_dseq_print(test_output, stdout);
+    int* new_seq = (int*)malloc(10 * sizeof(int));
+    for(int i=0; i<10; i++) new_seq[i] = 0;
+    ghmm_dseq_copy(test_output->seq[0], new_seq, 10);
+    ghmm_dseq_print(test_output, stdout);
+
+    if(ghmm_dmodel_baum_welch(&read_model->model, test_output)) {
+        fprintf(stdout, "error! \n");
+    }
+    fprintf(stdout,"transition matrix:\n");
+    ghmm_dmodel_A_print(stdout, &read_model->model, "", " ", "\n");
+    fprintf(stdout,"observation symbol matrix:\n");
+    ghmm_dmodel_B_print(stdout, &read_model->model, "", " ", "\n");
+
+    free_hmm_model(read_model);
+    ghmm_dseq_free(&test_output);
 
     return 0;
 }
