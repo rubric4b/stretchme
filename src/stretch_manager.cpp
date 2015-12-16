@@ -1,6 +1,8 @@
 #include <string.h>
 #include <sensor/sensor.h>
+#include <sm_sensor.h>
 
+#include "sequence.h"
 #include "stretch_manager.h"
 #include "sm_sensor.h"
 
@@ -120,6 +122,9 @@ void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb
 	sensor_control(true, true);
 
 	// TODO: HMM
+	// get sequence
+	const SensorIntegration si = get_current_sensor_data();
+
 
 }
 
