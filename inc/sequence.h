@@ -18,7 +18,10 @@ public:
 
 
     void AddRawSequence(std::vector<glm::vec3> seq);
-    int GetRefNum(glm::vec3 v);
+    int GetRefNum(const glm::vec3 &v);
+
+    void CreateSymbols(std::vector<glm::vec3> vectors);
+    void PrintSymbols();
 
 private:
     void InitRefVector();
@@ -33,7 +36,8 @@ public:
 
 
 private:
-    std::vector<glm::vec4> mRefVector;
+    std::vector<glm::vec3> mRefVector;
+    std::vector<int> mSymbols;
 
     int mSeqCount;
 
