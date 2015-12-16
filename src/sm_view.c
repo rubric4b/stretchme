@@ -21,6 +21,8 @@ static void Stretch_Result_cb(StretchType type, StretchState state, StretchResul
 {
 	appdata_s *ad = data;
 
+	DBG("type %d, state %d, result %d\n", type, state, result);
+
 	switch(state)
 	{
 		case STRETCH_STATE_UNFOLD:
@@ -58,7 +60,7 @@ static void Stretch_Result_cb(StretchType type, StretchState state, StretchResul
 		{
 			;
 		}
-	
+
 }
 }
 
@@ -146,7 +148,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 <font color=#FF00FF>위로</font> 뻗으세요");
+	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 위로 뻗으세요");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -199,8 +201,12 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	vibrate(300, 99);
 
+	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
+
 	stretching_stop();
 	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
+
+	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	Evas_Object *layout, *Hold_Animation;
 	Elm_Object_Item *nf_it = NULL;
@@ -237,6 +243,8 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Holding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
@@ -650,7 +658,6 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 }
-
 
 void
 create_main_view(appdata_s *ad)

@@ -66,7 +66,6 @@ const vec3 INIT_GRAVITY_VECTOR(-0.33, 0.33, 9.87);
 //const vec3 INIT_GRAVITY_VECTOR(0.0, 0.0, 9.9);
 
 std::vector<vec3> gLinearAcc;
-std::vector<vec3> gPC;
 
 double length_2(const vec3& in) {
 	double len = length(in);
@@ -307,13 +306,11 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 			pca.x = eigen(0, 0);
 			pca.y = eigen(0, 1);
 			pca.z = eigen(0, 2);
-			gPC.push_back(pca);
 			current.pcaAcc.push_back(pca);
 
 			DBG("mean (%.2f, %.2f, %.2f), eigen (%.2f, %.2f, %.2f)\n",
 				mean(0, 0), mean(0, 1), mean(0, 2),
 				eigen(0, 0), eigen(0,1), eigen(0,2));
-
 
 			gLinearAcc.clear();
 		}

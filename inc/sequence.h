@@ -32,12 +32,12 @@ private:
 
     //variables
 public:
+    std::vector<int> mSymbols;
 
 
 
 private:
     std::vector<glm::vec3> mRefVector;
-    std::vector<int> mSymbols;
 
     int mSeqCount;
 

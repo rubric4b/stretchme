@@ -2,6 +2,7 @@
 #include <sensor/sensor.h>
 #include <sm_sensor.h>
 #include <logger.h>
+#include <hmm_model.h>
 
 #include "sequence.h"
 #include "stretch_manager.h"
@@ -73,43 +74,124 @@ static void stretching_sensor_cb(void* data)
 	Sequence seq;
 	Sequence seq_pca;
 
-	if (si.linearAcc.size() > 200)
+	if(sMgr->state == STRETCH_STATE_UNFOLD)
 	{
-		vector<vec3>::iterator itr = si.linearAcc.end();
 
-		itr--;
-		float len = 0;
-		DBG("Sequence last11111 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
-		len = length(*itr--);
-		DBG("Sequence last22222 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
-		len += length(*itr--);
-		DBG("Sequence last33333 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
-		len += length(*itr--);
-
-		DBG("Sequence tail length: %f\n", len);
-		// not moving
-		if (len < 2.0)
+		if (si.linearAcc.size() > 200)
 		{
+			vector<vec3>::iterator itr = si.linearAcc.end();
 
-			DBG("Sequence generate!\n");
-			seq.CreateSymbols(si.linearAcc);
-			seq.PrintSymbols();
+			itr--;
+			float len = 0;
+			DBG("Sequence last11111 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+			len = length(*itr--);
+			DBG("Sequence last22222 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+			len += length(*itr--);
+			DBG("Sequence last33333 %f %f %f num: %d\n", itr.base()->x,itr.base()->y,itr.base()->z, seq.GetRefNum(*itr));
+			len += length(*itr--);
 
-			DBG("Pca Sequence generate!\n");
-			seq_pca.CreateSymbols(si.pcaAcc);
-			seq_pca.PrintSymbols();
+			DBG("Sequence tail length: %f\n", len);
 
-			sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
-			// make false the progressing
-			sMgr->is_progress = false;
-			stretching_stop();
+			// not moving
+			if (len < 2.0)
+			{
+				Hmm_Model* hmm = read_model_from_file("hmm_up");
+
+				seq.CreateSymbols(si.linearAcc);
+				seq.PrintSymbols();
+				DBG("Sequence generate! (%d / %d)\n", seq.mSymbols.size(), HMM_MODEL_MAX_LENGTH);
+
+				DBG("Pca Sequence generate!\n");
+				seq_pca.CreateSymbols(si.pcaAcc);
+				seq_pca.PrintSymbols();
+
+				int* temp = (int*)malloc(sizeof(int)*HMM_MODEL_MAX_LENGTH);
+
+#if 0
+
+				DBG("Sequence (%d / %d)\n", 1172 / sizeof(int), HMM_MODEL_MAX_LENGTH);
+
+				if(1172 / sizeof(int) >= HMM_MODEL_MAX_LENGTH)
+				{
+					memcpy(seq2, &(seq.mSymbols[0]), 1172);
+				}
+				else
+				{
+					memset(seq2, 26, 1172);
+					memcpy(seq2, &(seq.mSymbols[0]), 1172);
+				}
+#else
+				if(seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH)
+				{
+					for(int i = 0;
+							i < HMM_MODEL_MAX_LENGTH; i++)
+						temp[i] = seq.mSymbols.at(i);// + seq.mSymbols.size() - HMM_MODEL_MAX_LENGTH);
+
+	//				memcpy(temp, &(seq.mSymbols[seq.mSymbols.size() - HMM_MODEL_MAX_LENGTH]), sizeof(int) * HMM_MODEL_MAX_LENGTH);
+				}
+				else
+				{
+					for (int i = 0; i < seq.mSymbols.size() ; i++)
+						temp[i] = seq.mSymbols.at(i);
+	//				memset(temp, 26, HMM_MODEL_MAX_LENGTH);
+	//				memcpy(temp, &(seq.mSymbols[0]), sizeof(int) * HMM_MODEL_MAX_LENGTH);
+					for (int i = seq.mSymbols.size(); i < HMM_MODEL_MAX_LENGTH; i++)
+					{
+						temp[i] = 26;
+					}
+				}
+#endif
+
+				ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, HMM_MODEL_MAX_LENGTH, 1,  HMM_MODEL_MAX_LENGTH);
+				//ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols[0]), (seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH ? HMM_MODEL_MAX_LENGTH : seq.mSymbols.size()));
+				ghmm_dseq_copy(test_seq->seq[0], temp, HMM_MODEL_MAX_LENGTH);
+
+				free(temp);
+
+				// make false the progressing
+				sMgr->is_progress = false;
+				stretching_stop();
+
+				double prob = hmm_evaluate(hmm, test_seq);
+				if(prob > -600.0 && prob < 1)
+				{
+					sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
+				}
+				else
+				{
+					sMgr->func(sMgr->type, sMgr->state, STRETCH_FAIL, sMgr->func_data);
+				}
+
+			}
+
+
 		}
+	} // unfold state
+	else if(sMgr->state == STRETCH_STATE_HOLD)
+	{
+		if(si.linearAcc.size() > 100)
+		{
+			vector<vec3>::iterator itr = si.linearAcc.end();
 
+			itr--;
+			float len = 0;
+			len = length(*itr--);
+			len += length(*itr--);
+			len += length(*itr--);
 
+			DBG("Sequence tail length: %f\n", len);
+
+			// check moving
+			if (len > 10.0)
+			{
+				// make false the progressing
+				sMgr->is_progress = false;
+				stretching_stop();
+
+				sMgr->func(sMgr->type, sMgr->state, STRETCH_FAIL, sMgr->func_data);
+			}
+		}
 	}
-
-
-
 }
 
 static void stretch_manager_initialize()

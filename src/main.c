@@ -144,11 +144,16 @@ ui_app_low_memory(app_event_info_h event_info, void *user_data)
 	/*APP_EVENT_LOW_MEMORY*/
 }
 
+#include "hmm_model.h"
+
 int
 main(int argc, char *argv[])
 {
 	appdata_s ad = {0,};
 	int ret = 0;
+
+	init_hmm();
+	test_model();
 
 	ui_app_lifecycle_callback_s event_callback = {0,};
 	app_event_handler_h handlers[5] = {NULL, };

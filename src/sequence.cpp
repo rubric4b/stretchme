@@ -14,7 +14,7 @@
 
 #include "sequence.h"
 
-#define NUM_CIRCLE_PTS 5
+#define NUM_CIRCLE_PTS 8
 
 using namespace std;
 using namespace glm;
