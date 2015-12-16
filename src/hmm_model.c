@@ -32,7 +32,7 @@ int seq2[] = {3,12,13,10,18,13,16,13,5,8,19,11,14,3,14,19,8,5,15,8,11,
 
 int seq3[] = {0,13,13,3,14,3,14,8,5,8,14,11,10,12,3,14,11,14,3,0,11,
               0,11,0,13,12,13,4,18,13,18,13,18,13,10,12,10,13,12,2,5,2,
-              19,11,19,14,11,14,11,11,11,11};
+              19,11,19,14,11,14,11,11};
 
 
 int seq4[] = {0,3,18,13,16,18,8,11,14,6,11,14,17,6,11,3,14,3,4,18,16,
@@ -242,8 +242,14 @@ int test_model()
         memcpy(temp, seqs[i], sizeof(int)*seqs_length[i]);
         if( seqs_length[i] < max_length)
         {
-            for (int j = seqs_length[i] ; j < max_length; j++)
+            int k = 0;
+            for(k = max_length - 1; temp[max_length - 1] == temp[k - 1]; k--);
+            temp[max_length] = temp[k];
+
+            for (int j = seqs_length[i] + 1 ; j < max_length; j++)
+            {
                 temp[j] = temp[j-1];
+            }
         }
 
         ghmm_dseq_copy(my_output->seq[i], temp, max_length);
