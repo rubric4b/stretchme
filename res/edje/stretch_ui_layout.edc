@@ -255,7 +255,7 @@ collections {
 		} // parts
 	} // group
 
-	group { name: "stretch_success";
+	group { name: "stretch_result";
 
 	    parts {
 

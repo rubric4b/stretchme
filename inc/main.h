@@ -39,6 +39,10 @@ typedef struct appdata {
 	Evas_Object *datetime;
 	Eext_Circle_Surface *circle_surface;
 	struct tm saved_time;
+
+	// view
+	Ecore_Timer * fold_timer;
+	Eina_Bool is_stretch_success;
 } appdata_s;
 
 void app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max);
