@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
 	STRETCH_ARM_UP,
@@ -52,5 +56,9 @@ void stretching_stop();
  * get the last matching rate (percentage)
  */
 float stretching_get_matching_rate();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __STRETCH_MANAGER_H__

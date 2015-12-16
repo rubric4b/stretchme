@@ -63,6 +63,21 @@ static void sensor_control(bool enable, bool reset)
 	}
 }
 
+static void stretching_sensor_cb(void* data)
+{
+	// TODO: get sensor data
+
+	// TODO: decide whether the state is changed
+
+	// TODO: HMM
+
+	// TODO: call sMgr->func with the result
+
+
+	// make false the progressing
+	sMgr->is_progress = false;
+}
+
 static void stretch_manager_initialize()
 {
 	if(sMgr)
@@ -121,6 +136,9 @@ void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb
 	// turn on the sensor
 	sensor_control(true, true);
 
+	// register callback to get sensor event data
+	sensor_callback_register(stretching_sensor_cb, NULL);
+
 	// TODO: HMM
 	// get sequence
 	const SensorIntegration si = get_current_sensor_data();
@@ -152,5 +170,4 @@ float stretching_get_matching_rate()
 
 	return 0.0f;
 }
-
 
