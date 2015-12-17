@@ -72,7 +72,6 @@ static void stretching_sensor_cb(void* data)
 	// get sensor data
 	SensorIntegration si = get_current_sensor_data();
 	Sequence seq;
-	Sequence seq_pca;
 
 	if(sMgr->state == STRETCH_STATE_UNFOLD)
 	{
@@ -93,7 +92,7 @@ static void stretching_sensor_cb(void* data)
 			DBG("Sequence tail length: %f\n", len);
 
 			// not moving
-			if (len < 2.0)
+			if (len < 1.5)
 			{
 				sMgr->is_progress = false;
 				// make false the progressing
@@ -105,10 +104,6 @@ static void stretching_sensor_cb(void* data)
 				seq.CreateSymbols(si.linearAcc);
 				seq.PrintSymbols();
 				DBG("Sequence generate! (%d / %d)\n", seq.mSymbols.size(), HMM_MODEL_MAX_LENGTH);
-
-				DBG("Pca Sequence generate!\n");
-				seq_pca.CreateSymbols(si.pcaAcc);
-				seq_pca.PrintSymbols();
 
 //				int* temp = (int*)malloc(sizeof(int)*HMM_MODEL_MAX_LENGTH);
 
@@ -168,7 +163,7 @@ static void stretching_sensor_cb(void* data)
 
 
 				// Determine the success or fail.
-				if (prob > -150.0 && prob < 1) {
+				if (prob > -175.0 && prob < 1) {
 					sMgr->func(sMgr->type, sMgr->state, STRETCH_SUCCESS, sMgr->func_data);
 				}
 				else {

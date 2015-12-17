@@ -37,7 +37,6 @@ static void ResetSensorIntegration(SensorIntegration& si)
 	si.qDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
 
 	si.linearAcc.clear();
-	si.pcaAcc.clear();
 
 }
 
@@ -117,10 +116,10 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		reset = true;
 	}
 
-   unsigned int time_diff = (unsigned int)(event->timestamp/1000 - init_time);
+	unsigned int time_diff = (unsigned int)(event->timestamp/1000 - init_time);
 
-   switch (type)
-   {
+	switch (type)
+	{
 		case SENSOR_ACCELEROMETER:
 		{
 			// Use sensor information
@@ -140,7 +139,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //			DBG("ACCELEROM\t length %f\n",length(current.acc));
 //			DBG("ACCELEROM\t diff %f\n", diff);
 		}
-		break;
+			break;
 
 		case SENSOR_GYROSCOPE :
 		{
@@ -165,11 +164,11 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //			DBG("GYROSCOPE\t( %6d )\t%f\t%f\t%f\n", time_diff, current.gyro.x, current.gyro.y, current.gyro.z);
 //			DBG("GYROSCOPE\t diff %f\n", diff);
 		}
-		break;
+			break;
 
 		default:
-		break;
-   }
+			break;
+	}
 
 
 	// the first time
@@ -284,7 +283,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 //		current.vel = out_vel;
 #endif
 		//1 pca
-		#define PCA_DATA_NUM 10
+/*		#define PCA_DATA_NUM 10
 
 		if(gLinearAcc.size() >= PCA_DATA_NUM)
 		{
@@ -313,7 +312,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				eigen(0, 0), eigen(0,1), eigen(0,2));
 
 			gLinearAcc.clear();
-		}
+		}*/
 
 		if(sensor_callback_func)
 		{
@@ -459,6 +458,36 @@ SensorIntegration & get_current_sensor_data()
 void sensor_callback_register(Sensor_Cb func, void* data)
 {
 	sensor_callback_func = func,
-	sensor_callback_func_data = data;
+			sensor_callback_func_data = data;
 }
 
+vec3 get_pca_eigen()
+{
+
+
+	Eigen::MatrixXd eigen = Eigen::MatrixXd::Zero(current.linearAcc.size(), 3);
+	Eigen::MatrixXd data = Eigen::MatrixXd::Zero(current.linearAcc.size(), 3);
+	Eigen::MatrixXd mean = Eigen::MatrixXd::Zero(1, 3);
+
+	for(int i = 0; i < current.linearAcc.size(); i++)
+	{
+		data(i, 0) = current.linearAcc[i].x;
+		data(i, 1) = current.linearAcc[i].y;
+		data(i, 2) = current.linearAcc[i].z;
+	}
+
+	GPCMEmbedPPCA(eigen, data, mean);
+
+	// use only the best principle eigen
+	vec3 pca;
+	pca.x = eigen(0, 0);
+	pca.y = eigen(0, 1);
+	pca.z = eigen(0, 2);
+
+	DBG("mean (%.2f, %.2f, %.2f), eigen (%.2f, %.2f, %.2f)\n",
+		mean(0, 0), mean(0, 1), mean(0, 2),
+		eigen(0, 0), eigen(0,1), eigen(0,2));
+
+	return pca;
+
+}
