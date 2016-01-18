@@ -17,18 +17,23 @@ typedef struct
 	unsigned int timestamp; // id
 
 	glm::vec3 acc;
-	bool acc_updated;
+	glm::vec3 kAcc;
+	bool isAccUpdated;
 	glm::vec3 gyro;
-	bool gyro_updated;
+	glm::vec3 kGyro;
+	bool isGyroUpdated;
 
 	glm::quat qDeviceOrientation; // Quaternion of device orientation
+	glm::quat qKDeviceOrientation; // Quaternion of device orientation
 
 	glm::vec3 vel;
 	glm::vec3 pos;
+	glm::vec3 kpos;
 
 	std::vector<glm::vec3> linearAcc;
+	std::vector<glm::vec3> kLinearAcc;
 
-}SensorIntegration;
+}sensor_data_info;
 
 typedef struct
 {
@@ -50,7 +55,7 @@ void sensor_deinit(sensor_info* sensor);
 void sensor_listen_pause(sensor_info* sensor);
 void sensor_listen_resume(sensor_info* sensor);
 void reset_measure();
-SensorIntegration & get_current_sensor_data();
+sensor_data_info & get_current_sensor_data();
 glm::vec3 get_pca_eigen();
 
 /**

@@ -70,7 +70,7 @@ static void sensor_control(bool enable, bool reset)
 static void stretching_sensor_cb(void* data)
 {
 	// get sensor data
-	SensorIntegration si = get_current_sensor_data();
+	sensor_data_info si = get_current_sensor_data();
 	Sequence seq;
 
 	if(sMgr->state == STRETCH_STATE_UNFOLD)
