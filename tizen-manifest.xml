@@ -4,8 +4,14 @@
     <ui-application appid="org.example.stretchme" exec="stretchme" multiple="false" nodisplay="false" taskmanage="true" type="capp">
         <label>stretchme</label>
         <icon>stretchme.png</icon>
+        <app-control>
+            <operation name="http://tizen.org/appcontrol/operation/default"/>
+            <uri name="NULL"/>
+            <mime name="NULL"/>
+        </app-control>
     </ui-application>
     <privileges>
+        <privilege>http://tizen.org/privilege/appmanager.launch</privilege>
         <privilege>http://tizen.org/privilege/haptic</privilege>
     </privileges>
 </manifest>

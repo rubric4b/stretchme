@@ -3,6 +3,8 @@
 #include <time.h>
 
 #include <app.h>
+#include <app_control.h>
+
 #include <device/haptic.h>
 
 #include "main.h"
@@ -84,10 +86,30 @@ app_create(void *data)
 	return true;
 }
 
+static bool
+_app_control_extra_data_cb(app_control_h app_control, const char *key, void *user_data)
+{
+   int ret;
+   char *value;
+
+   ret = app_control_get_extra_data(app_control, key, &value);
+   if (ret != APP_CONTROL_ERROR_NONE)
+   {
+      dlog_print(DLOG_ERROR, LOG_TAG, "app_control_get_extra_data() failed. err = %d", ret);
+   }
+   dlog_print(DLOG_DEBUG, LOG_TAG, "[key] %s, [value] %s", key, value);
+
+   return true;
+}
+
 static void
 app_control(app_control_h app_control, void *data)
 {
 	/* Handle the launch request. */
+
+	int ret = app_control_foreach_extra_data(app_control, _app_control_extra_data_cb, 0);
+	if (ret != APP_CONTROL_ERROR_NONE)
+	   dlog_print(DLOG_ERROR, LOG_TAG, "app_control_foreach_extra_data() failed. err = %d", ret);
 }
 
 static void

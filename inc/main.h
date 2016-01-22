@@ -29,6 +29,8 @@
 #define PACKAGE "org.example.stretchme"
 #endif
 
+#define STRETCHING_WATCH_APP_ID "org.tizen.stretchtime"
+
 #define EDJ_FILE "edje/stretch_ui_layout.edj"
 
 #define ICON_DIR "/opt/usr/apps/org.example.stretchme/res/images"

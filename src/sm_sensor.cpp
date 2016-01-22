@@ -481,7 +481,6 @@ void sensor_callback_register(Sensor_Cb func, void* data)
 vec3 get_pca_eigen()
 {
 
-
 	Eigen::MatrixXd eigen = Eigen::MatrixXd::Zero(current.linearAcc.size(), 3);
 	Eigen::MatrixXd data = Eigen::MatrixXd::Zero(current.linearAcc.size(), 3);
 	Eigen::MatrixXd mean = Eigen::MatrixXd::Zero(1, 3);

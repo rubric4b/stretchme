@@ -19,6 +19,36 @@ static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
 static StretchState stretch_cur_state = STRETCH_STATE_NONE;
 
+static void emit_current_time_to_watchapp(void *data, char* key)
+{
+	app_control_h app_control;
+
+	app_control_create(&app_control);
+	app_control_set_operation(app_control, APP_CONTROL_OPERATION_VIEW);
+	app_control_set_app_id(app_control, STRETCHING_WATCH_APP_ID);
+
+	struct timeval current;
+	gettimeofday(&current, NULL);
+
+	char timestring[20];
+	snprintf(timestring, 20, "%d", current.tv_sec);
+
+	// TODO: need to store the last success time in db or file
+	app_control_add_extra_data(app_control, key, timestring);
+
+	if (app_control_send_launch_request(app_control, NULL, NULL) == APP_CONTROL_ERROR_NONE)
+	{
+	   DBG("Succeeded to launch a %s app.", STRETCHING_WATCH_APP_ID);
+	}
+	else
+	{
+	   DBG("Failed to launch a %s app.", STRETCHING_WATCH_APP_ID);
+	}
+
+	app_control_destroy(app_control);
+
+}
+
 static void Stretch_Result_cb(StretchType type, StretchState state, StretchResult result, void *data)
 {
 	appdata_s *ad = data;
@@ -456,6 +486,9 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	vibrate(100, 99);
 	usleep(1000*100); // 100 ms
 	vibrate(100, 99);
+
+	// send the success time to stretchtime watch app
+	emit_current_time_to_watchapp(ad, "last_success_time");
 }
 
 // Fail
