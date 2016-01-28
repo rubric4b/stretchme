@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <glib-object.h>
+#include <json-glib.h>
+
 #include "action_icon.h"
 #include "sm_view.h"
 #include "stretch_manager.h"
+#include "sm_data.h"
 
 // Callback functions -------------------------------------------------------------------------------------------------
 static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
@@ -18,6 +22,53 @@ static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
 static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
 static StretchState stretch_cur_state = STRETCH_STATE_NONE;
+
+#define STRETCHING_DATA_FILEPATH "/opt/usr/share/stretching.json"
+
+static void write_stretching_data_to_json_file(unsigned int current_time)
+{
+#if 1
+JsonParser *jsonParser  =  NULL;
+GError *error  =  NULL;
+jsonParser = json_parser_new ();
+
+#else
+	JsonBuilder *builder = json_builder_new ();
+
+	json_builder_begin_object (builder);
+
+	json_builder_set_member_name (builder, "last_success");
+	json_builder_add_int_value (builder, current_time);
+/*
+	json_builder_add_string_value (builder, "http://www.gnome.org/img/flash/two-thirty.png");
+
+	json_builder_set_member_name (builder, "size");
+	json_builder_begin_array (builder);
+	json_builder_add_int_value (builder, 652);
+	json_builder_add_int_value (builder, 242);
+	json_builder_end_array (builder);
+*/
+	json_builder_end_object (builder);
+
+	JsonGenerator *gen = json_generator_new ();
+	JsonNode * root = json_builder_get_root (builder);
+	json_generator_set_root (gen, root);
+	gboolean ret = json_generator_to_file (gen, STRETCHING_DATA_FILEPATH);
+
+	if(ret)
+	{
+		DBG("json file (%s) writing success\n");
+	}
+	else
+	{
+		DBG("json file (%s) writing failed\n");
+	}
+
+	json_node_free (root);
+	g_object_unref (gen);
+	g_object_unref (builder);
+#endif
+}
 
 static void emit_current_time_to_watchapp(void *data, char* key)
 {
@@ -46,6 +97,8 @@ static void emit_current_time_to_watchapp(void *data, char* key)
 	}
 
 	app_control_destroy(app_control);
+
+	write_stretching_data_to_json_file(current.tv_sec);
 
 }
 
@@ -701,6 +754,9 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// TODO: DO this when stretching is succeeded!
+	store_last_time_to_current();
 }
 
 void
@@ -709,13 +765,26 @@ create_main_view(appdata_s *ad)
 	Evas_Object *layout, *bg, *button;
 	Elm_Object_Item *nf_it = NULL;
 
+#if 0
 	// it has randomly 3 types for time that user had stretched before.
 	srandom(time(NULL));
 	int type = random() % 3;
+#else
+	time_t diff = get_elapsed_time_from_last();
+	int type = get_awareness_level_from_data(diff);
 
-	int colors[3][4] = {
+	int d_day = diff / (60 * 60 * 24);
+	diff -= d_day * 60 * 60 * 24;
+	int d_hour = diff / (60 * 60);
+	diff -= d_hour * 60 * 60;
+	int d_min = diff / 60;
+
+#endif
+
+	int colors[4][4] = {
 		{112, 198, 19, 255}, // green
 		{239, 188, 69, 255}, // yellow
+		{252, 116, 75, 255}, // red
 		{252, 116, 75, 255} // red
 	};
 
@@ -736,7 +805,23 @@ create_main_view(appdata_s *ad)
 	elm_object_part_text_set(layout, "text", "팔을 뻗어서<br>스트레칭 해보세요");
 
 	char text2string[50];
-	snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", (type+1), "시간 전");
+
+	switch(type)
+	{
+	case 1:
+		snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", d_min, "분 전");
+		break;
+	case 2:
+	case 3:
+		snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", d_hour, "시간 전");
+		break;
+	case 4:
+		snprintf(text2string, sizeof(text2string), "%s", "스트레칭을 오랫동안 하지 않음");
+		break;
+	default:
+		snprintf(text2string, sizeof(text2string), "%s", "스트레칭을 할 시간입니다.");
+		break;
+	}
 
 	elm_object_part_text_set(layout, "text2", text2string);
 
@@ -747,7 +832,7 @@ create_main_view(appdata_s *ad)
 	// Add background
 	bg = elm_image_add(layout);
 	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
-	evas_object_color_set(bg, colors[type][0], colors[type][1], colors[type][2], colors[type][3]);
+	evas_object_color_set(bg, colors[type-1][0], colors[type-1][1], colors[type-1][2], colors[type-1][3]);
 	evas_object_show(bg);
 	elm_object_part_content_set(layout, "elm.swallow.content", bg);
 

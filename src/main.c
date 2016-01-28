@@ -1,15 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+
+#define  _GNU_SOURCE
 
 #include <app.h>
 #include <app_control.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <device/haptic.h>
 
 #include "main.h"
 #include "logger.h"
 #include "sm_view.h"
+
+
+#include <time.h>
 
 void
 app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max)
@@ -86,20 +91,56 @@ app_create(void *data)
 	return true;
 }
 
+#define DATA_FILE_PATH "/opt/usr/media/stretching_data.txt"
+
+
 static bool
 _app_control_extra_data_cb(app_control_h app_control, const char *key, void *user_data)
 {
-   int ret;
-   char *value;
+	int ret;
+	char *value;
 
-   ret = app_control_get_extra_data(app_control, key, &value);
-   if (ret != APP_CONTROL_ERROR_NONE)
-   {
-      dlog_print(DLOG_ERROR, LOG_TAG, "app_control_get_extra_data() failed. err = %d", ret);
-   }
-   dlog_print(DLOG_DEBUG, LOG_TAG, "[key] %s, [value] %s", key, value);
+	ret = app_control_get_extra_data(app_control, key, &value);
+	if (ret != APP_CONTROL_ERROR_NONE)
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "app_control_get_extra_data() failed. err = %d", ret);
+	}
+	dlog_print(DLOG_DEBUG, LOG_TAG, "[key] %s, [value] %s", key, value);
 
-   return true;
+	if(strcmp(key, "timestamp") == 0)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "[key] %s, [value] %s", key, value);
+		// can not convert string timestamp to time_t
+	}
+	else if(strcmp(key, "timeformat") == 0)
+	{
+		char* ret;
+
+		// make timestamp from time formatted string
+		struct tm tm;
+		ret = strptime(value, "%Y-%m-%d %H:%M:%S", &tm);
+		time_t timestamp = mktime(&tm);
+
+		dlog_print(DLOG_DEBUG, LOG_TAG, "[timeforamt] %s, [timestamp] %ld", value, timestamp);
+		dlog_print(DLOG_DEBUG, LOG_TAG, "[%ld] : %d, %d, %d, %d : %d : %d\n", timestamp, tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+		// get difference between current and old
+		// TODO: use real data
+		time_t diff = difftime(timestamp, 1453861634);
+		dlog_print(DLOG_DEBUG, LOG_TAG, "[diff time] %ld", diff);
+
+		int d_day = diff / (60 * 60 * 24);
+		diff -= d_day * 60 * 60 * 24;
+		int d_hour = diff / (60 * 60);
+		diff -= d_hour * 60 * 60;
+		int d_min = diff / 60;
+		diff -= d_min * 60;
+		int d_sec = diff;
+
+		dlog_print(DLOG_DEBUG, LOG_TAG, "[Diff] : %d, (%d : %d : %d)\n", d_day, d_hour, d_min, d_sec);
+	}
+
+	return true;
 }
 
 static void

@@ -20,7 +20,7 @@
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
-#define LOG_TAG "stretch"
+#define LOG_TAG "stretchme"
 #include <dlog.h>
 
 #define DLOG(prio, fmt, arg...) dlog_print(prio, LOG_TAG, "%s(%d) > " fmt, __func__, __LINE__, ##arg)
