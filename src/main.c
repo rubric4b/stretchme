@@ -208,10 +208,14 @@ ui_app_low_memory(app_event_info_h event_info, void *user_data)
 }
 
 #include "hmm_model.h"
+#include "xmm/catch_test.h"
 
 int
 main(int argc, char *argv[])
 {
+
+	catch_test(argc, argv);
+
 	appdata_s ad = {0,};
 	int ret = 0;
 
@@ -241,3 +245,5 @@ main(int argc, char *argv[])
 
 	return ret;
 }
+
+
