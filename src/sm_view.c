@@ -5,6 +5,7 @@
 #include <glib-object.h>
 #include <json-glib.h>
 
+
 #include "action_icon.h"
 #include "sm_view.h"
 #include "stretch_manager.h"
@@ -160,8 +161,18 @@ stop_sensor(void *data, Elm_Object_Item *it)
 static Eina_Bool
 naviframe_pop_cb(void *data, Elm_Object_Item *it)
 {
+	stretch_manager_release();
 	ui_app_exit();
 	return EINA_FALSE;
+}
+
+static void
+naviframe_back_cb(void *data, Evas_Object *obj, void *event_info)
+{
+    struct appdata *ad = data;
+    stretching_stop();
+    elm_naviframe_item_pop(ad->nf);
+
 }
 
 static void
@@ -258,7 +269,8 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 
 	// TODO: remove this callback when HMM works well
-	//evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
+//	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
+	evas_object_smart_callback_add(Unfolding_Animation, "clicked", naviframe_back_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
