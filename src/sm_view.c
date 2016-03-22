@@ -5,7 +5,6 @@
 #include <glib-object.h>
 #include <json-glib.h>
 
-
 #include "action_icon.h"
 #include "sm_view.h"
 #include "stretch_manager.h"
@@ -83,7 +82,7 @@ static void emit_current_time_to_watchapp(void *data, char* key)
 	gettimeofday(&current, NULL);
 
 	char timestring[20];
-	snprintf(timestring, 20, "%d", current.tv_sec);
+	snprintf(timestring, 20, "%ld", current.tv_sec);
 
 	// TODO: need to store the last success time in db or file
 	app_control_add_extra_data(app_control, key, timestring);
@@ -166,14 +165,15 @@ naviframe_pop_cb(void *data, Elm_Object_Item *it)
 	return EINA_FALSE;
 }
 
+/*
 static void
 naviframe_back_cb(void *data, Evas_Object *obj, void *event_info)
 {
     struct appdata *ad = data;
     stretching_stop();
     elm_naviframe_item_pop(ad->nf);
-
 }
+*/
 
 static void
 label_text_set(Evas_Object *label, struct tm t)
@@ -244,7 +244,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "두 손을 깍지 끼고<br>머리 위로 뻗으세요");
+	elm_object_part_text_set(layout, "text", "Fold your hands<br>and stretch arms up high");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -269,8 +269,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 
 	// TODO: remove this callback when HMM works well
-//	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
-	evas_object_smart_callback_add(Unfolding_Animation, "clicked", naviframe_back_cb, ad);
+	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
@@ -281,8 +280,6 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// stretching result checking
 	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_UNFOLD;
-
-	elm_naviframe_item_pop_cb_set(nf_it, stop_sensor, ad);
 
 }
 
@@ -319,7 +316,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_layout_file_set(layout, edj_path, "anim_img_and_upper_text"); // custom theme
 	evas_object_show(layout);
 
-	elm_object_part_text_set(layout, "text", "현재 자세를 유지하세요");
+	elm_object_part_text_set(layout, "text", "Keep the posture");
 
 	// Add animation
 	Hold_Animation = elm_image_add(layout);
@@ -375,7 +372,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "천천히 심호흡하며<br>원래 자세로 돌아가세요");
+	elm_object_part_text_set(layout, "text", "Get back to the origin with deep breathing");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -448,6 +445,23 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_object_part_content_set(layout, "elm.swallow.bg", bg);
 
 
+#if 1
+#if 1
+
+#if 1
+
+	// result image
+	Success_image = elm_image_add(layout);
+	elm_object_style_set(Success_image, "center");
+	elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
+	evas_object_show(Success_image);
+	elm_object_part_content_set(layout, "elm.swallow.content", Success_image);
+
+	// text
+	elm_object_part_text_set(layout, "text", "Success!!");
+
+#else
+
 	// Add Scroller
 	Evas_Object* circle_scroller, *scroller;
 
@@ -466,9 +480,6 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	/* Activate Rotary Event */
 	eext_rotary_object_event_activated_set(circle_scroller, EINA_TRUE);
 
-#if 1
-#if 1
-
 // USE 1 IMAGE
 
 	// result image
@@ -479,6 +490,8 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_show(Success_image);
 
 	elm_object_content_set(scroller, Success_image);
+
+#endif
 
 #else
 
@@ -537,12 +550,12 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 
-	elm_object_text_set(button, "한 번 더 하기");
+	elm_object_text_set(button, "Once again?");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 	evas_object_show(button);
 
-	nf_it = elm_naviframe_item_push(ad->nf, "한 번 더 하기", NULL, NULL, layout, NULL);
+	nf_it = elm_naviframe_item_push(ad->nf, "again", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
@@ -593,11 +606,14 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_show(Fail_image);
 	elm_object_part_content_set(layout, "elm.swallow.content", Fail_image);
 
+	// text
+	elm_object_part_text_set(layout, "text", "Fail to stretch...");
+
 	// Add button
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 
-	elm_object_text_set(button, "다시 시도");
+	elm_object_text_set(button, "Retry");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
 	evas_object_show(button);
@@ -636,7 +652,7 @@ Result_cb(void *data, Evas_Object *obj, void *event_info)
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 
-	elm_object_text_set(button, "종료");
+	elm_object_text_set(button, "Exit");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", Reward_cb, ad);
 	evas_object_show(button);
@@ -670,7 +686,7 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 
-	elm_object_text_set(button, "종료");
+	elm_object_text_set(button, "Exit");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", set_clicked_cb, ad);
 	evas_object_show(button);
@@ -750,22 +766,25 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	label = elm_label_add(scroller);
 	elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
-	elm_object_text_set(label, "<align=center><font_size=38>팔을 <font color=#FF0000>위로</font color> 뻗어서 스트레칭 해보세요.</font_size> <BR> "
-			"<font_size=30 color=#999999>양손을 깍지 끼고 양 팔을 머리위로 쭉 뻗은 후 신호를 기다리세요. "
-			"신호에 맞추어 기다렸다가 내리세요.</font_size></align>");
+	elm_object_text_set(label, "<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
+			"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
+			"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>");
 	elm_object_content_set(scroller, label);
 	evas_object_show(label);
 
 	// Button
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
-	elm_object_text_set(button, "시작하기"); // Start!
+	elm_object_text_set(button, "Start"); // Start!
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
 	evas_object_show(button);
 
-	nf_it = elm_naviframe_item_push(ad->nf, "Setting time", NULL, NULL, layout, NULL);
+	nf_it = elm_naviframe_item_push(ad->nf, "Stretching guide", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+
+	// exit app by "back"
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	// TODO: DO this when stretching is succeeded!
 	store_last_time_to_current();
@@ -814,24 +833,24 @@ create_main_view(appdata_s *ad)
 	elm_layout_file_set(layout, edj_path, "strech_main"); // custom theme
 
 	// Text setting
-	elm_object_part_text_set(layout, "text", "팔을 뻗어서<br>스트레칭 해보세요");
+	elm_object_part_text_set(layout, "text", "Do stretching<br>with your arms");
 
 	char text2string[50];
 
 	switch(type)
 	{
 	case 1:
-		snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", d_min, "분 전");
+		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last", d_min, (d_min > 1) ? "minutes ago" : "minute ago");
 		break;
 	case 2:
 	case 3:
-		snprintf(text2string, sizeof(text2string), "%s : %d%s", "마지막 스트레칭", d_hour, "시간 전");
+		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last", d_hour, (d_hour > 1) ? "hours ago" : "hour ago");
 		break;
 	case 4:
-		snprintf(text2string, sizeof(text2string), "%s", "스트레칭을 오랫동안 하지 않음");
+		snprintf(text2string, sizeof(text2string), "%s", "Try to release your body");
 		break;
 	default:
-		snprintf(text2string, sizeof(text2string), "%s", "스트레칭을 할 시간입니다.");
+		snprintf(text2string, sizeof(text2string), "%s", "It is the time to stretch!");
 		break;
 	}
 
@@ -852,7 +871,7 @@ create_main_view(appdata_s *ad)
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
 
-	elm_object_text_set(button, "스트레칭 시작");
+	elm_object_text_set(button, "Start");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_show(button);
 
