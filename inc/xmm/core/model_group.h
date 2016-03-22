@@ -875,8 +875,12 @@ namespace xmm
          */
         virtual void updateTrainingSet(Label const& label)
         {
+        	// @graysih : if not using pthread, .is_training() function is not referenced.
+#ifdef USE_PTHREAD
+            if (models.find(label) != models.end() && models[label].is_training()) {
+#else
             if (models.find(label) != models.end()) {
-//            	&& models[label].is_training()) {
+#endif
                 throw std::runtime_error("The model is already training");
             }
             if (globalTrainingSet->allLabels.find(label) == globalTrainingSet->allLabels.end())
