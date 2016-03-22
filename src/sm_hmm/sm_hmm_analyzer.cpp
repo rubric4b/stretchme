@@ -2,10 +2,10 @@
 // Created by hobbang5 on 2016-03-20.
 //
 
-#include <logger.h>
+#include "logger.h"
 
-#include "sm_hmm_manager.h"
-#include "sm_hmm_analyzer.h"
+#include "sm_hmm/sm_hmm_manager.h"
+#include "sm_hmm/sm_hmm_analyzer.h"
 
 using namespace glm;
 

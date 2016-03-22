@@ -1,13 +1,11 @@
 #include <string.h>
 #include <sensor/sensor.h>
-#include <sm_sensor.h>
-
 
 #include "logger.h"
 #include "stretch_manager.h"
 #include "sm_sensor.h"
-#include "sm_hmm_manager.h"
-#include "sm_hmm_analyzer.h"
+#include "sm_hmm/sm_hmm_manager.h"
+#include "sm_hmm/sm_hmm_analyzer.h"
 
 #ifndef bool
 typedef unsigned char bool;
@@ -42,7 +40,7 @@ typedef struct
 	sensor_info* accel;
 	sensor_info* gyro;
 
-	// hmm model
+	// sm_hmm model
 	Sm_Hmm_Manager* hmm_mgr;
 
 }StretchManager;
@@ -165,7 +163,7 @@ static void stretching_sensor_cb(void* data)
 				stretching_stop();
 				double prob = 1.0;
 
-				Hmm_Model* hmm = read_model_from_file("hmm_up");
+				Hmm_Model* sm_hmm = read_model_from_file("hmm_up");
 
 				seq.CreateSymbols(si.linearAcc);
 				seq.PrintSymbols();
@@ -217,14 +215,14 @@ static void stretching_sensor_cb(void* data)
 					}
 
 
-					ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&hmm->model, 1, seq.mSymbols.size(), 1,
+					ghmm_dseq *test_seq = ghmm_dmodel_generate_sequences(&sm_hmm->model, 1, seq.mSymbols.size(), 1,
 																		 seq.mSymbols.size());
 					//ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols[0]), (seq.mSymbols.size() > HMM_MODEL_MAX_LENGTH ? HMM_MODEL_MAX_LENGTH : seq.mSymbols.size()));
 					ghmm_dseq_copy(test_seq->seq[0], &(seq.mSymbols.at(0)), seq.mSymbols.size());
 
 					//free(temp);
 
-					prob = hmm_evaluate(hmm, test_seq);
+					prob = hmm_evaluate(sm_hmm, test_seq);
 				}
 
 

@@ -1,7 +1,6 @@
 #include <vector>
 #include <limits>
 #include <math.h>
-#include <sm_sensor.h>
 
 #include "sm_sensor.h"
 #include "logger.h"

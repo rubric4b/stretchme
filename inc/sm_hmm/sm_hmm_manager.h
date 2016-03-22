@@ -27,15 +27,11 @@ public:
     // destructor
     ~Sm_Hmm_Manager();
 
-
-
     // get loglikehood within window
     double get_Loglikehood(StretchType type);
 
     // model performing
     double perform_Stretching(StretchType type, std::vector<float> &observation);
-
-
 
     // reset when stretching end
     void reset_Model_Performing(StretchType type);

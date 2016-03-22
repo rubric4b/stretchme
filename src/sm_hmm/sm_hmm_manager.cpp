@@ -4,9 +4,9 @@
 
 #include <app.h>
 
-#include "sm_hmm_manager.h"
+#include "sm_hmm/sm_hmm_manager.h"
+#include "sm_hmm/sm_hmm_analyzer.h"
 #include "logger.h"
-#include "sm_hmm_analyzer.h"
 
 using namespace std;
 
@@ -91,7 +91,7 @@ xmm::HMM* init_model(unsigned int set_cnts, const char** learning_sets,
                     unsigned int window_size = SM_DEFAULT_SMOOTHING_WINDOW_SIZE)
 {
 
-    //training set and hmm model
+    //training set and sm_hmm model
     xmm::TrainingSet ts(xmm::NONE, ts_dim);
     xmm::HMM* ret_model = new xmm::HMM(xmm::NONE, &ts);
 
