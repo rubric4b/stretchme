@@ -214,13 +214,13 @@ int
 main(int argc, char *argv[])
 {
 
-	catch_test(argc, argv);
+//	catch_test(argc, argv);
+//	init_hmm();
+//	test_model();
 
 	appdata_s ad = {0,};
 	int ret = 0;
 
-	init_hmm();
-	test_model();
 
 	ui_app_lifecycle_callback_s event_callback = {0,};
 	app_event_handler_h handlers[5] = {NULL, };
