@@ -136,7 +136,7 @@ namespace xmm
         
         ///@}
         
-#ifdef SWIGPYTHON
+//#ifdef SWIGPYTHON
         /** @name Python File I/O (#ifdef SWIGPYTHON) */
         ///@{
         
@@ -186,7 +186,7 @@ namespace xmm
             return tmp;
         }
         ///@}
-#endif
+//#endif
     };
     
     ///@endcond
