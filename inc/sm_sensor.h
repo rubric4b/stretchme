@@ -23,15 +23,15 @@ typedef struct
 	glm::vec3 kGyro;
 	bool isGyroUpdated;
 
-	glm::quat qDeviceOrientation; // Quaternion of device orientation
-	glm::quat qKDeviceOrientation; // Quaternion of device orientation
+//	glm::quat qDeviceOrientation; // Quaternion of device orientation
+//	glm::quat qKDeviceOrientation; // Quaternion of device orientation
 
-	glm::vec3 vel;
-	glm::vec3 pos;
-	glm::vec3 kpos;
+//	glm::vec3 vel;
+//	glm::vec3 pos;
+//	glm::vec3 kpos;
 
-	std::vector<glm::vec3> linearAcc;
-	std::vector<glm::vec3> kLinearAcc;
+//	std::vector<glm::vec3> linearAcc;
+//	std::vector<glm::vec3> kLinearAcc;
 
 }sensor_data_info;
 
@@ -51,11 +51,13 @@ typedef void (*Sensor_Cb)(void *data);
 sensor_info* sensor_init(sensor_type_e sensor_type);
 void sensor_start(sensor_info* sensor);
 void sensor_stop(sensor_info* sensor);
-void sensor_deinit(sensor_info* sensor);
+void sensor_release(sensor_info* sensor);
 void sensor_listen_pause(sensor_info* sensor);
 void sensor_listen_resume(sensor_info* sensor);
 void reset_measure();
 sensor_data_info & get_current_sensor_data();
+sensor_data_info & get_prev_sensor_data();
+
 glm::vec3 get_pca_eigen();
 
 /**

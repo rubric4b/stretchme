@@ -1,14 +1,10 @@
 #include <vector>
-
+#include <limits>
 #include <math.h>
+#include <sm_sensor.h>
 
 #include "sm_sensor.h"
 #include "logger.h"
-
-#include <limits>
-
-#include <sm_sensor.h>
-
 #include "pca/embedppca.h"
 #include "kalman_manager.h"
 #include "sequence.h"
@@ -34,13 +30,13 @@ static void reset_sensor_data_info(sensor_data_info& si)
 
 	si.kAcc = vec3(0);
 	si.kGyro = vec3(0);
-	si.kpos = vec3(0);
+//	si.kpos = vec3(0);
 
-	si.qDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
-	si.qKDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
+//	si.qDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
+//	si.qKDeviceOrientation = quat(1.0, 0.0, 0.0, 0.0);
 
-	si.linearAcc.clear();
-	si.kLinearAcc.clear();
+//	si.linearAcc.clear();
+//	si.kLinearAcc.clear();
 
 }
 
@@ -129,7 +125,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 	static unsigned long long gyroCount = 0;
 
 	static KalmanGearS2 accKalman(KalmanGearS2::ACCELEROMETER, 0.00001);
-	static KalmanGearS2 gyroKalman(KalmanGearS2::GYROSCOPE, 0.1);
+	static KalmanGearS2 gyroKalman(KalmanGearS2::GYROSCOPE, 0.00001);
 
 	// Select a specific sensor with a sensor handle
 	// This example uses sensor type, assuming there is only 1 sensor for each type
@@ -167,6 +163,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 
 			current.isAccUpdated = true;
 
+/*
 			double diff = abs(length(current.acc) - length(prev.acc)) / length(prev.acc);
 			diff *= 100.0;
 
@@ -174,15 +171,16 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				accCount++;
 			else
 				accCount = 0;
+*/
 		}
 			break;
 
 		case SENSOR_GYROSCOPE :
 		{
 			// real? degree??
-			double x_angle = event->values[0] * (pi<double>() / 180.0); // degree to radian
-			double y_angle = event->values[1] * (pi<double>() / 180.0);
-			double z_angle = event->values[2] * (pi<double>() / 180.0);
+			double x_angle = event->values[0]; //* (pi<double>() / 180.0); // degree to radian
+			double y_angle = event->values[1]; //* (pi<double>() / 180.0);
+			double z_angle = event->values[2]; //* (pi<double>() / 180.0);
 
 //			current.gyro = adjust_error_vector( vec3(x_angle, y_angle, z_angle));
 			current.gyro = vec3(x_angle, y_angle, z_angle);
@@ -190,6 +188,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 
 			current.isGyroUpdated = true;
 
+/*
 			double curr_length = (length(current.gyro) == 0) ? 0.0001 : length(current.gyro);
 			double prev_length = (length(prev.gyro) == 0) ? 0.0001 : length(prev.gyro);
 			double diff = abs(curr_length - prev_length) / prev_length;
@@ -199,6 +198,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 				gyroCount++;
 			else
 				gyroCount = 0;
+*/
 		}
 			break;
 
@@ -211,11 +211,11 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 	if(reset && current.isAccUpdated)
 	{
 		current.timestamp = timeDiff;
-		current.qDeviceOrientation = get_rotation_between(current.acc, INIT_GRAVITY_VECTOR);
-		current.qKDeviceOrientation = get_rotation_between(current.kAcc, INIT_GRAVITY_VECTOR);
-		current.pos = vec3(0, 0, 0);
-		current.kpos = vec3(0, 0, 0);
-		current.vel = vec3(0, 0, 0);
+//		current.qDeviceOrientation = get_rotation_between(current.acc, INIT_GRAVITY_VECTOR);
+//		current.qKDeviceOrientation = get_rotation_between(current.kAcc, INIT_GRAVITY_VECTOR);
+//		current.pos = vec3(0, 0, 0);
+//		current.kpos = vec3(0, 0, 0);
+//		current.vel = vec3(0, 0, 0);
 		current.isAccUpdated = false;
 		current.isGyroUpdated = false;
 
@@ -225,7 +225,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 	}
 
 
-	// Update rotation
+	/*// Update rotation
 	if (accCount > 20 && gyroCount > 20)
 	{
 
@@ -241,7 +241,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		prev = current;
 
 		return;
-	}
+	}*/
 
 
 	if( current.isAccUpdated && current.isGyroUpdated )
@@ -249,6 +249,7 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		current.timestamp = timeDiff;
 		float dt = (float)(current.timestamp - prev.timestamp)/1000;
 
+/*
 		//1 device orientation
 		current.qDeviceOrientation = get_device_orientation(dt, current.gyro, prev.qDeviceOrientation);
 		current.qKDeviceOrientation = get_device_orientation(dt, current.kGyro, prev.qKDeviceOrientation);
@@ -256,10 +257,11 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 		//1 linear acceleration
 		vec3 linearAcc = get_linear_acceleration(current.qDeviceOrientation, current.acc);
 		vec3 kLinearAcc = get_linear_acceleration(current.qKDeviceOrientation, current.kAcc);
+*/
 
-		gLinearAcc.push_back(linearAcc);
-		current.linearAcc.push_back(linearAcc);
-		current.kLinearAcc.push_back(kLinearAcc);
+//		gLinearAcc.push_back(linearAcc);
+//		current.linearAcc.push_back(linearAcc);
+//		current.kLinearAcc.push_back(kLinearAcc);
 
 		//1 Position
 		//3 : integrate linear acceleration
@@ -277,16 +279,32 @@ on_sensor_event(sensor_h sensor, sensor_event_s *event, void *user_data)
 
 		current.pos = prev.pos + 0.5f * current.vel * dt;
 #else
+/*
 		// directly double integration
 		current.pos = prev.pos + 0.5f * linearAcc * dt * dt;
 		current.kpos = prev.kpos + 0.5f * kLinearAcc * dt * dt;
+*/
 #endif
 
-		DBG("ALLDATA\t%6d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", timeDiff
-				, current.acc.x, current.acc.y, current.acc.z, current.kAcc.x, current.kAcc.y, current.kAcc.z
-				, current.gyro.x, current.gyro.y, current.gyro.z,	current.kGyro.x, current.kGyro.y, current.kGyro.z
-				, linearAcc.x, linearAcc.y, linearAcc.z, kLinearAcc.x, kLinearAcc.y, kLinearAcc.z
-				, current.pos.x, current.pos.y, current.pos.z, current.kpos.x, current.kpos.y, current.kpos.z);
+//		DBG("ALLDATA\t%6d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", timeDiff
+//				, current.acc.x, current.acc.y, current.acc.z, current.kAcc.x, current.kAcc.y, current.kAcc.z
+//				, current.gyro.x, current.gyro.y, current.gyro.z,	current.kGyro.x, current.kGyro.y, current.kGyro.z
+//				, linearAcc.x, linearAcc.y, linearAcc.z, kLinearAcc.x, kLinearAcc.y, kLinearAcc.z
+//				, current.pos.x, current.pos.y, current.pos.z, current.kpos.x, current.kpos.y, current.kpos.z);
+
+//		DBG("gyro \t%6d, %f, %f, %f\n", timeDiff, current.gyro.x, current.gyro.y, current.gyro.z);
+//		DBG("kGyro \t%6d, %f, %f, %f\n", timeDiff, current.kGyro.x, current.kGyro.y, current.kGyro.z);
+//		vec3 kAcc_diff = current.kAcc - prev.kAcc;
+//		if(length(kAcc_diff) > 0.2)
+//		{
+//			kAcc_diff = normalize(kAcc_diff);
+//			DBG("kAcc diff \t%6d, %f, %f, %f\n", timeDiff, kAcc_diff.x, kAcc_diff.y, kAcc_diff.z);
+//		}
+//		DBG("kAccel \t%6d, %f, %f, %f\n", timeDiff, current.kAcc.x, current.kAcc.y, current.kAcc.z);
+// 		DBG("gyro length \t%6d, %f\n", timeDiff, length(current.gyro));
+//		DBG("kaccel length between %f\n", length(current.kAcc - prev.kAcc));
+
+
 
 #if 0
 		//1 using kalman
@@ -392,6 +410,12 @@ sensor_init(sensor_type_e sensor_type){
 		return NULL;
 	}
 
+	error = sensor_listener_set_option(sensor->listener, SENSOR_OPTION_ON_IN_SCREEN_OFF);
+	if(error)
+	{
+		ERR("sensor option failed\n");
+	}
+
 	return sensor;
 }
 
@@ -448,7 +472,7 @@ void sensor_stop(sensor_info* sensor)
 	}
 }
 
-void sensor_deinit(sensor_info* sensor)
+void sensor_release(sensor_info* sensor)
 {
 	int error;
 	error = sensor_destroy_listener(sensor->listener);
@@ -472,12 +496,19 @@ sensor_data_info & get_current_sensor_data()
 	return current;
 }
 
+sensor_data_info & get_prev_sensor_data()
+{
+	return prev;
+}
+
+
 void sensor_callback_register(Sensor_Cb func, void* data)
 {
 	sensor_callback_func = func,
 			sensor_callback_func_data = data;
 }
 
+/*
 vec3 get_pca_eigen()
 {
 
@@ -507,3 +538,4 @@ vec3 get_pca_eigen()
 	return pca;
 
 }
+*/
