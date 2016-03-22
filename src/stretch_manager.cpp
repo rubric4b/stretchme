@@ -1,12 +1,15 @@
 #include <string.h>
 #include <sensor/sensor.h>
 #include <sm_sensor.h>
-#include <logger.h>
-#include <hmm_model.h>
 
+
+#include "hmm_model.h"
+#include "logger.h"
 #include "sequence.h"
 #include "stretch_manager.h"
 #include "sm_sensor.h"
+#include "sm_hmm_manager.h"
+#include "sm_hmm_analyzer.h"
 
 #ifndef bool
 typedef unsigned char bool;
@@ -41,6 +44,9 @@ typedef struct
 	sensor_info* accel;
 	sensor_info* gyro;
 
+	// hmm model
+	Sm_Hmm_Manager* hmm_mgr;
+
 }StretchManager;
 
 static StretchManager* sMgr = NULL;
@@ -69,6 +75,68 @@ static void sensor_control(bool enable, bool reset)
 
 static void stretching_sensor_cb(void* data)
 {
+	static Sm_Hmm_Analyzer *analyzer = new Sm_Hmm_Analyzer();
+
+	// get sensor data
+	sensor_data_info curr_si = get_current_sensor_data();
+	StretchResult stretch_result = STRETCH_FAIL;
+	static int observation_cnt(0);
+
+	static bool callback_flag = false;
+
+	switch(sMgr->state) {
+		case STRETCH_STATE_UNFOLD : {
+			vector<float> observation(SM_DEFAULT_TS_DIMENTION);
+
+			if(analyzer->get_Observation(curr_si.kAcc, observation)) {
+				observation_cnt++;
+				sMgr->hmm_mgr->perform_Stretching(sMgr->type, observation);
+			}
+
+
+
+			if(curr_si.timestamp > 2500 && analyzer->get_Stay() || curr_si.timestamp > 10000) {
+				DBG("%4d log p = %5f, cnt %d\n",curr_si.timestamp, sMgr->hmm_mgr->get_Loglikehood(sMgr->type), observation_cnt);
+				if( -sMgr->hmm_mgr->get_Loglikehood(sMgr->type) < analyzer->get_Treshold() && observation_cnt > 150) {
+					stretch_result = STRETCH_SUCCESS;
+				}
+
+				callback_flag = true;
+			}
+
+		}
+			break;
+
+		case STRETCH_STATE_HOLD : {
+
+			if(curr_si.timestamp > 1000) {
+				callback_flag = true;
+				stretch_result = STRETCH_SUCCESS;
+			}
+
+		}
+			break;
+
+
+		default:
+			break;
+
+
+	}
+
+
+	if(callback_flag) {
+		callback_flag = false;
+		observation_cnt = 0;
+		analyzer->reset();
+
+		sMgr->hmm_mgr->reset_Model_Performing(sMgr->type);
+		sMgr->func(sMgr->type, sMgr->state, stretch_result, sMgr->func_data);
+
+	}
+
+
+    /*
 	// get sensor data
 	sensor_data_info si = get_current_sensor_data();
 	Sequence seq;
@@ -202,6 +270,7 @@ static void stretching_sensor_cb(void* data)
 			}
 		}
 	}
+     */
 }
 
 static void stretch_manager_initialize()
@@ -225,6 +294,29 @@ static void stretch_manager_initialize()
 	sensor_listen_pause(sMgr->accel);
 	sensor_listen_pause(sMgr->gyro);
 	reset_measure();
+
+	sMgr->hmm_mgr = new Sm_Hmm_Manager();
+
+}
+
+void stretch_manager_release() {
+	if(sMgr) {
+		if(sMgr->hmm_mgr) delete sMgr->hmm_mgr;
+
+		if(sMgr->accel) {
+			sensor_stop(sMgr->accel);
+			sensor_release(sMgr->accel);
+		}
+
+		if(sMgr->gyro) {
+			sensor_stop(sMgr->gyro);
+			sensor_release(sMgr->gyro);
+		}
+
+		free(sMgr);
+		sMgr = NULL;
+
+	}
 }
 
 /**

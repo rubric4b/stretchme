@@ -52,6 +52,7 @@ void stretching_set_sensitivity(float sensitivity);
  */
 void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb func, void* data);
 void stretching_stop();
+void stretch_manager_release();
 
 /**
  * get the last matching rate (percentage)
