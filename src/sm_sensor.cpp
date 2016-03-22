@@ -7,7 +7,6 @@
 #include "logger.h"
 #include "pca/embedppca.h"
 #include "kalman_manager.h"
-#include "sequence.h"
 
 #define UPDATE_RATE 10 // millisecond
 

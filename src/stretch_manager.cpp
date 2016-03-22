@@ -3,9 +3,7 @@
 #include <sm_sensor.h>
 
 
-#include "hmm_model.h"
 #include "logger.h"
-#include "sequence.h"
 #include "stretch_manager.h"
 #include "sm_sensor.h"
 #include "sm_hmm_manager.h"
