@@ -83,8 +83,8 @@ static void stretching_sensor_cb(void* data)
 			hMgr->perform_Stretching(curr_si.kAcc);
 
 			if(curr_si.timestamp > 3500 && hMgr->is_End() || curr_si.timestamp > 10000) {
-				DBG("%4d log p = %5f\n",curr_si.timestamp, hMgr->get_Loglikehood());
-				if( -hMgr->get_Loglikehood() < hMgr->get_Threshold()) {
+				DBG("%4d log p = %5f\n",curr_si.timestamp, hMgr->get_Probability());
+				if(-hMgr->get_Probability() < hMgr->get_Threshold()) {
 					stretch_result = STRETCH_SUCCESS;
 				}
 

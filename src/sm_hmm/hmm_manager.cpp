@@ -30,12 +30,12 @@ Hmm_Manager::~Hmm_Manager() {
 
 }
 
-double Hmm_Manager::get_Loglikehood(StretchType type) {
+double Hmm_Manager::get_Probability(StretchType type) {
     return m_models[type]->get_Probability();
 }
 
-double Hmm_Manager::get_Loglikehood() {
-    return get_Loglikehood(m_currType);
+double Hmm_Manager::get_Probability() {
+    return get_Probability(m_currType);
 }
 
 double Hmm_Manager::perform_Stretching(StretchType type, glm::vec3 &observation) {

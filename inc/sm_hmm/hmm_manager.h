@@ -22,8 +22,8 @@ public:
     ~Hmm_Manager();
 
     // get loglikehood within window
-    double get_Loglikehood(StretchType type);
-    double get_Loglikehood();
+    double get_Probability(StretchType type);
+    double get_Probability();
 
     // model performing
     double perform_Stretching(StretchType type, glm::vec3 &observation);
