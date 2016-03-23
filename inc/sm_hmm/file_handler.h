@@ -9,6 +9,10 @@
 
 #include "xmm/xmm.h"
 
-void record_training_set_from_file(xmm::TrainingSet& ts, int index, const std::string& file_name);
+bool write_hmm_to_file(const std::string &file_name, const xmm::HMM &model);
+
+bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model);
+
+void record_training_set_from_file(const std::string &file_name, int ts_phrase_index, xmm::TrainingSet &ts);
 
 #endif //__FILE_HANDLER_H__

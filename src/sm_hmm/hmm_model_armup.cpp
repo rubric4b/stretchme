@@ -20,41 +20,49 @@ Hmm_ArmUp::Hmm_ArmUp() :
 {
     m_analyzer = HA_ArmUp();
 
-    // training set files
-    const char* arm_up_learning_set[] =
-            {
-                    "data/learning_set_kaccel_4.csv",
-                    "data/learning_set_kaccel_5.csv",
-                    "data/learning_set_kaccel_6.csv",
-                    "data/learning_set_kaccel_7.csv",
-                    "data/learning_set_kaccel_8.csv",
-                    "data/learning_set_kaccel_9.csv",
-                    "data/learning_set_kaccel_10.csv",
-                    "data/learning_set_kaccel_11.csv",
-                    "data/learning_set_kaccel_12.csv",
-                    "data/learning_set_kaccel_13.csv",
-                    "data/learning_set_kaccel_14.csv"
-            };
+    m_hmm = xmm::HMM();
+    if(!read_hmm_from_file("xmm_armup.hmm", m_hmm)) {
 
-    // setup training set
-    xmm::TrainingSet ts(xmm::NONE, ARM_UP_TS_DIMENSION);
-    //record training set
-    for(int i=0; i<11; i++) {
-        record_training_set_from_file(ts, i, arm_up_learning_set[i]);
+        // training set files
+        const char* arm_up_learning_set[] =
+                {
+                        "data/learning_set_kaccel_4.csv",
+                        "data/learning_set_kaccel_5.csv",
+                        "data/learning_set_kaccel_6.csv",
+                        "data/learning_set_kaccel_7.csv",
+                        "data/learning_set_kaccel_8.csv",
+                        "data/learning_set_kaccel_9.csv",
+                        "data/learning_set_kaccel_10.csv",
+                        "data/learning_set_kaccel_11.csv",
+                        "data/learning_set_kaccel_12.csv",
+                        "data/learning_set_kaccel_13.csv",
+                        "data/learning_set_kaccel_14.csv"
+                };
+
+        // setup training set
+        xmm::TrainingSet ts(xmm::NONE, ARM_UP_TS_DIMENSION);
+
+        //record training set
+        for(int i=0; i<11; i++) {
+            record_training_set_from_file(arm_up_learning_set[i], i, ts);
+        }
+
+        // setup xmm
+        m_hmm.set_trainingSet(&ts);
+        m_hmm.set_nbStates(ARM_UP_NB_STATE);
+        m_hmm.set_transitionMode("left-right");
+        m_hmm.set_covariance_mode(xmm::GaussianDistribution::DIAGONAL);
+        m_hmm.set_likelihoodwindow(ARM_UP_WINDOW_SIZE);
+
+        // training
+        m_hmm.train();
+
+        DBG("hmm armup() initialize\n");
+        DBG("%s", m_hmm.__str__().c_str());
+
+        write_hmm_to_file("xmm_armup.hmm", m_hmm);
+
     }
-
-    // setup xmm
-    m_hmm = xmm::HMM(xmm::NONE, &ts);
-    m_hmm.set_nbStates(ARM_UP_NB_STATE);
-    m_hmm.set_transitionMode("left-right");
-    m_hmm.set_covariance_mode(xmm::GaussianDistribution::DIAGONAL);
-    m_hmm.set_likelihoodwindow(ARM_UP_WINDOW_SIZE);
-
-    // training
-    m_hmm.train();
-
-    DBG("hmm armup() initialize\n");
-    DBG("%s", m_hmm.__str__().c_str());
 
     // initialize Hmm_Model
     init_Hmm(ARM_UP_NB_STATE, ARM_UP_TS_DIMENSION, ARM_UP_THRESHOLD);

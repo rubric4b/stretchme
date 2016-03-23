@@ -38,10 +38,74 @@ static char* util_strtok(char* str, const char* delim, char** nextp)
 }
 
 
-
-void record_training_set_from_file(xmm::TrainingSet& ts, int index, const std::string& file_name)
+bool write_hmm_to_file(const std::string &file_name, const xmm::HMM &model)
 {
-    //buffer
+    // out file stream
+    std::ofstream out_fstream;
+
+    // file data path
+    std::string file_path = app_get_data_path() + file_name;
+
+    out_fstream.open(file_path.c_str(), std::ios::out | std::ios::binary);
+    if(!out_fstream.is_open() || !out_fstream.good()) {
+        std::string msg = "Failed to open file " + file_path;
+        ERR("%s\n",msg.c_str());
+        return false;
+    }
+
+    JSONNode jsonfile = model.to_json();
+
+    out_fstream << jsonfile.write_formatted();
+
+    out_fstream.close();
+
+    return true;
+
+}
+
+
+/**
+ * @brief read method for python wrapping ('read' keyword forbidden, name has to be different)
+ * @warning only defined if SWIGPYTHON is defined
+ */
+bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model)
+{
+    // in file stream
+    std::ifstream in_file;
+
+    // file path
+    std::string file_path = app_get_data_path() + file_name;
+
+    // file open
+    in_file.open(file_path.c_str(), std::ios::in | std::ios::binary);
+    if(!in_file.is_open() || !in_file.good()) {
+        std::string msg = "Failed to open file " + file_path;
+        ERR("%s\n",msg.c_str());
+        return false;
+    }
+
+    std::string jsonstring;
+
+    in_file.seekg(0, std::ios::end);
+    jsonstring.reserve(in_file.tellg());
+    in_file.seekg(0, std::ios::beg);
+
+    jsonstring.assign((std::istreambuf_iterator<char>(in_file)),
+                      std::istreambuf_iterator<char>());
+    JSONNode jsonfile = libjson::parse(jsonstring);
+    model.from_json(jsonfile);
+
+    in_file.close();
+
+    DBG("HMM is read from file %s\n", file_path.c_str());
+
+    return true;
+}
+
+
+void record_training_set_from_file(const std::string &file_name, int ts_phrase_index, xmm::TrainingSet &ts)
+{
+    // in file stream
     std::ifstream in_file;
 
     // file path
@@ -51,6 +115,7 @@ void record_training_set_from_file(xmm::TrainingSet& ts, int index, const std::s
     in_file.open(file_path.c_str(), std::ios::in | std::ios::binary);
     if(!in_file.is_open() || !in_file.good()) {
         std::string msg = "Failed to open file " + file_path;
+        ERR("%s\n",msg.c_str());
         throw std::runtime_error(msg.c_str());
     }
 
@@ -72,7 +137,7 @@ void record_training_set_from_file(xmm::TrainingSet& ts, int index, const std::s
 
         if( analyzer.get_Observation(curr_observation, observation) ) {
 
-            ts.recordPhrase(index, observation);
+            ts.recordPhrase(ts_phrase_index, observation);
             ts_cnt++;
         }
 
