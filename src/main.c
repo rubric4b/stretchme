@@ -207,8 +207,6 @@ ui_app_low_memory(app_event_info_h event_info, void *user_data)
 	/*APP_EVENT_LOW_MEMORY*/
 }
 
-#include "xmm/catch_test.h"
-
 int
 main(int argc, char *argv[])
 {
