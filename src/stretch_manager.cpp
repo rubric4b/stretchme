@@ -37,7 +37,6 @@ typedef struct
 
 	// sensor
 	sensor_info* accel;
-	sensor_info* gyro;
 
 	// sm_hmm model
 	Hmm_Manager * hmm_mgr;
@@ -57,13 +56,11 @@ static void sensor_control(bool enable, bool reset)
 	if(isEnabled && !enable)
 	{
 		sensor_listen_pause(sMgr->accel);
-		sensor_listen_pause(sMgr->gyro);
 		isEnabled = enable;
 	}
 	else if(!isEnabled && enable)
 	{
 		sensor_listen_resume(sMgr->accel);
-		sensor_listen_resume(sMgr->gyro);
 		isEnabled = enable;
 	}
 }
@@ -133,13 +130,10 @@ static void stretch_manager_initialize()
 
 	// sensor initialize
 	sMgr->accel = sensor_init(SENSOR_ACCELEROMETER);
-	sMgr->gyro = sensor_init(SENSOR_GYROSCOPE);
 
 	sensor_start(sMgr->accel);
-	sensor_start(sMgr->gyro);
 
 	sensor_listen_pause(sMgr->accel);
-	sensor_listen_pause(sMgr->gyro);
 	reset_measure();
 
 	sMgr->hmm_mgr = new Hmm_Manager();
@@ -153,11 +147,6 @@ void stretch_manager_release() {
 		if(sMgr->accel) {
 			sensor_stop(sMgr->accel);
 			sensor_release(sMgr->accel);
-		}
-
-		if(sMgr->gyro) {
-			sensor_stop(sMgr->gyro);
-			sensor_release(sMgr->gyro);
 		}
 
 		free(sMgr);

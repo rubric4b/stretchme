@@ -19,19 +19,6 @@ typedef struct
 	glm::vec3 acc;
 	glm::vec3 kAcc;
 	bool isAccUpdated;
-	glm::vec3 gyro;
-	glm::vec3 kGyro;
-	bool isGyroUpdated;
-
-//	glm::quat qDeviceOrientation; // Quaternion of device orientation
-//	glm::quat qKDeviceOrientation; // Quaternion of device orientation
-
-//	glm::vec3 vel;
-//	glm::vec3 pos;
-//	glm::vec3 kpos;
-
-//	std::vector<glm::vec3> linearAcc;
-//	std::vector<glm::vec3> kLinearAcc;
 
 }sensor_data_info;
 
