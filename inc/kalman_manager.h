@@ -5,10 +5,6 @@
 
 using namespace glm;
 
-void kalman(vec3 pos, vec3 linear_acc, vec3& ad_pos, vec3& vel, bool reset);
-
-
-
 // default prediction level
 static const float DEFAULT_PREDICTION_LEVEL = 0.00001;
 
