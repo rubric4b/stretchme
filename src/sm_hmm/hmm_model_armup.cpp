@@ -13,7 +13,7 @@ using namespace std;
 unsigned int Hmm_ArmUp::ARM_UP_NB_STATE         = 4;
 unsigned int Hmm_ArmUp::ARM_UP_TS_DIMENSION     = 7;
 unsigned int Hmm_ArmUp::ARM_UP_WINDOW_SIZE      = 20;
-double       Hmm_ArmUp::ARM_UP_THRESHOLD        = 7.8;
+double       Hmm_ArmUp::ARM_UP_THRESHOLD        = 8.5;
 
 Hmm_ArmUp::Hmm_ArmUp() :
     m_isPerforming(false)
