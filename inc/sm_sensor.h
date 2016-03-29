@@ -1,60 +1,66 @@
 #ifndef __SM_SENSOR_H__
 #define __SM_SENSOR_H__
 
-#include <vector>
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-#include <stdlib.h>
 #include <sensor.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "glm/glm.hpp"
+#include "kalman_manager.h"
 
-typedef struct
-{
-	unsigned int timestamp; // id
+#define SMSN_DEFAULT_UPDATE_MS 10
 
-	glm::vec3 acc;
-	glm::vec3 kAcc;
-	bool isAccUpdated;
+class sm_Sensor {
+	typedef void (*Sensor_Cb)(const sm_Sensor &sensor, void *data);
 
-}sensor_data_info;
+public:
+	sm_Sensor(sensor_type_e sensor_type,
+			  sensor_event_cb event_cb_func = listenerCb,
+			  unsigned int update_ms = SMSN_DEFAULT_UPDATE_MS);
+	~sm_Sensor();
 
-typedef struct
-{
-	sensor_type_e type;
-	sensor_h handle;
-	sensor_listener_h listener;
+	bool init(sensor_type_e type);
+	bool start();
+	bool stop();
+	bool release();
+	bool pause();
+	bool resume();
+	void reset();
 
-	float value_min;		/**< Minimal value */
-	float value_max;		/**< Maximal value */
-	float value_range;		/**< Values range */
+	void tick(sensor_event_s *event);
 
-}sensor_info;
+	void register_Callback(Sensor_Cb sensor_cb_func, void *data);
 
-typedef void (*Sensor_Cb)(void *data);
-sensor_info* sensor_init(sensor_type_e sensor_type);
-void sensor_start(sensor_info* sensor);
-void sensor_stop(sensor_info* sensor);
-void sensor_release(sensor_info* sensor);
-void sensor_listen_pause(sensor_info* sensor);
-void sensor_listen_resume(sensor_info* sensor);
-void reset_measure();
-sensor_data_info & get_current_sensor_data();
-sensor_data_info & get_prev_sensor_data();
+public:
 
-glm::vec3 get_pca_eigen();
+	// abbreviate: sn = sensor
+	unsigned long long m_initTime;
+	unsigned int m_timestamp; // id
 
-/**
- * register ONE callback function which called when the sensor event comes
- */
-void sensor_callback_register(Sensor_Cb func, void* data);
+	glm::vec3 m_prevData;
+	glm::vec3 m_prevKData;
+	glm::vec3 m_currData;
+	glm::vec3 m_currKData;
+
+	sensor_type_e m_snType;
+	sensor_h m_snHandle;
+	sensor_listener_h m_snListener;
+	sensor_event_cb m_snListenerCbFunc;
+	bool m_on_snListenerCb;
+
+	unsigned int m_updateMs;
+	float m_valueMin;		/**< Minimal value */
+	float m_valueMax;		/**< Maximal value */
+	float m_valueRange;		/**< Values range */
+
+	Sensor_Cb m_snCbFunc;
+	void *m_snCbData;
+
+	KalmanGearS2 m_kFilter;
 
 
-#ifdef __cplusplus
-}
-#endif
+private:
+	//typedef void (*sensor_event_cb)(sensor_h sensor, sensor_event_s *event, void *data);
+	static void listenerCb(sensor_h sensor, sensor_event_s *event, void *sensor_ptr);
+
+};
 
 #endif // __SM_SENSOR_H__ //
