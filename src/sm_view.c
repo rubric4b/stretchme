@@ -7,8 +7,8 @@
 
 #include "action_icon.h"
 #include "sm_view.h"
-#include "stretch_manager.h"
 #include "sm_data.h"
+#include "stretch_interface.h"
 
 // Callback functions -------------------------------------------------------------------------------------------------
 static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
@@ -278,7 +278,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	// stretching result checking
-	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
+	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_UNFOLD;
 
 }
@@ -300,7 +300,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	stretching_stop();
-	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
+	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_HOLD;
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
@@ -363,7 +363,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// set success since user succeed to keep hold time
 	ad->is_stretch_success = EINA_TRUE;
-//	stretching_start(STRETCH_ARM_UP, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
+//	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_FOLD, Stretch_Result_cb, ad);
 
 	/* Base Layout */
 	char edj_path[PATH_MAX] = {0, };
