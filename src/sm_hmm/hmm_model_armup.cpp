@@ -66,6 +66,7 @@ Hmm_ArmUp::Hmm_ArmUp() :
 
     // initialize Hmm_Model
     init_Hmm(ARM_UP_NB_STATE, ARM_UP_TS_DIMENSION, ARM_UP_THRESHOLD);
+    m_hmm.performance_init();
 
 }
 
@@ -85,9 +86,8 @@ double Hmm_ArmUp::get_Probability_child() {
     return m_hmm.results_log_likelihood;
 }
 
-double Hmm_ArmUp::perform_Stretching_child(glm::vec3 &curr_observation) {
+double Hmm_ArmUp::perform_Stretching_child(const glm::vec3 &curr_observation) {
     if(!m_isPerforming) {
-        m_hmm.performance_init();
         m_isPerforming = true;
     }
 
@@ -101,6 +101,7 @@ double Hmm_ArmUp::perform_Stretching_child(glm::vec3 &curr_observation) {
 
 bool Hmm_ArmUp::reset_child() {
     m_isPerforming = false;
+    m_hmm.performance_init();
     m_analyzer.reset();
 
     return true;

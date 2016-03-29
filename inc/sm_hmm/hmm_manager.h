@@ -8,11 +8,12 @@
 
 #include <vector>
 
+#include "singleton.hpp"
 #include "hmm_model.h"
 #include "stretch_manager.h"
 #include "xmm/xmm.h"
 
-class Hmm_Manager
+class Hmm_Manager : public Singleton<Hmm_Manager>
 {
 public:
     // consturctor
@@ -26,8 +27,8 @@ public:
     double get_Probability();
 
     // model performing
-    double perform_Stretching(StretchType type, glm::vec3 &observation);
-    double perform_Stretching(glm::vec3 &observation);
+    double perform_Stretching(StretchType type, const vec3 &observation);
+    double perform_Stretching(const vec3 &observation);
 
     // get threshold of the motion probability within model
     double get_Threshold(StretchType type);

@@ -33,8 +33,8 @@ public:
     virtual double get_Probability_child() = 0;
 
     // update observation : interface functiib
-    double perform_Stretching(glm::vec3 &curr_observation);
-    virtual double perform_Stretching_child(glm::vec3 &curr_observation) = 0;
+    double perform_Stretching(const glm::vec3 &curr_observation);
+    virtual double perform_Stretching_child(const glm::vec3 &curr_observation) = 0;
 
     // reset model performing : interface function
     bool reset();

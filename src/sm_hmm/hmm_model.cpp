@@ -33,7 +33,7 @@ double Hmm_Model::get_Probability() {
     return get_Probability_child();
 }
 
-double Hmm_Model::perform_Stretching(glm::vec3 &curr_observation) {
+double Hmm_Model::perform_Stretching(const glm::vec3 &curr_observation) {
     if(!get_Init()) {
         ERR("This model is not initialized\n");
         return 0;

@@ -15,7 +15,7 @@ public:
 
     bool get_Observation(std::vector<float>& curr_observation, std::vector<float>& observation);
 
-    virtual bool get_Observation(glm::vec3 curr_observation, std::vector<float>& observation) override;
+    virtual bool get_Observation(const glm::vec3 curr_observation, std::vector<float> &observation) override;
 
     virtual bool is_End() override;
     virtual void reset() override;

@@ -11,7 +11,7 @@
 using namespace std;
 
 Hmm_Manager::Hmm_Manager() :
-        m_currType(STRETCH_ARM_UP),
+        m_currType(STRETCH_TYPE_ARM_UP),
         m_models(STRETCH_TYPE_NUM)
 {
     init_Manager();
@@ -19,7 +19,7 @@ Hmm_Manager::Hmm_Manager() :
 
 Hmm_Manager::~Hmm_Manager() {
 
-    delete m_models[STRETCH_ARM_UP];
+    delete m_models[STRETCH_TYPE_ARM_UP];
 
 /*
     for(int i=0; i<m_models.size(); i++)
@@ -38,11 +38,11 @@ double Hmm_Manager::get_Probability() {
     return get_Probability(m_currType);
 }
 
-double Hmm_Manager::perform_Stretching(StretchType type, glm::vec3 &observation) {
+double Hmm_Manager::perform_Stretching(StretchType type, const vec3 &observation) {
     return m_models[type]->perform_Stretching(observation);
 }
 
-double Hmm_Manager::perform_Stretching(glm::vec3 &observation) {
+double Hmm_Manager::perform_Stretching(const vec3 &observation) {
     return perform_Stretching(m_currType, observation);
 }
 
@@ -61,7 +61,7 @@ void Hmm_Manager::reset_All_Model_Performing() {
 }
 
 void Hmm_Manager::init_Manager() {
-    m_models[STRETCH_ARM_UP] = new Hmm_ArmUp();
+    m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
 }
 
 double Hmm_Manager::get_Threshold(StretchType type) {

@@ -26,7 +26,7 @@ public:
 
     virtual double get_Probability_child() override;
 
-    virtual double perform_Stretching_child(glm::vec3 &curr_observation) override;
+    virtual double perform_Stretching_child(const glm::vec3 &curr_observation) override;
 
     virtual bool reset_child() override;
 

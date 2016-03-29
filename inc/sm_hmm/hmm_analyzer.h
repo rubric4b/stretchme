@@ -19,7 +19,7 @@ public:
     virtual ~Hmm_Analyzer() { };
 
     // pure virtual functions
-    virtual bool get_Observation(glm::vec3 curr_observation, std::vector<float>& observation) = 0;
+    virtual bool get_Observation(const glm::vec3 curr_observation, std::vector<float> &observation) = 0;
     virtual bool is_End() = 0;
     virtual void reset() = 0;
 
