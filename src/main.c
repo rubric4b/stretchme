@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <device/haptic.h>
+#include <device/power.h>
 
 #include "main.h"
 #include "logger.h"
@@ -44,6 +45,7 @@ void vibrate(int duration, int feedback)
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	device_power_release_lock(POWER_LOCK_DISPLAY);
 	ui_app_exit();
 }
 

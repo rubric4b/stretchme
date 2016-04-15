@@ -63,7 +63,7 @@ bool get_stored_last_time(time_t* timestamp)
 	char timeformat[20];
 
 	// get the last success time from file
-	FILE *fp = fopen(DATA_FILE_PATH, "rw+");
+	FILE *fp = fopen(DATA_FILE_PATH, "r");
 
 	if(fp != NULL)
 	{

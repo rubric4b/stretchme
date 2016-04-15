@@ -4,6 +4,7 @@
 
 #include <glib-object.h>
 #include <json-glib.h>
+#include <device/power.h>
 
 #include "action_icon.h"
 #include "sm_view.h"
@@ -17,7 +18,6 @@ static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 
 static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
-static void Result_cb(void *data, Evas_Object *obj, void *event_info);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
 static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
@@ -161,6 +161,7 @@ static Eina_Bool
 naviframe_pop_cb(void *data, Elm_Object_Item *it)
 {
 	stretch_manager_release();
+	device_power_release_lock(POWER_LOCK_DISPLAY);
 	ui_app_exit();
 	return EINA_FALSE;
 }
@@ -281,6 +282,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_UNFOLD;
 
+	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
@@ -438,7 +440,30 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	// Add bg
 	bg = elm_image_add(layout);
 	elm_object_style_set(bg, "center");
+
+	srandom(time(NULL));
+	unsigned int achieve = ((random() % 5) + 1 )*20;
+
+	switch(achieve)
+	{
+
+		case 20:
+			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_20p.png", NULL);
+		break;
+		case 40:
+			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_40p.png", NULL);
+		break;
+		case 60:
+			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_60p.png", NULL);
+		break;
+		case 80:
+			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_80p.png", NULL);
+		break;
+		default:
 	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
+		break;
+	}
+
 	evas_object_color_set(bg, 35, 202, 224, 255); // blue
 
 	evas_object_show(bg);
@@ -565,6 +590,9 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	usleep(1000*100); // 100 ms
 	vibrate(100, 99);
 
+
+	device_power_release_lock(POWER_LOCK_DISPLAY);
+
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
 }
@@ -625,40 +653,8 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	vibrate(700, 99);
-}
 
-// Result
-static void
-Result_cb(void *data, Evas_Object *obj, void *event_info)
-{
-	struct appdata *ad = data;
-	Evas_Object *layout, *Result_image, *button;
-	Elm_Object_Item *nf_it = NULL;
-
-	layout = elm_layout_add(ad->nf);
-	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_layout_theme_set(layout, "layout", "bottom_button", "default");
-	evas_object_show(layout);
-
-	// Add animation
-	Result_image = elm_image_add(layout);
-	elm_object_style_set(Result_image, "center");
-	elm_image_file_set(Result_image, ICON_DIR "/Result.png", NULL);
-	evas_object_show(Result_image);
-	elm_object_part_content_set(layout, "elm.swallow.content", Result_image);
-
-	// Add button
-	button = elm_button_add(layout);
-	elm_object_style_set(button, "bottom");
-
-	elm_object_text_set(button, "Exit");
-	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Reward_cb, ad);
-	evas_object_show(button);
-
-	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
-	elm_naviframe_item_title_enabled_set(nf_it, false, true);
+	device_power_release_lock(POWER_LOCK_DISPLAY);
 }
 
 // Reward
