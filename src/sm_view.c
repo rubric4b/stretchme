@@ -12,7 +12,7 @@
 #include "stretch_interface.h"
 
 // Callback functions -------------------------------------------------------------------------------------------------
-static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+//static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 
@@ -230,7 +230,7 @@ static void
 Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
 // Entrance the stretching - Now testing here for adding label
-static void
+void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
@@ -694,7 +694,7 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
 
-static void
+void
 Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
@@ -784,6 +784,9 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// TODO: DO this when stretching is succeeded!
 	store_last_time_to_current();
+
+
+	auto_start_stretch(data);
 }
 
 void
