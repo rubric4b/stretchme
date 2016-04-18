@@ -15,6 +15,8 @@ public:
     static unsigned int ARM_UP_WINDOW_SIZE;
     static double ARM_UP_THRESHOLD;
 
+    int m_observationCnt;
+
 public:
     Hmm_ArmUp();
 
