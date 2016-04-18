@@ -57,6 +57,8 @@ void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb
 void stretching_stop();
 void stretch_manager_release();
 
+void auto_start_stretch(void *data);
+
 /**
  * get the last matching rate (percentage)
  */
