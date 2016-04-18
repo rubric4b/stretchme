@@ -12,7 +12,7 @@ public:
 	stretch_Manager();
 	virtual ~stretch_Manager();
 
-	void start(StretchType type, StretchState state, Stretching_Result_Cb func, void* data);
+	void start(StretchConfig conf, Stretching_Result_Cb func, void* data);
 	void stop();
 
 	void init();
@@ -20,8 +20,7 @@ public:
 	void eval(const sm_Sensor &sensor);
 
 private:
-	StretchType m_stType;
-	StretchState m_stState;
+	StretchConfig m_stConf;
 
 	float m_lastMatchingRate;
 	float m_sensitivity;

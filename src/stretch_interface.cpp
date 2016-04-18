@@ -17,10 +17,10 @@ void stretch_manager_release() {
     sMgr.release();
 }
 
-void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb func, void* data) {
+void stretching_start(StretchConfig conf, Stretching_Result_Cb func, void* data) {
     if(accel) accel->stop();
 
-    sMgr.start(type, state, func, data);
+    sMgr.start(conf, func, data);
 }
 
 void stretching_stop() {
@@ -48,7 +48,7 @@ auto_start_cb(sensor_h sensor, sensor_event_s *event, void *data) {
         accel->m_prevData = accel->m_currData;
     }
 
-    if(mov_cnt > 20) {
+    if(mov_cnt > 30) {
         // moving
         mov_cnt = 0;
         accel->stop();

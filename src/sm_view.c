@@ -102,13 +102,13 @@ static void emit_current_time_to_watchapp(void *data, char* key)
 
 }
 
-static void Stretch_Result_cb(StretchType type, StretchState state, StretchResult result, void *data)
+static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *data)
 {
 	appdata_s *ad = data;
 
-	DBG("type %d, state %d, result %d\n", type, state, result);
+	DBG("Stretch_Result_cb:conf[mode,type,state]=%d,%d,%d, result(%d)\n", conf.mode, conf.type, conf.state, result);
 
-	switch(state)
+	switch(conf.state)
 	{
 		case STRETCH_STATE_UNFOLD:
 			if(result == STRETCH_SUCCESS)
@@ -279,7 +279,8 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
 	// stretching result checking
-	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_UNFOLD, Stretch_Result_cb, ad);
+	const StretchConfig armup_unfold_conf = { STRETCH_MODE_EVAL, STRETCH_TYPE_ARM_UP, STRETCH_STATE_UNFOLD};
+	stretching_start(armup_unfold_conf, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_UNFOLD;
 
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
@@ -302,7 +303,8 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	stretching_stop();
-	stretching_start(STRETCH_TYPE_ARM_UP, STRETCH_STATE_HOLD, Stretch_Result_cb, ad);
+	const StretchConfig armup_hold_conf = { STRETCH_MODE_EVAL, STRETCH_TYPE_ARM_UP, STRETCH_STATE_HOLD};
+	stretching_start(armup_hold_conf, Stretch_Result_cb, ad);
 	stretch_cur_state = STRETCH_STATE_HOLD;
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
