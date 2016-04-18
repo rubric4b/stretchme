@@ -101,7 +101,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		case STRETCH_STATE_UNFOLD : {
 			hMgr.perform_Stretching( sensor.m_currKData );
 
-			if(sensor.m_timestamp > 3500 && hMgr.is_End() || sensor.m_timestamp > 10000) {
+			if(sensor.m_timestamp > 3500 && hMgr.is_End() || sensor.m_timestamp > 9000) {
 				double prob = hMgr.get_Probability();
 				DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
 				if(-prob < hMgr.get_Threshold() && prob != 0) {
