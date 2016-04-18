@@ -15,7 +15,7 @@ HA_ArmUp::HA_ArmUp() :
         is_stay(false),
         prev_obseravtion(0),
         diff(0),
-        diff_cnt(0)
+        nondiff_cnt(0)
 {
 
 }
@@ -32,7 +32,7 @@ void HA_ArmUp::reset() {
     is_stay = false;
     prev_obseravtion = vec3(0);
     diff = vec3(0);
-    diff_cnt = 0;
+    nondiff_cnt = 0;
 
 }
 
@@ -52,24 +52,21 @@ bool HA_ArmUp::get_Observation(const vec3 curr_observation, std::vector<float> &
 
     diff = (curr_observation - prev_obseravtion);
 
-    if(length(diff) < 0.3 ) {
+    if(length(diff) < 0.2 ) {
 //        DBG("get_Observation:: %f length not enough!\n", length(diff));
-        diff_cnt++;
-//        return false;
-    } else {
-        diff_cnt = 0;
-        is_init_move = true;
-        is_stay = false;
+        nondiff_cnt++;
+
+        if(nondiff_cnt > 100) {
+            is_stay = true;
+        }
+
+        return false;
+
     }
 
-    if(!is_init_move) {
-        return false;
-    }
-
-    if(diff_cnt > 100) {
-        is_stay = true;
-        return false;
-    }
+    nondiff_cnt = 0;
+    is_init_move = true;
+    is_stay = false;
 
     diff = normalize(diff);
     observation[0] = curr_observation.x;
@@ -82,14 +79,12 @@ bool HA_ArmUp::get_Observation(const vec3 curr_observation, std::vector<float> &
 
     prev_obseravtion = curr_observation;
 
-
     return true;
 
 }
 
 bool HA_ArmUp::is_End() {
-
-    return is_stay;
+    return (is_stay && is_init_move);
 }
 
 bool HA_ArmUp::get_Observation(std::vector<float> &curr_observation, std::vector<float> &observation) {

@@ -26,7 +26,7 @@ private:
     bool is_stay;
     glm::vec3 prev_obseravtion;
     glm::vec3 diff;
-    int diff_cnt;
+    int nondiff_cnt;
 
 };
 
