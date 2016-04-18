@@ -14,6 +14,7 @@ class sm_Sensor {
 public:
 	sm_Sensor(sensor_type_e sensor_type,
 			  sensor_event_cb event_cb_func = listenerCb,
+			  void* event_cb_data = NULL,
 			  unsigned int update_ms = SMSN_DEFAULT_UPDATE_MS);
 	~sm_Sensor();
 
@@ -44,6 +45,7 @@ public:
 	sensor_h m_snHandle;
 	sensor_listener_h m_snListener;
 	sensor_event_cb m_snListenerCbFunc;
+	void* m_snListenerCbData;
 	bool m_on_snListenerCb;
 
 	unsigned int m_updateMs;

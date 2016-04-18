@@ -3,6 +3,7 @@
 
 sm_Sensor::sm_Sensor(sensor_type_e sensor_type,
 					 sensor_event_cb event_cb_func,
+					 void* event_cb_data,
 					 unsigned int update_ms) :
 	m_initTime(0),
 	m_timestamp(0),
@@ -13,15 +14,18 @@ sm_Sensor::sm_Sensor(sensor_type_e sensor_type,
 	m_snType(SENSOR_LAST),
 	m_snHandle(NULL),
 	m_snListener(NULL),
+	m_snListenerCbFunc(event_cb_func),
+	m_snListenerCbData(event_cb_data),
 	m_on_snListenerCb(false),
 	m_updateMs(update_ms),
 	m_valueMin(0),
 	m_valueMax(0),
 	m_valueRange(0),
 	m_snCbFunc(NULL),
-	m_snListenerCbFunc(event_cb_func),
+	m_snCbData(NULL),
 	m_kFilter(KalmanGearS2::ACCELEROMETER, 0.00001)
 {
+	if(!event_cb_data) m_snListenerCbData = this;
 	init(sensor_type);
 }
 
@@ -56,14 +60,14 @@ bool sm_Sensor::init(sensor_type_e type) {
 	}
 
 	// listener callback, equal to resume();
-	error = sensor_listener_set_event_cb(m_snListener, m_updateMs, m_snListenerCbFunc, this);
+	error = sensor_listener_set_event_cb(m_snListener, m_updateMs, m_snListenerCbFunc, m_snListenerCbData);
 	if(error) {
 		ERR("callback registration failed\n");
 		return false;
 	}
 	m_on_snListenerCb = true;
 
-	error = sensor_listener_set_option(m_snListener, SENSOR_OPTION_ON_IN_SCREEN_OFF)	;
+	error = sensor_listener_set_option(m_snListener, SENSOR_OPTION_ON_IN_SCREEN_OFF);
 	if(error) {
 		ERR("sensor option failed\n");
 		return false;
@@ -135,7 +139,7 @@ bool sm_Sensor::pause() {
 
 bool sm_Sensor::resume() {
 	DBG("sm_Sensor::resume()\n");
-	int error = sensor_listener_set_event_cb(m_snListener, m_updateMs, m_snListenerCbFunc, this);
+	int error = sensor_listener_set_event_cb(m_snListener, m_updateMs, m_snListenerCbFunc, m_snListenerCbData);
 	if(error) {
 		ERR("callback registration failed\n");
 		return false;
