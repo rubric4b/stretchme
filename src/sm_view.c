@@ -441,6 +441,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	bg = elm_image_add(layout);
 	elm_object_style_set(bg, "center");
 
+	// TODO: use read data
 	srandom(time(NULL));
 	unsigned int achieve = ((random() % 5) + 1 )*20;
 
@@ -460,7 +461,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_80p.png", NULL);
 		break;
 		default:
-	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
+			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
 		break;
 	}
 
@@ -478,7 +479,16 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	// result image
 	Success_image = elm_image_add(layout);
 	elm_object_style_set(Success_image, "center");
-	elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
+
+	if(achieve > 80)
+	{
+		elm_image_file_set(Success_image, ICON_DIR "/success_with_medal.png", NULL);
+	}
+	else
+	{
+		elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
+	}
+
 	evas_object_show(Success_image);
 	elm_object_part_content_set(layout, "elm.swallow.content", Success_image);
 
