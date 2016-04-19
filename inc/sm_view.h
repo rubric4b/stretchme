@@ -7,5 +7,16 @@
 void
 create_main_view(appdata_s *ad);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // __STRETCHME_VIEW_H__
+
 

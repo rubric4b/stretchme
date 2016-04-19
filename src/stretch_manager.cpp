@@ -35,15 +35,14 @@ void stretch_Manager::release() {
 	m_accel.release();
 }
 
-void stretch_Manager::start(StretchType type, StretchState state, Stretching_Result_Cb func, void *data) {
-	DBG("stretch_Manager::start() - stType = %d, stState = %d\n", type, state);
+void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void *data) {
+	DBG("stretch_Manager::start() - conf[mode,type,state] = %d,%d,%d\n", conf.mode, conf.type, conf.state);
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
-		m_resultCbFunc(m_stType, m_stState, STRETCH_CANCEL, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, m_resultCbData);
 	}
 
-	m_stType = type;
-	m_stState = state;
+	m_stConf = conf;
 	m_resultCbFunc = func;
 	m_resultCbData = data;
 	m_isProgress = true;
@@ -56,15 +55,15 @@ void stretch_Manager::start(StretchType type, StretchState state, Stretching_Res
 }
 
 stretch_Manager::stretch_Manager() :
-	m_stType(STRETCH_TYPE_NONE),
-	m_stState(STRETCH_STATE_NONE),
+	m_stConf(),
 	m_lastMatchingRate(0),
 	m_sensitivity(0),
 	m_resultCbFunc(NULL),
 	m_isProgress(false),
 	m_accel(SENSOR_ACCELEROMETER)
 {
-
+	const static StretchConfig init_conf = {STRETCH_MODE_NONE, STRETCH_TYPE_NONE, STRETCH_STATE_NONE};
+	m_stConf = init_conf;
 }
 
 stretch_Manager::~stretch_Manager() {
@@ -76,7 +75,7 @@ void stretch_Manager::stop() {
 
 	if(m_isProgress && m_resultCbFunc) {
 		//m_isProgress = false;
-		m_resultCbFunc(m_stType, m_stState, STRETCH_CANCEL, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, m_resultCbData);
 	}
 
 
@@ -94,14 +93,14 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	StretchResult stretch_result = STRETCH_FAIL;
 	bool callback_flag(false);
 
-	hMgr.set_CurrentType(m_stType);
+	hMgr.set_CurrentType(m_stConf.type);
 
 
-	switch(m_stState) {
+	switch(m_stConf.state) {
 		case STRETCH_STATE_UNFOLD : {
 			hMgr.perform_Stretching( sensor.m_currKData );
 
-			if(sensor.m_timestamp > 3500 && hMgr.is_End() || sensor.m_timestamp > 10000) {
+			if(sensor.m_timestamp > 3500 && hMgr.is_End() || sensor.m_timestamp > 9000) {
 				double prob = hMgr.get_Probability();
 				DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
 				if(-prob < hMgr.get_Threshold() && prob != 0) {
@@ -131,8 +130,8 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	if(callback_flag) {
 		m_isProgress = false;
 
-		hMgr.reset_Model_Performing(m_stType);
-		m_resultCbFunc(m_stType, m_stState, stretch_result, m_resultCbData);
+		hMgr.reset_Model_Performing(m_stConf.type);
+		m_resultCbFunc(m_stConf, stretch_result, m_resultCbData);
 
 	}
 }

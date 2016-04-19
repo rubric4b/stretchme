@@ -12,11 +12,19 @@ extern "C" {
 
 typedef enum
 {
+    STRETCH_MODE_NONE,
+    STRETCH_MODE_TRAIN,
+    STRETCH_MODE_EVAL,
+    STRETCH_MODE_DATA
+}StretchMode;
+
+typedef enum
+{
     STRETCH_TYPE_NONE,
     STRETCH_TYPE_ARM_UP,
-    STRETCH_ARM_UP_AND_SWING, // NOT YET SUPPORTED
-    STRETCH_ARM_FORWARD, // NOT YET SUPPORTED
-    STRETCH_ARM_BACK, // NOT YET SUPPORTED
+    STRETCH_TYPE_ARM_UP_AND_SWING, // NOT YET SUPPORTED
+    STRETCH_TYPE_ARM_FORWARD, // NOT YET SUPPORTED
+    STRETCH_TYPE_ARM_BACK, // NOT YET SUPPORTED
     STRETCH_TYPE_NUM
 }StretchType;
 
@@ -32,6 +40,13 @@ typedef enum
     STRETCH_STATE_FOLD // back to idle state
 }StretchState;
 
+typedef struct _StretchConfig
+{
+    StretchMode mode;
+    StretchType type;
+    StretchState state;
+}StretchConfig;
+
 typedef enum
 {
     STRETCH_SUCCESS,
@@ -39,7 +54,7 @@ typedef enum
     STRETCH_CANCEL // canceled by another request
 }StretchResult;
 
-typedef void (*Stretching_Result_Cb)(StretchType type, StretchState state, StretchResult result, void *data);
+typedef void (*Stretching_Result_Cb)(StretchConfig conf, StretchResult result, void *data);
 
 /**
  * Sensitivity 0.0 ~ 1.0
@@ -53,9 +68,11 @@ typedef void (*Stretching_Result_Cb)(StretchType type, StretchState state, Stret
  * It can handle the only one stretching action
  * If you ask to start it again before the result callback is returned, then previous request will be canceled
  */
-void stretching_start(StretchType type, StretchState state, Stretching_Result_Cb func, void* data);
+void stretching_start(StretchConfig conf, Stretching_Result_Cb func, void* data);
 void stretching_stop();
 void stretch_manager_release();
+
+void auto_start_stretch(void *data);
 
 /**
  * get the last matching rate (percentage)
