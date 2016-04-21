@@ -47,6 +47,10 @@ public:
     // initialize model, this method should be called from child class
     bool init_Hmm(unsigned int nbState, unsigned int tsDim, double threshold);
 
+    // retraining model
+    bool retrain();
+    virtual bool retrain_child() = 0;
+
 protected:
     // the number of transition states
     unsigned int m_nbState;

@@ -45,7 +45,7 @@ double Hmm_Model::perform_Stretching(const glm::vec3 &curr_observation) {
 bool Hmm_Model::is_PerformingDone() {
     if(!get_Init()) {
         ERR("This model is not initialized\n");
-        return 0;
+        return false;
     }
 
     return is_PerformingDone_child();
@@ -72,3 +72,13 @@ bool Hmm_Model::init_Hmm(unsigned int nbState,
 
     return true;
 }
+
+bool Hmm_Model::retrain() {
+    if(!get_Init()) {
+        ERR("This model is not initialized\n");
+        return false;
+    }
+    return retrain_child();
+}
+
+

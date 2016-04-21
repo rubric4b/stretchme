@@ -9,6 +9,8 @@
 #include "logger.h"
 
 #define FILE_ARMUP "xmm_armup.hmm"
+#define TRAINING_FILE_PATH "/opt/usr/media/"
+
 
 using namespace std;
 
@@ -24,8 +26,8 @@ Hmm_ArmUp::Hmm_ArmUp() :
     m_analyzer = HA_ArmUp();
 
     m_hmm = xmm::HMM();
-//    if(!read_hmm_from_file(FILE_ARMUP, m_hmm)) {
-    if(true) {
+    if(!read_hmm_from_file(FILE_ARMUP, m_hmm)) {
+//    if(true) {
 
         // training set files
         const char* arm_up_learning_set[] =
@@ -48,7 +50,7 @@ Hmm_ArmUp::Hmm_ArmUp() :
 
         //record training set
         for(int i=0; i<11; i++) {
-            record_training_set_from_file(arm_up_learning_set[i], i, ts);
+            record_training_set_from_file(arm_up_learning_set[i], RES_PATH, i, ts);
         }
 
         // setup xmm
@@ -113,3 +115,45 @@ bool Hmm_ArmUp::reset_child() {
 
     return true;
 }
+
+bool Hmm_ArmUp::retrain_child() {
+
+    // training set files
+    const char* arm_up_learning_set[] =
+        {
+             TRAINING_FILE_PATH"training_data_1.csv",
+             TRAINING_FILE_PATH"training_data_2.csv",
+             TRAINING_FILE_PATH"training_data_3.csv"
+        };
+
+    // setup training set
+    xmm::TrainingSet ts(xmm::NONE, ARM_UP_TS_DIMENSION);
+
+    //record training set
+    for(int i=0; i<3; i++) {
+        record_training_set_from_file(arm_up_learning_set[i], USER_PATH, i, ts);
+    }
+
+    // setup xmm
+    m_hmm.set_trainingSet(&ts);
+    m_hmm.set_nbStates(ARM_UP_NB_STATE);
+    m_hmm.set_transitionMode("left-right");
+    m_hmm.set_covariance_mode(xmm::GaussianDistribution::DIAGONAL);
+    m_hmm.set_likelihoodwindow(ARM_UP_WINDOW_SIZE);
+
+    // training
+    m_hmm.train();
+
+    DBG("hmm armup() retrained\n");
+    DBG("%s", m_hmm.__str__().c_str());
+
+    write_hmm_to_file(FILE_ARMUP, m_hmm);
+
+    // initialize Hmm_Model
+    init_Hmm(ARM_UP_NB_STATE, ARM_UP_TS_DIMENSION, ARM_UP_THRESHOLD);
+    m_hmm.performance_init();
+
+    return true;
+}
+
+

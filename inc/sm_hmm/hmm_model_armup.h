@@ -32,7 +32,7 @@ public:
 
     virtual bool reset_child() override;
 
-
+    virtual bool retrain_child() override;
 
 private:
     // Hidden markov model using XMM lib

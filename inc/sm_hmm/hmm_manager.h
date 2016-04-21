@@ -51,6 +51,10 @@ public:
     void reset_Model_Performing();
     void reset_All_Model_Performing();
 
+    // retraining model
+    bool retrain_Model(StretchType type);
+
+
 private:
     void init_Manager();
 

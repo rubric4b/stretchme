@@ -95,3 +95,9 @@ unsigned int Hmm_Manager::get_TsDim(StretchType type) {
 unsigned int Hmm_Manager::get_TsDim() {
     return get_TsDim(m_currType);
 }
+
+bool Hmm_Manager::retrain_Model(StretchType type) {
+    return m_models[type]->retrain();
+}
+
+
