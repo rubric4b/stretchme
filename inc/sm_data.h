@@ -20,12 +20,19 @@
 #define false 0
 #endif
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
 	ST_TRIAL = 0,
 	ST_SUCCESS,
 	ST_FAIL
 }LOG_TYPE;
+
+
 
 /**
  * get the last stretching time from stored file
@@ -71,6 +78,11 @@ bool store_last_time(time_t timestamp, LOG_TYPE type);
  * @return true if file writing was succeeded
  */
 bool store_last_time_with_current(LOG_TYPE type);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // __SM_DATA_H__ //
 

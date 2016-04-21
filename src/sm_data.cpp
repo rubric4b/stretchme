@@ -1,11 +1,7 @@
+#include <fstream>
 
 #include "sm_data.h"
 #include "logger.h"
-
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <string>
 
 #define DATA_FILE_PATH "/opt/usr/media/stretching_data.txt"
 #define DATA_LINE_LENGTH 22
