@@ -283,6 +283,10 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	}
 
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
+
+	 // save the time when stretching is started!
+	 store_last_time_with_current(ST_TRIAL);
+
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
@@ -470,12 +474,6 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_show(bg);
 	elm_object_part_content_set(layout, "elm.swallow.bg", bg);
 
-
-#if 1
-#if 1
-
-#if 1
-
 	// result image
 	Success_image = elm_image_add(layout);
 	elm_object_style_set(Success_image, "center");
@@ -494,92 +492,6 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// text
 	elm_object_part_text_set(layout, "text", "Success!!");
-
-#else
-
-	// Add Scroller
-	Evas_Object* circle_scroller, *scroller;
-
-	scroller = elm_scroller_add(layout);
-	evas_object_size_hint_min_set(scroller, 360, 360);
-	evas_object_show(scroller);
-
-	elm_object_part_content_set(layout, "elm.swallow.content", scroller);
-
-	/* Create Circle Scroller */
-	circle_scroller = eext_circle_object_scroller_add(scroller, ad->circle_surface);
-
-	/* Set Scroller Policy */
-	eext_circle_object_scroller_policy_set(circle_scroller, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO);
-
-	/* Activate Rotary Event */
-	eext_rotary_object_event_activated_set(circle_scroller, EINA_TRUE);
-
-// USE 1 IMAGE
-
-	// result image
-	Success_image = elm_image_add(scroller);
-	elm_object_style_set(Success_image, "center");
-	elm_image_file_set(Success_image, ICON_DIR "/Success_Reward.png", NULL);
-	elm_image_no_scale_set(Success_image, EINA_TRUE);
-	evas_object_show(Success_image);
-
-	elm_object_content_set(scroller, Success_image);
-
-#endif
-
-#else
-
-// USE BOX
-
-	Evas_Object* box, *icon, *present;
-
-	box = elm_box_add(scroller);
-	elm_box_horizontal_set(box, EINA_FALSE);
-	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	evas_object_show(box);
-
-	icon = elm_image_add(box);
-	elm_object_style_set(icon, "center");
-	elm_image_file_set(icon, ICON_DIR "/Success_Picto.png", NULL);
-	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
-//	elm_image_no_scale_set(icon, EINA_TRUE);
-	evas_object_show(icon);
-
-	elm_box_pack_end(box, icon);
-
-	present = elm_image_add(box);
-	elm_object_style_set(present, "center");
-	elm_image_file_set(present, ICON_DIR "/Success_long.png", NULL);
-//	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-//	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	elm_image_no_scale_set(present, EINA_TRUE);
-	evas_object_show(present);
-
-	elm_box_pack_end(box, present);
-
-	elm_object_content_set(scroller, box);
-
-#endif
-
-#else
-
-// USE LAYOUT
-
-	Evas_Object* scroll_layout;
-
-	scroll_layout = elm_layout_add(scroller);
-	elm_layout_file_set(scroll_layout, edj_path, "stretch_success_content"); // custom theme
-//	evas_object_size_hint_weight_set(scroll_layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-//	evas_object_size_hint_align_set(scroll_layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
-	evas_object_resize(scroll_layout, 360, 720);
-	evas_object_show(scroll_layout);
-
-	elm_object_content_set(scroller, scroll_layout);
-
-#endif
 
 	// Add button
 	button = elm_button_add(layout);
@@ -602,6 +514,9 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 
 	device_power_release_lock(POWER_LOCK_DISPLAY);
+
+	// save the time when stretching is done!
+	store_last_time_with_current(ST_SUCCESS);
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -665,6 +580,10 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	vibrate(700, 99);
 
 	device_power_release_lock(POWER_LOCK_DISPLAY);
+
+	// save the time when stretching is done!
+	store_last_time_with_current(ST_FAIL);
+
 }
 
 // Reward
@@ -731,8 +650,8 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	} else {
 		snprintf(buff, sizeof(buff),
 				 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
-				 "팔을 위로 뻗어주세요.</font_size><br> "
-				"<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+				 "?�을 ?�로 뻗어주세??</font_size><br> "
+				"<font_size=30 color=#999999>3�?5초간 기록?�니??</font_size></align>",
 				 ad->training_cnt);
 		LABEL_TEXT = buff;
 		BTN_TEXT = "Training";
@@ -821,9 +740,6 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	// TODO: DO this when stretching is succeeded!
-	store_last_time_to_current();
-
 }
 
 static void button_pressed_cb(void *data, Evas_Object *button, void *ev) {
@@ -857,12 +773,7 @@ create_main_view(appdata_s *ad)
 	Evas_Object *layout, *bg, *button;
 	Elm_Object_Item *nf_it = NULL;
 
-#if 0
-	// it has randomly 3 types for time that user had stretched before.
-	srandom(time(NULL));
-	int type = random() % 3;
-#else
-	time_t diff = get_elapsed_time_from_last();
+	time_t diff = get_elapsed_time_from_last(ST_SUCCESS);
 	int type = get_awareness_level_from_data(diff);
 
 	int d_day = diff / (60 * 60 * 24);
@@ -870,8 +781,6 @@ create_main_view(appdata_s *ad)
 	int d_hour = diff / (60 * 60);
 	diff -= d_hour * 60 * 60;
 	int d_min = diff / 60;
-
-#endif
 
 	int colors[4][4] = {
 		{112, 198, 19, 255}, // green
@@ -900,6 +809,10 @@ create_main_view(appdata_s *ad)
 
 	switch(type)
 	{
+	case 0:
+		// the first time to try
+		snprintf(text2string, sizeof(text2string), "Let's start to stretch!");
+		break;
 	case 1:
 		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last", d_min, (d_min > 1) ? "minutes ago" : "minute ago");
 		break;
