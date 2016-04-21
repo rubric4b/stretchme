@@ -846,9 +846,10 @@ static void button_repeat_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	ad->is_training = true;
 
+	vibrate(100, 99);
+
 	popup_training_cb(data, NULL, NULL);
 
-	DBG("If you get into Training mode?\n");
 }
 
 void
@@ -951,6 +952,8 @@ create_main_view(appdata_s *ad)
 
 	// exit app when the 1st depth is poped
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+
+	hmm_init();
 }
 
 
