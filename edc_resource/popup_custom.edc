@@ -19,7 +19,7 @@
 group { name: "elmdemo-test/popup/layout/title_content_button";
    parts {
       part { name: "elm.swallow.content";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             min: 0 327;
@@ -33,7 +33,7 @@ group { name: "elmdemo-test/popup/layout/title_content_button";
 group { name: "elmdemo-test/popup/layout/title_content";
    parts {
       part { name: "elm.swallow.content";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             min: 0 410;
@@ -47,7 +47,7 @@ group { name: "elmdemo-test/popup/layout/title_content";
 group { name: "elmdemo-test/popup/layout/content_button";
    parts {
       part { name: "elm.swallow.content";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             min: 0 395;
@@ -61,7 +61,7 @@ group { name: "elmdemo-test/popup/layout/content_button";
 group { name: "elmdemo-test/popup/layout/default";
    parts {
       part { name: "elm.swallow.content";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             min: 0 478;
@@ -75,7 +75,7 @@ group { name: "elmdemo-test/popup/layout/default";
 group { name: "elmdemo-test/popup/layout/checkview";
    parts {
       part { name: "elm.swallow.content";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             min: 0 255;
@@ -88,7 +88,7 @@ group { name: "elmdemo-test/popup/layout/checkview";
 group { name: "popup_checkview_internal";
    parts {
       part { name: "label";
-         scale: 1;
+        scale: 0.77;
          type: SWALLOW;
          description { state: "default" 0.0;
             fixed: 1 0;
@@ -100,7 +100,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "bottom_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             align: 0.0 1.0;
             min: 0 4;
@@ -110,7 +110,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "pad_b";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             align: 0.0 1.0;
             min: 0 90;
@@ -127,7 +127,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "left_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             fixed: 1 0;
             min: 16 0;
@@ -141,7 +141,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "right_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             fixed: 1 0;
             min: 16 0;
@@ -155,7 +155,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "end_field";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             align: 0.0 1.0;
             min: 0 90;
@@ -175,7 +175,7 @@ group { name: "popup_checkview_internal";
       }
       part { name: "elm.swallow.end";
          type: SWALLOW;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             rel1.to: "end_field";
             rel2.to: "end_field";
@@ -200,7 +200,7 @@ group { name: "popup_progressbar";
    parts {
       part { name: "base";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 360 360;
             max: 360 360;
@@ -208,7 +208,7 @@ group { name: "popup_progressbar";
       }
       part { name: "top_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 0 74;
             rel1.relative: 0.0 0.0;
@@ -221,7 +221,7 @@ group { name: "popup_progressbar";
       }
       part { name: "elm.swallow.content";
          type: SWALLOW;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 98 98;
             max: 98 98;
@@ -235,7 +235,7 @@ group { name: "popup_progressbar";
       }
       part { name: "before_text_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 0 12;
             rel1.to: "elm.swallow.content";
@@ -248,7 +248,7 @@ group { name: "popup_progressbar";
       }
       part { name: "elm.text";
          type: TEXTBLOCK;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 300 88;
             max: 300 88;
@@ -271,7 +271,7 @@ group { name: "popup_progressbar";
 
       part { name: "bottom_pad";
          type: SPACER;
-         scale: 1;
+        scale: 0.77;
          description { state: "default" 0.0;
             min: 0 88;
             rel1.to: "base";
