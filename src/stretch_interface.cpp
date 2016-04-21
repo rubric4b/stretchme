@@ -11,6 +11,7 @@
 #include "sm_hmm/hmm_manager.h"
 #include "sm_view.h"
 #include "sm_popup.h"
+#include "main.h"
 
 
 #define sMgr stretch_Manager::Inst()
@@ -138,6 +139,8 @@ data_gathering_cb(sensor_h sensor, sensor_event_s *event, void *data) {
         nf_it = elm_naviframe_bottom_item_get(ad->nf);
         elm_naviframe_item_pop_to(nf_it);
 
+        vibrate(300, 99);
+
         popup_data_confirm_cb(data, NULL, NULL);
     }
 
@@ -153,4 +156,8 @@ void streching_date_gathering(void *data) {
 
 bool retraining_model(StretchType type) {
     return hMgr.retrain_Model(type);
+}
+
+void hmm_init() {
+    hMgr;
 }

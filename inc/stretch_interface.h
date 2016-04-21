@@ -75,6 +75,7 @@ void stretch_manager_release();
 void auto_start_stretch(void *data);
 void streching_date_gathering(void *data);
 bool retraining_model(StretchType type);
+void hmm_init();
 
 /**
  * get the last matching rate (percentage)

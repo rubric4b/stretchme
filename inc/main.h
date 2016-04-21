@@ -51,8 +51,16 @@ typedef struct appdata {
 	Eina_Bool is_stretch_success;
 } appdata_s;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max);
 void vibrate(int duration, int feedback);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __STRETCHME_H__
 
