@@ -48,8 +48,8 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	m_isProgress = true;
 
 	// turn on the sensor
-	m_accel.start();
 	m_accel.register_Callback(sensorCb, this);
+	m_accel.start();
 
 
 }
@@ -114,7 +114,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 			break;
 
 		case STRETCH_STATE_HOLD : {
-			if(sensor.m_timestamp > 1000) {
+			if(sensor.m_timestamp > 5000) {
 				callback_flag = true;
 				stretch_result = STRETCH_SUCCESS;
 			}

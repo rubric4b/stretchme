@@ -56,7 +56,7 @@ bool HA_ArmUp::get_Observation(const vec3 curr_observation, std::vector<float> &
 //        DBG("get_Observation:: %f length not enough!\n", length(diff));
         nondiff_cnt++;
 
-        if(nondiff_cnt > 100) {
+        if(nondiff_cnt > 50) {
             is_stay = true;
         }
 
