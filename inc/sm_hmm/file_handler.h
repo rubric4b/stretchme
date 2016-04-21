@@ -9,10 +9,20 @@
 
 #include "xmm/xmm.h"
 
+typedef enum {
+    DATA_PATH,
+    SHARED_DATA_PATH,
+    RES_PATH,
+    USER_PATH
+}PathType;
+
 bool write_hmm_to_file(const std::string &file_name, const xmm::HMM &model);
 
 bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model);
 
-void record_training_set_from_file(const std::string &file_name, int ts_phrase_index, xmm::TrainingSet &ts);
+void record_training_set_from_file(const std::string &file_name,
+                                   PathType type,
+                                   int ts_phrase_index,
+                                   xmm::TrainingSet &ts);
 
 #endif //__FILE_HANDLER_H__

@@ -103,13 +103,33 @@ bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model)
 }
 
 
-void record_training_set_from_file(const std::string &file_name, int ts_phrase_index, xmm::TrainingSet &ts)
+void record_training_set_from_file(const std::string &file_name,
+                                   PathType type,
+                                   int ts_phrase_index,
+                                   xmm::TrainingSet &ts)
 {
     // in file stream
     std::ifstream in_file;
 
     // file path
-    std::string file_path = app_get_resource_path() + file_name;
+    std::string file_path;
+    switch(type) {
+        case DATA_PATH :
+            file_path = app_get_data_path();
+            break;
+        case SHARED_DATA_PATH:
+            file_path = app_get_shared_data_path();
+            break;
+        case RES_PATH :
+            file_path = app_get_resource_path();
+            break;
+        case USER_PATH :
+            file_path = "";
+            break;
+        default:
+            break;
+    }
+    file_path += file_name;
 
     // file open
     in_file.open(file_path.c_str(), std::ios::in | std::ios::binary);
@@ -117,6 +137,9 @@ void record_training_set_from_file(const std::string &file_name, int ts_phrase_i
         std::string msg = "Failed to open file " + file_path;
         ERR("%s\n",msg.c_str());
         throw std::runtime_error(msg.c_str());
+    }else{
+        std::string msg = "Success to open file " + file_path;
+        DBG("%s\n",msg.c_str());
     }
 
     // record file to training set
