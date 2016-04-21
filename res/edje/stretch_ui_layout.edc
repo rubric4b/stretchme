@@ -6,6 +6,8 @@ images {
 }
 
 collections {
+
+
 	group { name: "anim_img_and_center_text";
 
 		styles {
@@ -311,5 +313,7 @@ collections {
 
 		} // parts
 	} // group
+
+       #include "../../edc_resource/popup_custom.edc"
 
 } // collections

@@ -8,20 +8,20 @@
 
 #include "action_icon.h"
 #include "sm_view.h"
+#include "sm_popup.h"
 #include "sm_data.h"
 #include "stretch_interface.h"
 
 // Callback functions -------------------------------------------------------------------------------------------------
-//static void Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 
 static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
-static void Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
 
-static StretchState stretch_cur_state = STRETCH_STATE_NONE;
+
+static StretchConfig st_current_config = { STRETCH_MODE_NONE, STRETCH_TYPE_NONE, STRETCH_STATE_NONE };
 
 #define STRETCHING_DATA_FILEPATH "/opt/usr/share/stretching.json"
 
@@ -108,45 +108,45 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 
 	DBG("Stretch_Result_cb:conf[mode,type,state]=%d,%d,%d, result(%d)\n", conf.mode, conf.type, conf.state, result);
 
-	switch(conf.state)
-	{
-		case STRETCH_STATE_UNFOLD:
-			if(result == STRETCH_SUCCESS)
-			{
-				// go to hold view
-				Hold_Stretch_cb(data, NULL, NULL);
-			}
-			else if(result == STRETCH_FAIL)
-			{
-				// go to fail view
-				Fail_Strecth_cb(data, NULL, NULL);
-			}
-		break;
-
-		case STRETCH_STATE_HOLD :
-			if(result == STRETCH_SUCCESS)
-			{
-				// store the result at app_data
-				ad->is_stretch_success = EINA_TRUE;
-
-				// go to fold view
-				Fold_Stretch_cb(data, NULL, NULL);
-			}
-			else if(result == STRETCH_FAIL)
-			{
-				// store the result at app_data
-				ad->is_stretch_success = EINA_FALSE;
-				// go to fail view
-				Fail_Strecth_cb(data, NULL, NULL);
-			}
-		break;
-
-		default:
+	if(conf.mode == STRETCH_MODE_EVAL) {
+		switch(conf.state)
 		{
-			;
+			case STRETCH_STATE_UNFOLD:
+				if(result == STRETCH_SUCCESS)
+				{
+					// go to hold view
+					Hold_Stretch_cb(data, NULL, NULL);
+				}
+				else if(result == STRETCH_FAIL)
+				{
+					// go to fail view
+					Fail_Strecth_cb(data, NULL, NULL);
+				}
+				break;
+
+			case STRETCH_STATE_HOLD :
+				if(result == STRETCH_SUCCESS)
+				{
+					// store the result at app_data
+					ad->is_stretch_success = EINA_TRUE;
+
+					// go to fold view
+					Fold_Stretch_cb(data, NULL, NULL);
+				}
+				else if(result == STRETCH_FAIL)
+				{
+					// store the result at app_data
+					ad->is_stretch_success = EINA_FALSE;
+					// go to fail view
+					Fail_Strecth_cb(data, NULL, NULL);
+				}
+				break;
+
+			default:
+				break;
 		}
 
-}
+	}
 }
 
 static Eina_Bool
@@ -166,15 +166,14 @@ naviframe_pop_cb(void *data, Elm_Object_Item *it)
 	return EINA_FALSE;
 }
 
-/*
-static void
+
+static Eina_Bool
 naviframe_back_cb(void *data, Evas_Object *obj, void *event_info)
 {
-    struct appdata *ad = data;
     stretching_stop();
-    elm_naviframe_item_pop(ad->nf);
+	return EINA_FALSE;
 }
-*/
+
 
 static void
 label_text_set(Evas_Object *label, struct tm t)
@@ -226,16 +225,12 @@ static Eina_Bool folding_timer_cb(void* data)
 }
 
 
-static void
-Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info);
-
 // Entrance the stretching - Now testing here for adding label
 void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	struct appdata *ad = data;
+	appdata_s *ad = data;
 	Evas_Object *layout, *Unfolding_Animation;
-
 	Elm_Object_Item *nf_it = NULL;
 
 	/* Base Layout */
@@ -251,7 +246,6 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_show(layout);
 
-
 	// Add animation
 	Unfolding_Animation = elm_image_add(layout);
 	//elm_object_style_set(Unfolding_Animation, "center");
@@ -263,14 +257,12 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	if (elm_image_animated_available_get(Unfolding_Animation)) {
 		action_icon_set(Unfolding_Animation, true);
 		action_icon_play_set(Unfolding_Animation, true, true, true);
-	}
-	else
-	{
+	} else {
 		DBG("Animation is NOT available\n");
 	}
 
 	// TODO: remove this callback when HMM works well
-	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
+//	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
@@ -278,17 +270,24 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	// stretching result checking
-	const StretchConfig armup_unfold_conf = { STRETCH_MODE_EVAL, STRETCH_TYPE_ARM_UP, STRETCH_STATE_UNFOLD};
-	stretching_start(armup_unfold_conf, Stretch_Result_cb, ad);
-	stretch_cur_state = STRETCH_STATE_UNFOLD;
+	st_current_config.type = STRETCH_TYPE_ARM_UP;
+	st_current_config.state = STRETCH_STATE_UNFOLD;
+
+	if(!ad->is_training) {
+		st_current_config.mode = STRETCH_MODE_EVAL;
+		// stretching result checking
+		stretching_start(st_current_config, Stretch_Result_cb, ad);
+	} else {
+		st_current_config.mode = STRETCH_MODE_TRAIN;
+		streching_date_gathering(ad);
+	}
 
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 }
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 {
-	if(stretch_cur_state == STRETCH_STATE_HOLD)
+	if(st_current_config.state == STRETCH_STATE_HOLD)
 		Fold_Stretch_cb(data, NULL, NULL);
 }
 
@@ -296,16 +295,15 @@ static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 static void
 Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	struct appdata *ad = data;
+	appdata_s *ad = data;
 
 	vibrate(300, 99);
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	stretching_stop();
-	const StretchConfig armup_hold_conf = { STRETCH_MODE_EVAL, STRETCH_TYPE_ARM_UP, STRETCH_STATE_HOLD};
-	stretching_start(armup_hold_conf, Stretch_Result_cb, ad);
-	stretch_cur_state = STRETCH_STATE_HOLD;
+	st_current_config.state = STRETCH_STATE_HOLD;
+	stretching_start(st_current_config, Stretch_Result_cb, ad);
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
@@ -363,7 +361,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
-	stretch_cur_state = STRETCH_STATE_FOLD;
+	st_current_config.state = STRETCH_STATE_FOLD;
 
 	// set success since user succeed to keep hold time
 	ad->is_stretch_success = EINA_TRUE;
@@ -428,7 +426,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
-	stretch_cur_state = STRETCH_STATE_NONE;
+	st_current_config.state = STRETCH_STATE_NONE;
 
 	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
@@ -618,7 +616,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Elm_Object_Item *nf_it = NULL;
 
 	stretching_stop();
-	stretch_cur_state = STRETCH_STATE_NONE;
+	st_current_config.state = STRETCH_STATE_NONE;
 
 	char edj_path[PATH_MAX] = {0, };
 	app_get_resource(EDJ_FILE, edj_path, (int)PATH_MAX);
@@ -707,9 +705,39 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 }
 
 void
+Model_Retraining_cb(void *data, Evas_Object *obj, void *event_info)
+{
+	appdata_s *ad = data;
+
+	retraining_model(st_current_config.type);
+	elm_popup_dismiss(ad->popup);
+	popup_training_done_cb(data, NULL, NULL);
+}
+
+
+void
 Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	struct appdata *ad = data;
+	char *LABEL_TEXT, *BTN_TEXT, buff[512];
+
+	if(!ad->is_training ) {
+		LABEL_TEXT =
+			"<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
+			"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
+			"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+		BTN_TEXT = "Start";
+
+	} else {
+		snprintf(buff, sizeof(buff),
+				 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
+				 "팔을 위로 뻗어주세요.</font_size><br> "
+				"<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+				 ad->training_cnt);
+		LABEL_TEXT = buff;
+		BTN_TEXT = "Training";
+	}
+
 	Elm_Object_Item *nf_it;
 	Evas_Object *button, *layout;
 	time_t local_time = time(NULL);
@@ -774,16 +802,15 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 
 	label = elm_label_add(scroller);
 	elm_label_line_wrap_set(label, ELM_WRAP_MIXED);
-	elm_object_text_set(label, "<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
-			"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
-			"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>");
+	elm_object_text_set(label, LABEL_TEXT);
 	elm_object_content_set(scroller, label);
 	evas_object_show(label);
 
 	// Button
 	button = elm_button_add(layout);
 	elm_object_style_set(button, "bottom");
-	elm_object_text_set(button, "Start"); // Start!
+
+	elm_object_text_set(button, BTN_TEXT); // Start!
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
 	evas_object_smart_callback_add(button, "clicked", Start_Stretch_cb, ad);
 	evas_object_show(button);
@@ -797,8 +824,31 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	// TODO: DO this when stretching is succeeded!
 	store_last_time_to_current();
 
+}
 
-	auto_start_stretch(data);
+static void button_pressed_cb(void *data, Evas_Object *button, void *ev) {
+	appdata_s *ad = data;
+	ad->is_training = false;
+
+	DBG("_button_pressed_cb : is_training = %d\n", ad->is_training);
+}
+
+
+static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
+	appdata_s *ad = data;
+	DBG("_button_unpressed_cb : is_training = %d\n", ad->is_training);
+	if(!ad->is_training) {
+		Strecth_Guide_cb(data, NULL, NULL);
+	}
+}
+
+static void button_repeat_cb(void *data, Evas_Object *button, void *ev) {
+	appdata_s *ad = data;
+	ad->is_training = true;
+
+	popup_training_cb(data, NULL, NULL);
+
+	DBG("If you get into Training mode?\n");
 }
 
 void
@@ -887,7 +937,13 @@ create_main_view(appdata_s *ad)
 	evas_object_show(button);
 
 	// Set next display as callback function
-	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
+	evas_object_smart_callback_add(button, "pressed", button_pressed_cb, ad);
+	evas_object_smart_callback_add(button, "unpressed", button_unpressed_cb, ad);
+
+	elm_button_autorepeat_set(button, EINA_TRUE);
+	elm_button_autorepeat_initial_timeout_set(button, 1.0);
+	elm_button_autorepeat_gap_timeout_set(button, 1.0);
+	evas_object_smart_callback_add(button, "repeated", button_repeat_cb, ad);
 
 	// Display current page
 	nf_it = elm_naviframe_item_push(ad->nf, "Enter the stretching", NULL, NULL, layout, NULL);
@@ -896,5 +952,6 @@ create_main_view(appdata_s *ad)
 	// exit app when the 1st depth is poped
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 }
+
 
 

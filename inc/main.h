@@ -42,6 +42,10 @@ typedef struct appdata {
 	Eext_Circle_Surface *circle_surface;
 	struct tm saved_time;
 
+	Evas_Object *popup;
+	Eina_Bool is_training; // or normal stretching
+	unsigned short training_cnt;
+
 	// view
 	Ecore_Timer * fold_timer;
 	Eina_Bool is_stretch_success;

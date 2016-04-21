@@ -5,7 +5,6 @@
 #ifndef STRETCHME_STRETCH_INTERFACE_H
 #define STRETCHME_STRETCH_INTERFACE_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,7 +36,8 @@ typedef enum
     STRETCH_STATE_SWING_1_BACK, // swing back to holding position
     STRETCH_STATE_SWING_2, // swing right or down from holding position
     STRETCH_STATE_SWING_2_BACK, // swing back to holding position
-    STRETCH_STATE_FOLD // back to idle state
+    STRETCH_STATE_FOLD, // back to idle state
+    STRETCH_STATE_CONFIRM // for training mode
 }StretchState;
 
 typedef struct _StretchConfig
@@ -73,6 +73,8 @@ void stretching_stop();
 void stretch_manager_release();
 
 void auto_start_stretch(void *data);
+void streching_date_gathering(void *data);
+bool retraining_model(StretchType type);
 
 /**
  * get the last matching rate (percentage)
