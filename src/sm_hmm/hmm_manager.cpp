@@ -6,6 +6,7 @@
 
 #include "sm_hmm/hmm_manager.h"
 #include "sm_hmm/hmm_model_armup.h"
+#include "sm_hmm/hmm_model_forward.h"
 #include "logger.h"
 
 using namespace std;
@@ -64,6 +65,10 @@ void Hmm_Manager::reset_All_Model_Performing() {
 void Hmm_Manager::init_Manager() {
     m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
     m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
+
+    m_models[STRETCH_TYPE_ARM_FORWARD] = new Hmm_Forward();
+    m_analyzers[STRETCH_TYPE_ARM_FORWARD] = m_models[STRETCH_TYPE_ARM_FORWARD]->get_Analyzer();
+
 }
 
 double Hmm_Manager::get_Threshold(StretchType type) {
