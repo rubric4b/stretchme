@@ -12,7 +12,8 @@ using namespace std;
 
 Hmm_Manager::Hmm_Manager() :
         m_currType(STRETCH_TYPE_ARM_UP),
-        m_models(STRETCH_TYPE_NUM)
+        m_models(STRETCH_TYPE_NUM),
+        m_analyzers(STRETCH_TYPE_NUM)
 {
     init_Manager();
 }
@@ -51,7 +52,7 @@ void Hmm_Manager::reset_Model_Performing(StretchType type) {
 }
 
 void Hmm_Manager::reset_Model_Performing() {
-    m_models[m_currType]->reset();
+    reset_Model_Performing(m_currType);
 }
 
 void Hmm_Manager::reset_All_Model_Performing() {
@@ -62,6 +63,7 @@ void Hmm_Manager::reset_All_Model_Performing() {
 
 void Hmm_Manager::init_Manager() {
     m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
+    m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
 }
 
 double Hmm_Manager::get_Threshold(StretchType type) {
@@ -99,5 +101,30 @@ unsigned int Hmm_Manager::get_TsDim() {
 bool Hmm_Manager::retrain_Model(StretchType type) {
     return m_models[type]->retrain();
 }
+
+bool Hmm_Manager::analyze_Observation(StretchType type, glm::vec3 observation) {
+    return m_analyzers[type]->analyze(observation);
+}
+
+bool Hmm_Manager::analyze_Observation(glm::vec3 observation) {
+    return analyze_Observation(m_currType, observation);
+}
+
+bool Hmm_Manager::get_End(StretchType type) {
+    return m_analyzers[type]->is_End();
+}
+
+bool Hmm_Manager::get_End() {
+    return get_End(m_currType);
+}
+
+
+
+
+
+
+
+
+
 
 

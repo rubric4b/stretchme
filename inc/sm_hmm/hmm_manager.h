@@ -12,6 +12,7 @@
 #include "hmm_model.h"
 #include "stretch_manager.h"
 #include "xmm/xmm.h"
+#include "hmm_analyzer.h"
 
 class Hmm_Manager : public Singleton<Hmm_Manager>
 {
@@ -27,8 +28,8 @@ public:
     double get_Probability();
 
     // model performing
-    double perform_Stretching(StretchType type, const vec3 &observation);
-    double perform_Stretching(const vec3 &observation);
+    double perform_Stretching(StretchType type, const glm::vec3 &observation);
+    double perform_Stretching(const glm::vec3 &observation);
 
     // get threshold of the motion probability within model
     double get_Threshold(StretchType type);
@@ -54,6 +55,14 @@ public:
     // retraining model
     bool retrain_Model(StretchType type);
 
+    // analyze Observation
+    bool analyze_Observation(StretchType type, glm::vec3 observation);
+    bool analyze_Observation(glm::vec3 observation);
+
+    // doen by analyzer
+    bool get_End(StretchType type);
+    bool get_End();
+
 
 private:
     void init_Manager();
@@ -63,6 +72,7 @@ private:
 
     // models HMM
     std::vector<Hmm_Model *> m_models;
+    std::vector<Hmm_Analyzer *> m_analyzers;
 
 
 public:

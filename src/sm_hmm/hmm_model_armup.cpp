@@ -2,6 +2,8 @@
 // Created by hobbang5 on 2016-03-22.
 //
 #include <app.h>
+#include <dirent.h>
+#include <sstream>
 
 #include "sm_hmm/hmm_analyzer_armup.h"
 #include "sm_hmm/hmm_model_armup.h"
@@ -17,40 +19,41 @@ using namespace std;
 unsigned int Hmm_ArmUp::ARM_UP_NB_STATE         = 4;
 unsigned int Hmm_ArmUp::ARM_UP_TS_DIMENSION     = 7;
 unsigned int Hmm_ArmUp::ARM_UP_WINDOW_SIZE      = 1;
-double       Hmm_ArmUp::ARM_UP_THRESHOLD        = 9;
+double       Hmm_ArmUp::ARM_UP_THRESHOLD        = 8;
 
 Hmm_ArmUp::Hmm_ArmUp() :
     m_observationCnt(0),
     m_isPerforming(false)
 {
-    m_analyzer = HA_ArmUp();
+    m_analyzer = new HA_ArmUp();
 
     m_hmm = xmm::HMM();
     if(!read_hmm_from_file(FILE_ARMUP, m_hmm)) {
 //    if(true) {
 
-        // training set files
-        const char* arm_up_learning_set[] =
-                {
-                        "data/learning_set_kaccel_4.csv",
-                        "data/learning_set_kaccel_5.csv",
-                        "data/learning_set_kaccel_6.csv",
-                        "data/learning_set_kaccel_7.csv",
-                        "data/learning_set_kaccel_8.csv",
-                        "data/learning_set_kaccel_9.csv",
-                        "data/learning_set_kaccel_10.csv",
-                        "data/learning_set_kaccel_11.csv",
-                        "data/learning_set_kaccel_12.csv",
-                        "data/learning_set_kaccel_13.csv",
-                        "data/learning_set_kaccel_14.csv"
-                };
-
         // setup training set
         xmm::TrainingSet ts(xmm::NONE, ARM_UP_TS_DIMENSION);
 
-        //record training set
-        for(int i=0; i<11; i++) {
-            record_training_set_from_file(arm_up_learning_set[i], RES_PATH, i, ts);
+        DIR *dir;
+        struct dirent *ent;
+        std::stringstream path;
+        const string DATA_DIR = "data/armup/";
+        path << app_get_resource_path() << DATA_DIR;
+        if ((dir = opendir (path.str().c_str())) != NULL) {
+            /* print all the files and directories within directory */
+            int index(0);
+            while ((ent = readdir (dir)) != NULL) {
+                if(ent->d_type == 8) {
+                    stringstream file;;
+                    file << path.str() << ent->d_name;
+                    record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts);
+                    index++;
+                    DBG("index %d, %s\n", index, ent->d_name);
+                }
+            }
+            closedir (dir);
+        } else {
+            ERR("Coundn't open diretory!\n");
         }
 
         // setup xmm
@@ -77,7 +80,8 @@ Hmm_ArmUp::Hmm_ArmUp() :
 }
 
 Hmm_ArmUp::~Hmm_ArmUp() {
-
+    if(m_analyzer)
+        delete m_analyzer;
 }
 
 Hmm_ArmUp::Hmm_ArmUp(const Hmm_ArmUp &src) {
@@ -85,7 +89,7 @@ Hmm_ArmUp::Hmm_ArmUp(const Hmm_ArmUp &src) {
 }
 
 bool Hmm_ArmUp::is_PerformingDone_child() {
-    return m_analyzer.is_End();
+    return m_analyzer->is_End();
 }
 
 double Hmm_ArmUp::get_Probability_child() {
@@ -99,7 +103,7 @@ double Hmm_ArmUp::perform_Stretching_child(const glm::vec3 &curr_observation) {
     }
 
     vector<float> observation(m_tsDim);
-    if(m_analyzer.get_Observation(curr_observation, observation)) {
+    if(m_analyzer->get_Observation(curr_observation, observation)) {
         m_observationCnt++;
         return m_hmm.performance_update(observation);
     }
@@ -111,27 +115,50 @@ bool Hmm_ArmUp::reset_child() {
     m_observationCnt = 0;
     m_isPerforming = false;
     m_hmm.performance_init();
-    m_analyzer.reset();
+    m_analyzer->reset();
 
     return true;
 }
 
 bool Hmm_ArmUp::retrain_child() {
 
-    // training set files
-    const char* arm_up_learning_set[] =
-        {
-             TRAINING_FILE_PATH"training_data_1.csv",
-             TRAINING_FILE_PATH"training_data_2.csv",
-             TRAINING_FILE_PATH"training_data_3.csv"
-        };
-
     // setup training set
     xmm::TrainingSet ts(xmm::NONE, ARM_UP_TS_DIMENSION);
 
+    int index(0);
+    DIR *dir;
+    struct dirent *ent;
+    std::stringstream path;
+    const string DATA_DIR = "data/";
+    path << app_get_resource_path() << DATA_DIR;
+    if ((dir = opendir (path.str().c_str())) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            if(ent->d_type == 8) {
+                stringstream file;;
+                file << path.str() << ent->d_name;
+                record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts);
+                index++;
+                DBG("index %d, %s\n", index, ent->d_name);
+            }
+        }
+        closedir (dir);
+    } else {
+        ERR("Coundn't open diretory!\n");
+    }
+
+    // training set files
+    const char* arm_up_training_set[] =
+        {
+             TRAINING_FILE_PATH"training_data_1.csv"
+             ,TRAINING_FILE_PATH"training_data_2.csv"
+             ,TRAINING_FILE_PATH"training_data_3.csv"
+        };
+
     //record training set
     for(int i=0; i<3; i++) {
-        record_training_set_from_file(arm_up_learning_set[i], USER_PATH, i, ts);
+        record_training_set_from_file(arm_up_training_set[i], USER_PATH, index, ts);
+        index++;
     }
 
     // setup xmm

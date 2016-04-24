@@ -9,6 +9,7 @@
 
 #include "xmm/models/hmm.h"
 #include "glm/glm.hpp"
+#include "sm_hmm/hmm_analyzer.h"
 
 class Hmm_Model {
 
@@ -61,6 +62,9 @@ protected:
     // the probability which can be recognized as stretching motion
     double m_threshold;
 
+    // analyzer
+    Hmm_Analyzer *m_analyzer;
+
 private:
     // flag for init
     bool m_isInit;
@@ -80,6 +84,9 @@ public:
 
     // get flag for initialize
     bool get_Init() { return m_isInit; }
+
+    // get analyzer
+    Hmm_Analyzer *get_Analyzer() { return m_analyzer; }
 
 };
 

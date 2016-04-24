@@ -38,9 +38,6 @@ private:
     // Hidden markov model using XMM lib
     xmm::HMM m_hmm;
 
-    // observation(sensor data) analyzer
-    HA_ArmUp m_analyzer;
-
     // flag for performing
     bool m_isPerforming;
 };

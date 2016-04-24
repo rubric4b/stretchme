@@ -11,6 +11,7 @@ Hmm_Model::Hmm_Model() :
     m_nbState(0),
     m_tsDim(0),
     m_threshold(0),
+    m_analyzer(NULL),
     m_isInit(false)
 { }
 
