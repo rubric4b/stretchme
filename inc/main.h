@@ -45,6 +45,9 @@ typedef struct appdata {
 	Evas_Object *popup;
 	Eina_Bool is_training; // or normal stretching
 	unsigned short training_cnt;
+	unsigned short stretch_sequence;
+
+	char* training_prefix;
 
 	// view
 //	Ecore_Timer * fold_timer;

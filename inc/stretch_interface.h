@@ -73,7 +73,7 @@ void stretching_stop();
 void stretch_manager_release();
 
 void auto_start_stretch(void *data);
-void streching_date_gathering(void *data);
+void streching_data_gathering(void *data);
 bool retraining_model(StretchType type);
 void hmm_init();
 

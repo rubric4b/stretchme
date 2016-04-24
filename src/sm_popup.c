@@ -26,7 +26,7 @@ static void response_training_yes_cb(void *data, Evas_Object *obj, void *event_i
     if(!data) return;
     elm_popup_dismiss(ad->popup);
 
-    Strecth_Guide_cb(data, NULL, NULL);
+    Stretch_Guide_cb(data, NULL, NULL);
 
 }
 
@@ -49,7 +49,7 @@ void popup_training_cb(void *data, Evas_Object *obj, void *event_info)
     elm_object_part_text_set(layout, "elm.text.title", "TRAINING MODE");
 
     elm_object_part_text_set(layout, "elm.text", "트레이닝 모드로 전환합니다.<br>"
-            "<font color=#FF0000>3번</font color>의 스트레칭 동작이 기록됩니다.<br>"
+            " <font color=#FF0000>2가지</font color> 동작을 각각 <font color=#FF0000>3번</font color> 반복합니다.<br>"
             "계속하시겠습니까?");
     elm_object_content_set(ad->popup, layout);
 
@@ -90,22 +90,27 @@ static void response_data_no_cb(void *data, Evas_Object *obj, void *event_info)
     elm_popup_dismiss(ad->popup);
 
     // add new naviframe
-    Strecth_Guide_cb(data, NULL, NULL);
+    Stretch_Guide_cb(data, NULL, NULL);
 
 }
 
 static void response_data_yes_cb(void *data, Evas_Object *obj, void *event_info)
 {
     appdata_s *ad = (appdata_s *) data;
-    ad->training_cnt++;
 
     if(!data) return;
+
+    ad->training_cnt++;
+    if(ad->training_cnt > 3) {
+        ad->stretch_sequence++;
+        ad->training_cnt = 1;
+    }
 
     // close popup
     elm_popup_dismiss(ad->popup);
 
     // add new naviframe
-    Strecth_Guide_cb(data, NULL, NULL);
+    Stretch_Guide_cb(data, NULL, NULL);
 
 }
 
@@ -128,18 +133,35 @@ void popup_data_confirm_cb(void *data, Evas_Object *obj, void *event_info)
     elm_layout_theme_set(layout, "layout", "popup", "content/circle/buttons2");
     elm_object_part_text_set(layout, "elm.text.title", "TRAINING MODE");
 
-    if(ad->training_cnt >= 3) {
-        snprintf(buff, sizeof(buff),
-                 "모든 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
-                 "끝내시겠습니까?");
-        yes_cb = popup_small_process_cb;
-    } else {
-        snprintf(buff, sizeof(buff),
-                 "<font color=#FF0000>%d회 </font color>동작을 수행하셨습니다.<br>"
-                 "다음 동작을 수행하시겠습니까?",
-                 ad->training_cnt);
-        yes_cb = response_data_yes_cb;
+    if(ad->stretch_sequence == 0) {  //ARM_UP
+        if(ad->training_cnt >= 3) {
+            snprintf(buff, sizeof(buff),
+                     "위로 팔뻗기 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
+                             "다음 동작으로 진행하시겠습니까??");
+            yes_cb = response_data_yes_cb;
+        } else {
+            snprintf(buff, sizeof(buff),
+                     "위로 팔뻗기 동작을 <font color=#FF0000>%d회</font color> 수행하셨습니다.<br>"
+                             "한번 더 하시겠습니까?",
+                     ad->training_cnt);
+            yes_cb = response_data_yes_cb;
+        }
+    }else if(ad->stretch_sequence == 1) {  //FORWARD
+        if(ad->training_cnt >= 3) {
+            snprintf(buff, sizeof(buff),
+                     "모든 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
+                             "끝내시겠습니까?");
+            yes_cb = popup_small_process_cb;
+        } else {
+            snprintf(buff, sizeof(buff),
+                     "앞으로 팔뻗기 동작을 <font color=#FF0000>%d회 </font color> 수행하셨습니다.<br>"
+                             "한번 더 하시겠습니까?",
+                     ad->training_cnt);
+            yes_cb = response_data_yes_cb;
+        }
+
     }
+
     elm_object_part_text_set(layout, "elm.text", buff);
     elm_object_content_set(ad->popup, layout);
 

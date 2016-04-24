@@ -147,7 +147,21 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 			case STRETCH_STATE_FOLD :
 				if(result == STRETCH_SUCCESS)
 				{
-					Success_Strecth_cb(data, NULL, NULL);
+					if(ad->stretch_sequence == 0){
+						ad->stretch_sequence = 1;
+						Stretch_Guide_cb(data, NULL, NULL);
+
+						return;
+
+					}else if(ad->stretch_sequence == 1){
+						ad->stretch_sequence = 0;
+
+						Success_Strecth_cb(data, NULL, NULL);
+
+						return;
+					}
+
+
 				}
 				else if(result == STRETCH_FAIL)
 				{
@@ -226,10 +240,24 @@ void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	appdata_s *ad = data;
+	char *LABEL_TEXT;
+
+	if(ad->stretch_sequence == 0) { // ARM_UP
+		LABEL_TEXT = "Fold your hands<br>and stretch arms up high";
+		ad->training_prefix = "training_armup_";
+	} else if(ad->stretch_sequence == 1) { // FORWARD
+		LABEL_TEXT = "팔을 앞으로 <br>쭉 뻗으세요.";
+		ad->training_prefix = "training_forward_";
+	}
+
 	Evas_Object *layout, *Unfolding_Animation;
 	Elm_Object_Item *nf_it = NULL;
 
-	st_current_config.type = STRETCH_TYPE_ARM_UP;
+	if(ad->stretch_sequence == 0) {
+		st_current_config.type = STRETCH_TYPE_ARM_UP;
+	}else if(ad->stretch_sequence == 1) {
+		st_current_config.type = STRETCH_TYPE_ARM_FORWARD;
+	}
 	st_current_config.state = STRETCH_STATE_UNFOLD;
 	st_current_config.mode = (ad->is_training) ? STRETCH_MODE_TRAIN : STRETCH_MODE_EVAL;
 
@@ -240,7 +268,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "Fold your hands<br>and stretch arms up high");
+	elm_object_part_text_set(layout, "text", LABEL_TEXT);
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -261,9 +289,6 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		DBG("Animation is NOT available\n");
 	}
 
-	// TODO: remove this callback when HMM works well
-//	evas_object_smart_callback_add(Unfolding_Animation, "clicked", Hold_Stretch_cb, ad);
-
 	nf_it = elm_naviframe_item_push(ad->nf, "Unfolding", NULL, NULL, layout, NULL);
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
@@ -279,7 +304,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 		// stretching result checking
 		stretching_start(st_current_config, Stretch_Result_cb, ad);
 	} else {
-		streching_date_gathering(ad);
+		streching_data_gathering(ad);
 	}
 
 }
@@ -296,7 +321,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	appdata_s *ad = data;
 
-	vibrate(300, 99);
+	vibrate(200, 99);
 
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
@@ -350,7 +375,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	vibrate(300, 99);
+	vibrate(200, 99);
 
 	struct appdata *ad = data;
 	Evas_Object *layout, *Folding_Animation;
@@ -491,7 +516,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	elm_object_text_set(button, "Once again?");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", Stretch_Guide_cb, ad);
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, "again", NULL, NULL, layout, NULL);
@@ -560,7 +585,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	elm_object_text_set(button, "Retry");
 	elm_object_part_content_set(layout, "elm.swallow.button", button);
-	evas_object_smart_callback_add(button, "clicked", Strecth_Guide_cb, ad);
+	evas_object_smart_callback_add(button, "clicked", Stretch_Guide_cb, ad);
 	evas_object_show(button);
 
 	nf_it = elm_naviframe_item_push(ad->nf, NULL, NULL, NULL, layout, NULL);
@@ -627,25 +652,47 @@ Model_Retraining_cb(void *data, Evas_Object *obj, void *event_info)
 
 
 void
-Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
+Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 {
-	struct appdata *ad = data;
-	char *LABEL_TEXT, *BTN_TEXT, buff[512];
+	appdata_s *ad = data;
+	char *LABEL_TEXT, *BTN_TEXT, *GUIDE_ICON, buff[512];
 
 	if(!ad->is_training ) {
-		LABEL_TEXT =
-			"<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
-			"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
-			"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+		if(ad->stretch_sequence == 0) // ARM_UP
+		{
+			LABEL_TEXT =
+					"<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
+							"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
+							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+			GUIDE_ICON = ICON_DIR "/Up_stretching.gif";
+		}else if(ad->stretch_sequence == 1){ // FORWARD
+			LABEL_TEXT =
+					"<align=center><font_size=38> <font color=#FF0000>Stretch forward</font color> your folding arms.</font_size> <br> "
+							"<font_size=30 color=#999999>팔을 앞으로 쭉 뻗으세요."
+							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+			GUIDE_ICON = NULL;
+		}
+
 		BTN_TEXT = "Start";
 
-	} else {
-		snprintf(buff, sizeof(buff),
-				 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
-				 "팔을 위로 뻗어주세요</font_size><br> "
-				"<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
-				 ad->training_cnt);
-		LABEL_TEXT = buff;
+	} else { //training
+		if(ad->stretch_sequence == 0) {  //arm_up
+			snprintf(buff, sizeof(buff),
+					 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
+							 "팔을 위로 뻗어주세요</font_size><br> "
+							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+					 ad->training_cnt);
+			LABEL_TEXT = buff;
+			GUIDE_ICON = ICON_DIR "/Up_stretching.gif";
+		}else if(ad->stretch_sequence == 1){ //forward
+			snprintf(buff, sizeof(buff),
+					 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
+							 "팔을 앞으로 뻗어주세요</font_size><br> "
+							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+					 ad->training_cnt);
+			LABEL_TEXT = buff;
+			GUIDE_ICON = NULL;
+		}
 		BTN_TEXT = "Training";
 	}
 
@@ -676,7 +723,7 @@ Strecth_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	//Image add for stretching action icon.
 	actionIcon= elm_image_add(layout);
 
-	elm_image_file_set(actionIcon, ICON_DIR "/Up_stretching.gif", NULL);
+	elm_image_file_set(actionIcon, GUIDE_ICON, NULL);
 
 	// resizeing
 	//evas_object_size_hint_weight_set(actionIcon, 0.5, 0.5);
@@ -748,7 +795,7 @@ static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	DBG("_button_unpressed_cb : is_training = %d\n", ad->is_training);
 	if(!ad->is_training) {
-		Strecth_Guide_cb(data, NULL, NULL);
+		Stretch_Guide_cb(data, NULL, NULL);
 //		Success_Strecth_cb(data, NULL, NULL);
 	}
 }

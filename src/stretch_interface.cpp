@@ -37,6 +37,7 @@ void stretching_stop() {
 }
 
 
+/*
 void
 auto_start_cb(sensor_h sensor, sensor_event_s *event, void *data) {
 
@@ -85,6 +86,7 @@ void auto_start_stretch(void *data) {
     accel->start();
 }
 
+*/
 
 void
 data_gathering_cb(sensor_h sensor, sensor_event_s *event, void *data) {
@@ -100,7 +102,7 @@ data_gathering_cb(sensor_h sensor, sensor_event_s *event, void *data) {
     // initialize init time
     if(accel->m_initTime == 0) {
         std::ostringstream file_name;
-        file_name << "training_data_" << ad->training_cnt << ".csv";
+        file_name << ad->training_prefix << ad->training_cnt << ".csv";
         file_path = TRAINING_FILE_PATH + file_name.str();
 
         out_fstream.open(file_path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -129,7 +131,7 @@ data_gathering_cb(sensor_h sensor, sensor_event_s *event, void *data) {
     if(accel->m_timestamp > 5000) {
         DBG("data_gathering_cb end!\n");
         out_fstream.close();
-        accel->stop();
+        accel->pause();
 
         // disable app exit
         nf_it = elm_naviframe_top_item_get(ad->nf);
@@ -146,7 +148,7 @@ data_gathering_cb(sensor_h sensor, sensor_event_s *event, void *data) {
 
 }
 
-void streching_date_gathering(void *data) {
+void streching_data_gathering(void *data) {
     if(!accel) {
         accel = new sm_Sensor(SENSOR_ACCELEROMETER, data_gathering_cb, data, 10);
     }
