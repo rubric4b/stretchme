@@ -86,7 +86,7 @@ bool store_last_time_with_current(LOG_TYPE type);
  * @param[in] type LOG_TYPE
  * @return counts
  */
-int get_stored_today_count(LOG_TYPE type);
+int get_counts_in_today(LOG_TYPE type);
 
 
 #ifdef __cplusplus
