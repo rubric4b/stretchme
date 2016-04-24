@@ -25,8 +25,6 @@ void stretch_Manager::init() {
 
 	// sensor initialize
 	m_accel = sm_Sensor(SENSOR_ACCELEROMETER);
-	m_accel.start();
-	m_accel.pause();
 }
 
 void stretch_Manager::release() {
@@ -50,7 +48,6 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	// turn on the sensor
 	m_accel.register_Callback(sensorCb, this);
 	m_accel.start();
-
 
 }
 
@@ -92,6 +89,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	// get sensor data
 	StretchResult stretch_result = STRETCH_FAIL;
 	bool callback_flag(false);
+	static vec3 ob_hold(0);
 
 	hMgr.set_CurrentType(m_stConf.type);
 
@@ -101,7 +99,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching( sensor.m_currKData );
 
-					if(hMgr.is_End() || sensor.m_timestamp > 9000) {
+					if(hMgr.is_End() || sensor.m_timestamp > 30000) {
 						callback_flag = true;
 						double prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
@@ -109,23 +107,28 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						if(-prob < hMgr.get_Threshold() && prob != 0) {
 							stretch_result = STRETCH_SUCCESS;
 						}
+//						stretch_result = STRETCH_SUCCESS; //TESTCODE!!
 					}
 				}
 					break;
 
 				case STRETCH_STATE_HOLD : {
-					if(sensor.m_timestamp > 1000 && sensor.m_timestamp < 5000) {
+					if(sensor.m_timestamp > 1000) {
+						if (length(ob_hold) == 0) {
+							ob_hold = sensor.m_currData;
+						}
 						vec3 cur_norm = normalize(sensor.m_currKData);
-						vec3 pre_norm = normalize(sensor.m_prevKData);
+						vec3 pre_norm = normalize(ob_hold);
 
 						double theta = acos(dot(cur_norm, pre_norm));
-						DBG("theda %f degrees %f\n", theta, degrees(theta));
 
-						if(theta > radians(2.0) && !isnan(theta)) {
+						if (theta > radians(5.0) && !isnan(theta)) {
 							callback_flag = true;
 							stretch_result = STRETCH_FAIL;
 						}
-					}else if(sensor.m_timestamp >= 5000) {
+					}
+
+					if(sensor.m_timestamp > 5000) {
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -134,10 +137,11 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					break;
 
 				case STRETCH_STATE_FOLD : {
-					DBG("sensor %5f, %5f, %5f \n", sensor.m_currKData.x, sensor.m_currKData.y, sensor.m_currKData.z);
-					hMgr.analyze_Observation(sensor.m_currKData);
-					hMgr.get_End();
-					if(sensor.m_timestamp > 1000 && hMgr.get_End() || sensor.m_timestamp > 6000) {
+					if(sensor.m_timestamp > 1000) {
+						hMgr.analyze_Observation(sensor.m_currKData);
+					}
+
+					if(hMgr.get_End() || sensor.m_timestamp > 5000) {
 						DBG("fold time stamp %d\n", sensor.m_timestamp );
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
@@ -145,7 +149,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				}
 					break;
 
-				default:
+				default: //switch STATE
 					break;
 
 			}
@@ -154,25 +158,88 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 		case STRETCH_TYPE_ARM_FORWARD : {
 
+			switch (m_stConf.state) {
+				case STRETCH_STATE_UNFOLD : {
+					hMgr.perform_Stretching(sensor.m_currKData);
+
+					if (hMgr.is_End() || sensor.m_timestamp > 30000) {
+						callback_flag = true;
+						double prob = hMgr.get_Probability();
+						DBG("%4d log p = %5f\n", sensor.m_timestamp, prob);
+
+						if (-prob < hMgr.get_Threshold() && prob != 0) {
+							stretch_result = STRETCH_SUCCESS;
+						}
+//						stretch_result = STRETCH_SUCCESS; //TESTCODE!!
+					}
+				}
+					break;
+
+				case STRETCH_STATE_HOLD : {
+					if (sensor.m_timestamp > 1000) {
+						if (length(ob_hold) == 0) {
+							ob_hold = sensor.m_currData;
+						}
+						vec3 cur_norm = normalize(sensor.m_currKData);
+						vec3 pre_norm = normalize(ob_hold);
+
+						double theta = acos(dot(cur_norm, pre_norm));
+
+						if (theta > radians(5.0) && !isnan(theta)) {
+							callback_flag = true;
+							stretch_result = STRETCH_FAIL;
+						}
+					}
+
+					if (sensor.m_timestamp > 5000) {
+						callback_flag = true;
+						stretch_result = STRETCH_SUCCESS;
+					}
+
+				}
+					break;
+
+				case STRETCH_STATE_FOLD : {
+					if (sensor.m_timestamp > 1000) {
+						hMgr.analyze_Observation(sensor.m_currKData);
+					}
+
+					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
+						DBG("fold time stamp %d\n", sensor.m_timestamp);
+						callback_flag = true;
+						stretch_result = STRETCH_SUCCESS;
+					}
+				}
+					break;
+
+				default: //switch STATE
+					break;
+
+
+			}
+			break;
+
+			default:  //switch TYPE
+
+					break;
+
 		}
-			break;
-
-		default:
-			break;
-
-
 
 	}
 
-
-
-
-
 	if(callback_flag) {
-		m_isProgress = false;
-		m_accel.pause();
+		if(stretch_result == STRETCH_FAIL || m_stConf.state == STRETCH_STATE_FOLD) {
+			m_accel.stop();
+		}else{
+			m_accel.pause();
+		}
 
+		m_accel.register_Callback(NULL, NULL);
+		ob_hold = vec3(0);
+
+		m_isProgress = false;
 		hMgr.reset_Model_Performing();
+
 		m_resultCbFunc(m_stConf, stretch_result, m_resultCbData);
 
 	}
