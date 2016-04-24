@@ -95,29 +95,64 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 	hMgr.set_CurrentType(m_stConf.type);
 
+	switch (m_stConf.type) {
+		case STRETCH_TYPE_ARM_UP : {
+			switch(m_stConf.state) {
+				case STRETCH_STATE_UNFOLD : {
+					hMgr.perform_Stretching( sensor.m_currKData );
 
-	switch(m_stConf.state) {
-		case STRETCH_STATE_UNFOLD : {
-			hMgr.perform_Stretching( sensor.m_currKData );
+					if(hMgr.is_End() || sensor.m_timestamp > 9000) {
+						callback_flag = true;
+						double prob = hMgr.get_Probability();
+						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
 
-			if(sensor.m_timestamp > 3500 && hMgr.is_End() || sensor.m_timestamp > 9000) {
-				double prob = hMgr.get_Probability();
-				DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
-				if(-prob < hMgr.get_Threshold() && prob != 0) {
-					stretch_result = STRETCH_SUCCESS;
+						if(-prob < hMgr.get_Threshold() && prob != 0) {
+							stretch_result = STRETCH_SUCCESS;
+						}
+					}
 				}
+					break;
 
-				callback_flag = true;
+				case STRETCH_STATE_HOLD : {
+					if(sensor.m_timestamp > 1000 && sensor.m_timestamp < 5000) {
+						vec3 cur_norm = normalize(sensor.m_currKData);
+						vec3 pre_norm = normalize(sensor.m_prevKData);
+
+						double theta = acos(dot(cur_norm, pre_norm));
+						DBG("theda %f degrees %f\n", theta, degrees(theta));
+
+						if(theta > radians(2.0) && !isnan(theta)) {
+							callback_flag = true;
+							stretch_result = STRETCH_FAIL;
+						}
+					}else if(sensor.m_timestamp >= 5000) {
+						callback_flag = true;
+						stretch_result = STRETCH_SUCCESS;
+					}
+
+				}
+					break;
+
+				case STRETCH_STATE_FOLD : {
+					DBG("sensor %5f, %5f, %5f \n", sensor.m_currKData.x, sensor.m_currKData.y, sensor.m_currKData.z);
+					hMgr.analyze_Observation(sensor.m_currKData);
+					hMgr.get_End();
+					if(sensor.m_timestamp > 1000 && hMgr.get_End() || sensor.m_timestamp > 6000) {
+						DBG("fold time stamp %d\n", sensor.m_timestamp );
+						callback_flag = true;
+						stretch_result = STRETCH_SUCCESS;
+					}
+				}
+					break;
+
+				default:
+					break;
+
 			}
-
 		}
 			break;
 
-		case STRETCH_STATE_HOLD : {
-			if(sensor.m_timestamp > 5000) {
-				callback_flag = true;
-				stretch_result = STRETCH_SUCCESS;
-			}
+		case STRETCH_TYPE_ARM_FORWARD : {
 
 		}
 			break;
@@ -125,12 +160,19 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		default:
 			break;
 
+
+
 	}
+
+
+
+
 
 	if(callback_flag) {
 		m_isProgress = false;
+		m_accel.pause();
 
-		hMgr.reset_Model_Performing(m_stConf.type);
+		hMgr.reset_Model_Performing();
 		m_resultCbFunc(m_stConf, stretch_result, m_resultCbData);
 
 	}
