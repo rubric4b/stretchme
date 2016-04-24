@@ -47,8 +47,8 @@ typedef struct appdata {
 	unsigned short training_cnt;
 
 	// view
-	Ecore_Timer * fold_timer;
-	Eina_Bool is_stretch_success;
+//	Ecore_Timer * fold_timer;
+//	Eina_Bool is_stretch_success;
 } appdata_s;
 
 #ifdef __cplusplus
