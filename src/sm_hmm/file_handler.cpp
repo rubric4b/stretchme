@@ -107,7 +107,8 @@ bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model)
 void record_training_set_from_file(const std::string &file_name,
                                    PathType type,
                                    int ts_phrase_index,
-                                   xmm::TrainingSet &ts)
+                                   xmm::TrainingSet &ts,
+                                   Hmm_Analyzer *analyzer)
 {
     // in file stream
     std::ifstream in_file;
@@ -152,7 +153,6 @@ void record_training_set_from_file(const std::string &file_name,
     glm::vec3 curr_k_filtered(0);
 
     std::vector<float> observation(Hmm_ArmUp::ARM_UP_TS_DIMENSION);
-    HA_ArmUp analyzer = HA_ArmUp();
     while (!in_file.getline(line_buffer, sizeof(line_buffer)).eof()) {
         char *word, *wordPtr;
         word = util_strtok(line_buffer, ",", &wordPtr); // time
@@ -164,7 +164,7 @@ void record_training_set_from_file(const std::string &file_name,
         curr.z = atof(word);
         m_kFilter.Step(curr, curr_k_filtered);
 
-        if( analyzer.get_Observation(curr_k_filtered, observation) ) {
+        if( analyzer->get_Observation(curr_k_filtered, observation) ) {
 
             ts.recordPhrase(ts_phrase_index, observation);
             ts_cnt++;
@@ -173,6 +173,7 @@ void record_training_set_from_file(const std::string &file_name,
         line_cnt++;
     }
     in_file.close();
+    analyzer->reset();
 
     DBG("%s : %d lines are read", file_name.c_str(), line_cnt);
     DBG("%s : %d observation are recorded to training set", file_name.c_str(), ts_cnt);

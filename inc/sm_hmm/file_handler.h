@@ -8,6 +8,7 @@
 #include <string>
 
 #include "xmm/xmm.h"
+#include "hmm_analyzer.h"
 
 typedef enum {
     DATA_PATH,
@@ -23,6 +24,7 @@ bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model);
 void record_training_set_from_file(const std::string &file_name,
                                    PathType type,
                                    int ts_phrase_index,
-                                   xmm::TrainingSet &ts);
+                                   xmm::TrainingSet &ts,
+                                   Hmm_Analyzer *analyzer);
 
 #endif //__FILE_HANDLER_H__
