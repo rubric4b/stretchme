@@ -31,6 +31,7 @@ public:
 	void register_Callback(Sensor_Cb sensor_cb_func, void *data);
 
 public:
+	bool m_isStart;
 
 	// abbreviate: sn = sensor
 	unsigned long long m_initTime;

@@ -5,6 +5,7 @@ sm_Sensor::sm_Sensor(sensor_type_e sensor_type,
 					 sensor_event_cb event_cb_func,
 					 void* event_cb_data,
 					 unsigned int update_ms) :
+	m_isStart(false),
 	m_initTime(0),
 	m_timestamp(0),
 	m_prevData(0),
@@ -79,6 +80,8 @@ bool sm_Sensor::init(sensor_type_e type) {
 }
 
 bool sm_Sensor::start() {
+	m_isStart = true;
+
 	DBG("sm_Sensor::start()\n");
 	reset();
 
@@ -94,6 +97,8 @@ bool sm_Sensor::start() {
 }
 
 bool sm_Sensor::stop() {
+	m_isStart = false;
+
 	DBG("sm_Sensor::stop()\n");
 	int error = sensor_listener_unset_event_cb(m_snListener);
 	if(error) {
@@ -201,6 +206,12 @@ void sm_Sensor::tick(sensor_event_s *event) {
 			m_currData = vec3(event->values[0], event->values[1], event->values[2]);
 			m_kFilter.Step(m_currData, m_currKData);
 
+/*
+			DBG("n %.3f,%.3f,%.3f | k %.3f,%.3f,%.3f | t %d\n",
+				m_currData.x, m_currData.y, m_currData.z,
+				m_currKData.x, m_currKData.y, m_currKData.z,
+			m_timestamp);
+*/
 		}
 			break;
 
