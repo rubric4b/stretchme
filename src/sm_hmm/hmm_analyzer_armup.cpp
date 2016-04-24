@@ -7,7 +7,7 @@
 #include "sm_hmm/hmm_model_armup.h"
 #include "logger.h"
 
-#define MOVING_THRESHOLD 0.1
+#define MOVING_THRESHOLD 0.025
 #define MOVING_THRESHOLD_CNT 20
 
 using namespace glm;
@@ -87,29 +87,40 @@ bool HA_ArmUp::analyze(const glm::vec3 curr_observation) {
     }
 
     m_diff = (curr_observation - m_prev_obseravtion);
-    double len = length(m_diff);
+//    double len = length(m_diff);
+    double len = abs(length(curr_observation) - length(m_prev_obseravtion));
 
     if (!is_init_move) {
 
-        if (len > MOVING_THRESHOLD) { //determine motion start
+        vec3 curr_norm = normalize(curr_observation);
+        vec3 prev_norm = normalize(m_prev_obseravtion);
+
+        double theta = acos(dot(curr_norm, prev_norm));
+
+        if(theta > radians(5.0) && !isnan(theta)) {
+            is_init_move = true;
+        }
+
+        /*if (len > MOVING_THRESHOLD) { //determine motion start
             m_diff_cnt++;
             m_prev_obseravtion = curr_observation;
 
-            if(m_diff_cnt > MOVING_THRESHOLD_CNT) {
+            if(m_diff_cnt > 10) {
                 DBG("is_init_move = true\n");
                 is_init_move = true;
             }
         } else {
             m_diff_cnt = 0;
-        }
+        }*/
 
     } else { // motion start
 
         if(!is_stay) {
+
             if (len < MOVING_THRESHOLD) { //determine motion end
                 m_nondiff_cnt++;
 
-                if(m_nondiff_cnt > MOVING_THRESHOLD_CNT * 3) {
+                if(m_nondiff_cnt > 50) {
                     DBG("is_stay_true\n");
                     is_stay = true;
                 }
