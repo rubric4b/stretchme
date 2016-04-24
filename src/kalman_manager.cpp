@@ -34,12 +34,21 @@ static const glm::vec3 CONTROL(0, 0, 0);
 KalmanGearS2::KalmanGearS2(Type type, float prediction_level)
 : mType(type)
 , mPredictionLevel(prediction_level)
+, m_isInit(false)
 {
 	Initialize();
 }
 
 void KalmanGearS2::Step(glm::vec3 in, glm::vec3& out)
 {
+	if(!m_isInit) {
+		m_isInit = true;
+		out = in;
+		mPrevOutput = out;
+
+		return;
+	}
+
 	// prediction
 	mPredictionMean = mA * mPrevOutput + mB * CONTROL;
 	mPredictionCov = mA * mPredictionCov * glm::transpose(mA) + mR;
@@ -56,6 +65,7 @@ void KalmanGearS2::Step(glm::vec3 in, glm::vec3& out)
 void KalmanGearS2::Reset()
 {
 	mStep = 0;
+	m_isInit = false;
 	Initialize();
 }
 

@@ -62,6 +62,8 @@ private:
 
 	glm::mat3x3 mR; // prediction noise
 
+	bool m_isInit;
+
 };
 
 
