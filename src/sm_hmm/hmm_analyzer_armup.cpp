@@ -44,7 +44,7 @@ void HA_ArmUp::reset() {
 bool HA_ArmUp::get_Observation(const vec3 curr_observation, std::vector<float> &observation) {
 
     if(observation.size() != Hmm_ArmUp::ARM_UP_TS_DIMENSION) {
-        ERR("observation size is not the same with SM_DEFAULT_TS_DIMENTION!\n");
+        ERR("observation size is not the same with Hmm_ArmUp::ARM_UP_TS_DIMENSION!\n");
         return false;
     }
 
