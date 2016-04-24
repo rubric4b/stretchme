@@ -46,7 +46,7 @@ Hmm_ArmUp::Hmm_ArmUp() :
                 if(ent->d_type == 8) {
                     stringstream file;;
                     file << path.str() << ent->d_name;
-                    record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts);
+                    record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts, m_analyzer);
                     index++;
                     DBG("index %d, %s\n", index, ent->d_name);
                 }
@@ -67,7 +67,7 @@ Hmm_ArmUp::Hmm_ArmUp() :
         m_hmm.train();
 
         DBG("hmm armup() initialize\n");
-        DBG("%s", m_hmm.__str__().c_str());
+//        DBG("%s", m_hmm.__str__().c_str());
 
         write_hmm_to_file(FILE_ARMUP, m_hmm);
 
@@ -137,7 +137,7 @@ bool Hmm_ArmUp::retrain_child() {
             if(ent->d_type == 8) {
                 stringstream file;;
                 file << path.str() << ent->d_name;
-                record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts);
+                record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts, m_analyzer);
                 index++;
                 DBG("index %d, %s\n", index, ent->d_name);
             }
@@ -150,14 +150,14 @@ bool Hmm_ArmUp::retrain_child() {
     // training set files
     const char* arm_up_training_set[] =
         {
-             TRAINING_FILE_PATH"training_data_1.csv"
-             ,TRAINING_FILE_PATH"training_data_2.csv"
-             ,TRAINING_FILE_PATH"training_data_3.csv"
+              TRAINING_FILE_PATH"training_armup_1.csv"
+             ,TRAINING_FILE_PATH"training_armup_2.csv"
+             ,TRAINING_FILE_PATH"training_armup_3.csv"
         };
 
     //record training set
     for(int i=0; i<3; i++) {
-        record_training_set_from_file(arm_up_training_set[i], USER_PATH, index, ts);
+        record_training_set_from_file(arm_up_training_set[i], USER_PATH, index, ts, m_analyzer);
         index++;
     }
 
@@ -165,14 +165,14 @@ bool Hmm_ArmUp::retrain_child() {
     m_hmm.set_trainingSet(&ts);
     m_hmm.set_nbStates(ARM_UP_NB_STATE);
     m_hmm.set_transitionMode("left-right");
-    m_hmm.set_covariance_mode(xmm::GaussianDistribution::DIAGONAL);
+    m_hmm.set_covariance_mode(xmm::GaussianDistribution::FULL);
     m_hmm.set_likelihoodwindow(ARM_UP_WINDOW_SIZE);
 
     // training
     m_hmm.train();
 
     DBG("hmm armup() retrained\n");
-    DBG("%s", m_hmm.__str__().c_str());
+//    DBG("%s", m_hmm.__str__().c_str());
 
     write_hmm_to_file(FILE_ARMUP, m_hmm);
 
