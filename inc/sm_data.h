@@ -79,6 +79,16 @@ bool store_last_time(time_t timestamp, LOG_TYPE type);
  */
 bool store_last_time_with_current(LOG_TYPE type);
 
+
+/**
+ * get the number of stretching from stored file with type
+ *
+ * @param[in] type LOG_TYPE
+ * @return counts
+ */
+int get_stored_today_count(LOG_TYPE type);
+
+
 #ifdef __cplusplus
 }
 #endif

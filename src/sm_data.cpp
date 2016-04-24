@@ -119,7 +119,6 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 			// parsing type string
 			word2 = util_strtok(NULL, ",", &wordPtr); // type
 			int st_type = atoi(word2);
-			free(pline);
 
 			if(st_type == type)
 			{
@@ -127,17 +126,12 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 				struct tm tm;
 				char* ret = strptime(word1, "%Y-%m-%d %H:%M:%S", &tm);
 
-				if(ret == NULL)
-				{
-					ERR("strptime is failed");
-					return false;
-				}
-
 				*timestamp = mktime(&tm);
 
-				break;
+				return true;
 			}
 
+			free(pline);
 		}
 
 		in_file.close();
@@ -145,10 +139,86 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 	else
 	{
         ERR("%s file open failed\n", DATA_FILE_PATH);
+	}
+
+	return false;
+
+}
+
+/**
+ * get the number of stretching from stored file with type
+ *
+ * @param[in] type LOG_TYPE
+ * @return true if success
+ */
+int get_counts_in_today(LOG_TYPE type)
+{
+	int ret_cnt(0);
+	std::ifstream in_file;
+	time_t succeed_time;
+	struct tm today;
+
+	time(&succeed_time); //get current time
+	today = *localtime(&succeed_time); //convert time_t to tm struct
+
+	// file open
+	in_file.open(DATA_FILE_PATH, std::ios::in | std::ios::binary);
+
+	if (in_file.is_open() && in_file.good())
+	{
+		// go to end of the file
+		in_file.seekg(0, in_file.end);
+
+		// read line reversely
+		while (in_file.tellg() > 1)
+		{
+			in_file.seekg(-DATA_LINE_LENGTH, std::ios::cur);
+
+			std::string line;
+			std::getline(in_file, line);
+			int line_length = (int)line.length() +1;
+			in_file.seekg(-line_length, std::ios::cur);
+
+			char *word1, *word2, *wordPtr;
+			char* pline = strdup(line.c_str()); // make char* from const char*
+
+			// parsing time string
+			word1 = util_strtok(pline, ",", &wordPtr); // time
+			// parsing type string
+			word2 = util_strtok(NULL, ",", &wordPtr); // type
+			int st_type = atoi(word2);
+
+			if(st_type == type)
+			{
+				// make timestamp from time formatted string
+				DBG("%s\n", word1);
+				struct tm tm;
+				char* ret = strptime(word1, "%Y-%m-%d %H:%M:%S", &tm);
+
+				if(today.tm_mday != tm.tm_mday) // different day
+					break;
+
+				time_t log_time = mktime(&tm);
+				if (difftime(succeed_time, log_time) > 3600 || ret_cnt == 0 ) {
+					succeed_time = log_time;
+
+					// increase count
+					ret_cnt++;
+				}
+			}
+
+			free(pline);
+		}
+
+		in_file.close();
+	}
+	else
+	{
+		ERR("%s file open failed\n", DATA_FILE_PATH);
 		return false;
 	}
 
-	return true;
+	return ret_cnt;
 }
 
 /**
