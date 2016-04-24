@@ -8,6 +8,7 @@
 #include "sm_hmm/file_handler.h"
 #include "sm_hmm/hmm_analyzer_armup.h"
 #include "sm_hmm/hmm_model_armup.h"
+#include "kalman_manager.h"
 #include "logger.h"
 
 static char* util_strtok(char* str, const char* delim, char** nextp)
@@ -144,21 +145,26 @@ void record_training_set_from_file(const std::string &file_name,
 
     // record file to training set
     int line_cnt(0), ts_cnt(0);
+    KalmanGearS2 m_kFilter(KalmanGearS2::ACCELEROMETER, 0.00001);
+
     char line_buffer[512];
-    std::vector<float> curr_observation(3);
+    glm::vec3 curr(0);
+    glm::vec3 curr_k_filtered(0);
+
     std::vector<float> observation(Hmm_ArmUp::ARM_UP_TS_DIMENSION);
     HA_ArmUp analyzer = HA_ArmUp();
     while (!in_file.getline(line_buffer, sizeof(line_buffer)).eof()) {
         char *word, *wordPtr;
         word = util_strtok(line_buffer, ",", &wordPtr); // time
         word = util_strtok(NULL, ",", &wordPtr); // accel - x
-        curr_observation[0] = atof(word);
+        curr.x = atof(word);
         word = util_strtok(NULL, ",", &wordPtr); // accel - y
-        curr_observation[1] = atof(word);
+        curr.y = atof(word);
         word = util_strtok(NULL, ",", &wordPtr); // accel - z
-        curr_observation[2] = atof(word);
+        curr.z = atof(word);
+        m_kFilter.Step(curr, curr_k_filtered);
 
-        if( analyzer.get_Observation(curr_observation, observation) ) {
+        if( analyzer.get_Observation(curr_k_filtered, observation) ) {
 
             ts.recordPhrase(ts_phrase_index, observation);
             ts_cnt++;
