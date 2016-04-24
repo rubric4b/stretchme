@@ -647,6 +647,8 @@ Model_Retraining_cb(void *data, Evas_Object *obj, void *event_info)
 
 	retraining_model(st_current_config.type);
 	elm_popup_dismiss(ad->popup);
+	ad->stretch_sequence = 0;
+	ad->training_cnt = 0;
 	popup_training_done_cb(data, NULL, NULL);
 }
 
