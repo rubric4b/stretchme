@@ -21,14 +21,13 @@ Hmm_Manager::Hmm_Manager() :
 
 Hmm_Manager::~Hmm_Manager() {
 
-    delete m_models[STRETCH_TYPE_ARM_UP];
-
-/*
+//    delete m_models[STRETCH_TYPE_ARM_UP];
+//    delete m_models[STRETCH_TYPE_ARM_FORWARD];
     for(int i=0; i<m_models.size(); i++)
     {
-        delete m_models[i];
+        if(m_models[i])
+            delete m_models[i];
     }
-*/
 
 }
 
