@@ -102,7 +102,7 @@ static void response_data_yes_cb(void *data, Evas_Object *obj, void *event_info)
 
     ad->training_cnt++;
     if(ad->training_cnt > 3) {
-        ad->stretch_sequence++;
+        ad->stretch_sequence--;
         ad->training_cnt = 1;
     }
 
@@ -136,9 +136,9 @@ void popup_data_confirm_cb(void *data, Evas_Object *obj, void *event_info)
     if(ad->stretch_sequence == 0) {  //ARM_UP
         if(ad->training_cnt >= 3) {
             snprintf(buff, sizeof(buff),
-                     "위로 팔뻗기 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
-                             "다음 동작으로 진행하시겠습니까??");
-            yes_cb = response_data_yes_cb;
+                     "모든 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
+                             "끝내시겠습니까?");
+            yes_cb = popup_small_process_cb;
         } else {
             snprintf(buff, sizeof(buff),
                      "위로 팔뻗기 동작을 <font color=#FF0000>%d회</font color> 수행하셨습니다.<br>"
@@ -149,9 +149,9 @@ void popup_data_confirm_cb(void *data, Evas_Object *obj, void *event_info)
     }else if(ad->stretch_sequence == 1) {  //FORWARD
         if(ad->training_cnt >= 3) {
             snprintf(buff, sizeof(buff),
-                     "모든 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
-                             "끝내시겠습니까?");
-            yes_cb = popup_small_process_cb;
+                     "위로 팔뻗기 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
+                             "다음 동작으로 진행하시겠습니까??");
+            yes_cb = response_data_yes_cb;
         } else {
             snprintf(buff, sizeof(buff),
                      "앞으로 팔뻗기 동작을 <font color=#FF0000>%d회 </font color> 수행하셨습니다.<br>"
