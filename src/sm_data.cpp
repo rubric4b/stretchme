@@ -199,7 +199,7 @@ int get_counts_in_today(LOG_TYPE type)
 					break;
 
 				time_t log_time = mktime(&tm);
-				if (difftime(succeed_time, log_time) > 3600 || ret_cnt == 0 ) {
+				if (difftime(succeed_time, log_time) >= 3500 || ret_cnt == 0 ) {
 					succeed_time = log_time;
 
 					// increase count
