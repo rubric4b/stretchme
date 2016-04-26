@@ -122,7 +122,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 						double theta = acos(dot(cur_norm, pre_norm));
 
-						if (theta > radians(5.0) && !isnan(theta)) {
+						if (theta > radians(10.0) && !isnan(theta)) {
 							callback_flag = true;
 							stretch_result = STRETCH_FAIL;
 						}
@@ -137,12 +137,13 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					break;
 
 				case STRETCH_STATE_FOLD : {
-					if(sensor.m_timestamp > 1000) {
+					/*if (sensor.m_timestamp > 1000) {
 						hMgr.analyze_Observation(sensor.m_currKData);
-					}
+					}*/
 
-					if(hMgr.get_End() || sensor.m_timestamp > 5000) {
-						DBG("fold time stamp %d\n", sensor.m_timestamp );
+//					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
+					if (sensor.m_timestamp > 2000) {
+						DBG("fold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -185,7 +186,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 						double theta = acos(dot(cur_norm, pre_norm));
 
-						if (theta > radians(5.0) && !isnan(theta)) {
+						if (theta > radians(10.0) && !isnan(theta)) {
 							callback_flag = true;
 							stretch_result = STRETCH_FAIL;
 						}
@@ -200,11 +201,12 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					break;
 
 				case STRETCH_STATE_FOLD : {
-					if (sensor.m_timestamp > 1000) {
+					/*if (sensor.m_timestamp > 1000) {
 						hMgr.analyze_Observation(sensor.m_currKData);
-					}
+					}*/
 
-					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
+//					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
+					if (sensor.m_timestamp > 2000) {
 						DBG("fold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
