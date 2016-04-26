@@ -539,7 +539,8 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
 
-	ad->stretch_sequence = (unsigned short) (random() % 2);
+	ad->stretch_sequence++;
+	ad->stretch_sequence %= 2;
 
 }
 
@@ -648,9 +649,10 @@ Model_Retraining_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	appdata_s *ad = data;
 
-	retraining_model(st_current_config.type);
+	retraining_model(STRETCH_TYPE_ARM_UP);
+	retraining_model(STRETCH_TYPE_ARM_FORWARD);
 	elm_popup_dismiss(ad->popup);
-	ad->stretch_sequence = 0;
+	ad->stretch_sequence = 1;
 	ad->training_cnt = 0;
 	popup_training_done_cb(data, NULL, NULL);
 }
@@ -800,6 +802,7 @@ static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	DBG("_button_unpressed_cb : is_training = %d\n", ad->is_training);
 	if(!ad->is_training) {
+		ad->stretch_sequence = (unsigned short) (random() % 2);
 		Stretch_Guide_cb(data, NULL, NULL);
 //		Success_Strecth_cb(data, NULL, NULL);
 	}
@@ -822,14 +825,8 @@ create_main_view(appdata_s *ad)
 	Evas_Object *layout, *bg, *button;
 	Elm_Object_Item *nf_it = NULL;
 
-	time_t diff = get_elapsed_time_from_last(ST_SUCCESS);
-	int type = get_awareness_level_from_data(diff);
-
-	int d_day = diff / (60 * 60 * 24);
-	diff -= d_day * 60 * 60 * 24;
-	int d_hour = diff / (60 * 60);
-	diff -= d_hour * 60 * 60;
-	int d_min = diff / 60;
+	double diff = get_elapsed_time_from_last(ST_SUCCESS);
+	int level = get_awareness_level_from_data(diff);
 
 	int colors[4][4] = {
 		{112, 198, 19, 255}, // green
@@ -856,18 +853,21 @@ create_main_view(appdata_s *ad)
 
 	char text2string[50];
 
-	switch(type)
+	switch(level)
 	{
 	case 0:
 		// the first time to try
 		snprintf(text2string, sizeof(text2string), "Let's start to stretch!");
 		break;
 	case 1:
-		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last", d_min, (d_min > 1) ? "minutes ago" : "minute ago");
+		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last",
+				 div((int)diff, 60).quot, (diff > 60 * 2) ? "minutes ago" : "minute ago");
 		break;
 	case 2:
 	case 3:
-		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last", d_hour, (d_hour > 1) ? "hours ago" : "hour ago");
+		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last",
+				 (div((int)diff, 60 * 60).quot < 1) ? 1 : div((int)diff, 60 * 60).quot,
+			(diff > 60 * 60 * 2) ? "hours ago" : "hour ago");
 		break;
 	case 4:
 		snprintf(text2string, sizeof(text2string), "%s", "Try to release your body");
@@ -886,7 +886,7 @@ create_main_view(appdata_s *ad)
 	// Add background
 	bg = elm_image_add(layout);
 	elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
-	evas_object_color_set(bg, colors[type-1][0], colors[type-1][1], colors[type-1][2], colors[type-1][3]);
+	evas_object_color_set(bg, colors[level-1][0], colors[level-1][1], colors[level-1][2], colors[level-1][3]);
 	evas_object_show(bg);
 	elm_object_part_content_set(layout, "elm.swallow.content", bg);
 
