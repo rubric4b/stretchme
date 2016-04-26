@@ -149,7 +149,7 @@ void popup_data_confirm_cb(void *data, Evas_Object *obj, void *event_info)
     }else if(ad->stretch_sequence == 1) {  //FORWARD
         if(ad->training_cnt >= 3) {
             snprintf(buff, sizeof(buff),
-                     "위로 팔뻗기 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
+                     "앞으로 팔뻗기 동작을 <font color=#FF0000>완료</font color>하셨습니다.<br>"
                              "다음 동작으로 진행하시겠습니까??");
             yes_cb = response_data_yes_cb;
         } else {
