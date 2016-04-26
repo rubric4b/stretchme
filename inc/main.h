@@ -26,14 +26,14 @@
 #include "logger.h"
 
 #if !defined(PACKAGE)
-#define PACKAGE "org.example.stretchme"
+#define PACKAGE "org.tizen.stretchme"
 #endif
 
 #define STRETCHING_WATCH_APP_ID "org.tizen.stretchtime"
 
 #define EDJ_FILE "edje/stretch_ui_layout.edj"
 
-#define ICON_DIR "/opt/usr/apps/org.example.stretchme/res/images"
+#define ICON_DIR "/opt/usr/apps/org.tizen.stretchme/res/images"
 
 typedef struct appdata {
 	Evas_Object *nf;
