@@ -147,7 +147,8 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 			case STRETCH_STATE_FOLD :
 				if(result == STRETCH_SUCCESS)
 				{
-					if(ad->stretch_sequence == 0){
+
+					/*if(ad->stretch_sequence == 0){
 						ad->stretch_sequence = 1;
 						Stretch_Guide_cb(data, NULL, NULL);
 
@@ -155,11 +156,11 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 
 					}else if(ad->stretch_sequence == 1){
 						ad->stretch_sequence = 0;
-
+*/
 						Success_Strecth_cb(data, NULL, NULL);
 
 						return;
-					}
+//					}
 
 
 				}
@@ -495,7 +496,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Success_image = elm_image_add(layout);
 	elm_object_style_set(Success_image, "center");
 
-	if(achieve > 4)
+	if(achieve > 3)
 	{
 		elm_image_file_set(Success_image, ICON_DIR "/success_with_medal.png", NULL);
 	}
@@ -537,6 +538,8 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
+
+	ad->stretch_sequence = (unsigned short) (random() % 2);
 
 }
 
@@ -805,6 +808,7 @@ static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
 static void button_repeat_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	ad->is_training = true;
+	ad->stretch_sequence = 1; //FORWARD
 
 	vibrate(100, 99);
 
@@ -834,7 +838,7 @@ create_main_view(appdata_s *ad)
 		{252, 116, 75, 255} // red
 	};
 
-	vibrate(300, 99);
+//	vibrate(300, 99);
 
 	time_t local_time = time(NULL);
 	struct tm *time_info = localtime(&local_time);
