@@ -669,13 +669,13 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 					"<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
 							"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
 							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
-			GUIDE_ICON = ICON_DIR "/Up_stretching.gif";
+			GUIDE_ICON = ICON_DIR "/up_stretching.png";
 		}else if(ad->stretch_sequence == 1){ // FORWARD
 			LABEL_TEXT =
 					"<align=center><font_size=38> <font color=#FF0000>Stretch forward</font color> your folding arms.</font_size> <br> "
 							"<font_size=30 color=#999999>팔을 앞으로 쭉 뻗으세요."
 							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
-			GUIDE_ICON = NULL;
+			GUIDE_ICON = ICON_DIR "/forward_stretching.png";
 		}
 
 		BTN_TEXT = "Start";
@@ -688,7 +688,7 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
 					 ad->training_cnt);
 			LABEL_TEXT = buff;
-			GUIDE_ICON = ICON_DIR "/Up_stretching.gif";
+			GUIDE_ICON = ICON_DIR "/up_stretching.png";
 		}else if(ad->stretch_sequence == 1){ //forward
 			snprintf(buff, sizeof(buff),
 					 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
@@ -696,7 +696,7 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
 					 ad->training_cnt);
 			LABEL_TEXT = buff;
-			GUIDE_ICON = NULL;
+			GUIDE_ICON = ICON_DIR "/forward_stretching.png";
 		}
 		BTN_TEXT = "Training";
 	}
