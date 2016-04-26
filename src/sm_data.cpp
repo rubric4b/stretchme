@@ -226,7 +226,7 @@ int get_counts_in_today(LOG_TYPE type)
  *
  * @return timestamp which contain difference between times
  */
-time_t get_elapsed_time_from_last(LOG_TYPE type)
+double get_elapsed_time_from_last(LOG_TYPE type)
 {
 	time_t last;
 	bool ret = get_stored_last_time(&last, type);
@@ -259,31 +259,21 @@ int get_awareness_level()
  * @param[in] diff time difference for elapsed time after the last stretching
  * @return level that 1 ~ 4, 1 means the slightness, 4 means the seriousness (over 1 day)
  */
-int get_awareness_level_from_data(time_t diff)
+int get_awareness_level_from_data(double diff)
 {
-	int level = 0;
-
-	if(diff > 1)
-	{
-		int d_day = diff / (60 * 60 * 24);
-		diff -= d_day * 60 * 60 * 24;
-		int d_hour = diff / (60 * 60);
-		diff -= d_hour * 60 * 60;
-		int d_min = diff / 60;
-		diff -= d_min * 60;
-		int d_sec = diff;
-
-		if(d_day >= 1)
-			level = 4;
-		else if(d_hour >= 3)
-			level = 3;
-		else if(d_hour > 1 && d_min >= 30)
-			level = 2;
-		else
-			level = 1;
+	if(diff > 0) {
+		if (diff > 60 * 60 * 24) {  // 1day
+			return 4;
+		} else if( diff > 60 * 60 * 3) {  // 3 hour
+			return 3;
+		} else if( diff > 60 * 30) { // 30 min
+			return 2;
+		} else {
+			return 1;
+		}
 	}
 
-	return level;
+	return 0;
 }
 
 

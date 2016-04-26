@@ -47,7 +47,7 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type);
  *
  * @return timestamp which contain difference between times
  */
-time_t get_elapsed_time_from_last(LOG_TYPE type);
+double get_elapsed_time_from_last(LOG_TYPE type);
 
 /**
  * get the level of awareness according to elapsed time from stored data
@@ -62,7 +62,7 @@ int get_awareness_level();
  * @param[in] diff time difference for elapsed time after the last stretching
  * @return level that 1 ~ 4, 1 means the slightness, 4 means the seriousness (over 1 day)
  */
-int get_awareness_level_from_data(time_t diff);
+int get_awareness_level_from_data(double diff);
 
 /**
  * store the time as the last in the file
