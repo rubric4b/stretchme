@@ -8,7 +8,7 @@
 #include "logger.h"
 
 #define MOVING_THRESHOLD 0.025
-#define MOVING_THRESHOLD_CNT 20
+#define MOVING_THRESHOLD_CNT 50
 
 using namespace glm;
 
@@ -122,7 +122,7 @@ bool HA_Forward::analyze(const glm::vec3 curr_observation) {
             if (len < MOVING_THRESHOLD) { //determine motion end
                 m_nondiff_cnt++;
 
-                if(m_nondiff_cnt > 50) {
+                if(m_nondiff_cnt > MOVING_THRESHOLD_CNT) {
                     DBG("is_stay_true\n");
                     is_stay = true;
                 }
