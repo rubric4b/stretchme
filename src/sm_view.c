@@ -244,10 +244,10 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	char *LABEL_TEXT;
 
 	if(ad->stretch_sequence == 0) { // ARM_UP
-		LABEL_TEXT = "Fold your hands<br>and stretch arms up high";
+		LABEL_TEXT = "Interlock fingers<br>and raise hands above your head";
 		ad->training_prefix = "training_armup_";
 	} else if(ad->stretch_sequence == 1) { // FORWARD
-		LABEL_TEXT = "팔을 앞으로 <br>쭉 뻗으세요.";
+		LABEL_TEXT = "Interlock fingers<br> and extend hands forward";
 		ad->training_prefix = "training_forward_";
 	}
 
@@ -396,7 +396,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	layout = elm_layout_add(ad->nf);
 	elm_layout_file_set(layout, edj_path, "anim_img_and_center_text"); // custom theme
 
-	elm_object_part_text_set(layout, "text", "Get back to the origin with deep breathing");
+	elm_object_part_text_set(layout, "text", "Release<br>your arms<br>slowly");
 
 	evas_object_size_hint_weight_set(layout, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(layout, EVAS_HINT_FILL, EVAS_HINT_FILL);
@@ -668,15 +668,15 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 		if(ad->stretch_sequence == 0) // ARM_UP
 		{
 			LABEL_TEXT =
-					"<align=center><font_size=38> <font color=#FF0000>Stretch up</font color> your folding arms.</font_size> <br> "
-							"<font_size=30 color=#999999>Fold your hands and stretch arms up high. "
-							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+					"<align=center><font_size=36> <font color=#FC744b>Stretch out</font color> your hands <font color=#FC744b>over</font color> head</font_size>.<br> "
+							"<font_size=30 color=#999999>Interlocked fingers and raise hands above your head. "
+							"After then keep the posture for a few seconds. Finally release your hands after feedback.</font_size></align>";
 			GUIDE_ICON = ICON_DIR "/up_stretching.png";
 		}else if(ad->stretch_sequence == 1){ // FORWARD
 			LABEL_TEXT =
-					"<align=center><font_size=38> <font color=#FF0000>Stretch forward</font color> your folding arms.</font_size> <br> "
-							"<font_size=30 color=#999999>팔을 앞으로 쭉 뻗으세요."
-							"After then keep the stretching for some seconds. Finally release your arms by feedback.</font_size></align>";
+					"<align=center><font_size=36> <font color=#FC744b>Stretch forward</font color> your hands from chest.</font_size> <br> "
+							"<font_size=30 color=#999999>Interlocked fingers and extend hands forward. "
+							"After then keep the posture for a few seconds. Finally release your hands after feedback.</font_size></align>";
 			GUIDE_ICON = ICON_DIR "/forward_stretching.png";
 		}
 
@@ -849,7 +849,7 @@ create_main_view(appdata_s *ad)
 	elm_layout_file_set(layout, edj_path, "strech_main"); // custom theme
 
 	// Text setting
-	elm_object_part_text_set(layout, "text", "Do stretching<br>with your arms");
+	elm_object_part_text_set(layout, "text", "Stretch<br>your arms");
 
 	char text2string[50];
 
@@ -860,17 +860,19 @@ create_main_view(appdata_s *ad)
 		snprintf(text2string, sizeof(text2string), "Let's start to stretch!");
 		break;
 	case 1:
-		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last",
-				 div((int)diff, 60).quot, (diff > 60 * 2) ? "minutes ago" : "minute ago");
+		snprintf(text2string, sizeof(text2string), "%d %s",
+				div((int)diff, 60).quot, (diff > 60 * 2) ? "minutes elapsed" : "minute elapsed");
 		break;
 	case 2:
 	case 3:
-		snprintf(text2string, sizeof(text2string), "%s : %d %s", "The last",
-				 (div((int)diff, 60 * 60).quot < 1) ? 1 : div((int)diff, 60 * 60).quot,
-			(diff > 60 * 60 * 2) ? "hours ago" : "hour ago");
+		snprintf(text2string, sizeof(text2string), "%d %s",
+			(div((int)diff, 60 * 60).quot < 1) ? 1 : div((int)diff, 60 * 60).quot,
+			(diff > 60 * 60 * 2) ? "hours elapsed" : "hour elapsed");
 		break;
 	case 4:
-		snprintf(text2string, sizeof(text2string), "%s", "Try to release your body");
+		snprintf(text2string, sizeof(text2string), "%d %s",
+			(div((int)diff, 60 * 60 * 24).quot < 1) ? 1 : div((int)diff, 60 * 60 * 24).quot,
+			(diff > 60 * 60 * 24 * 2) ? "days elapsed" : "day elapsed");
 		break;
 	default:
 		snprintf(text2string, sizeof(text2string), "%s", "It is the time to stretch!");
