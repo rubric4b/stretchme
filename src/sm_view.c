@@ -305,7 +305,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
 	 // save the time when stretching is started!
-	 store_last_time_with_current(ST_TRIAL, 0.0f);
+	 store_last_time_with_current(ST_TRIAL, 534.00805836589365f);
 
 	if(!ad->is_training) {
 		// stretching result checking
@@ -547,7 +547,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_SUCCESS, 0.0f); // TODO: fill real recognition rate
+	store_last_time_with_current(ST_SUCCESS, 12.0f); // TODO: fill real recognition rate
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -616,7 +616,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_FAIL, 0.0f); // TODO: fill recognition rate
+	store_last_time_with_current(ST_FAIL, 0.0007f); // TODO: fill recognition rate
 
 }
 

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 
 #include "main.h"
 #include "sm_data.h"
@@ -42,6 +43,45 @@ static char* util_strtok(char* str, const char* delim, char** nextp)
     return ret;
 }
 
+static std::string get_const_size_string_from_float(double val, int nInt, int nReal)
+{
+	std::ostringstream ret;
+
+	int num_digit_of_int = 1;
+	int int_of_val = (int)val;
+
+	while(1)
+	{
+		int_of_val /= 10;
+		if(int_of_val < 1)
+			break;
+		num_digit_of_int++;
+	}
+
+	for(int i = 0; i < nInt - num_digit_of_int; i++)
+	{
+		ret << " ";
+	}
+
+	ret << (int)val;
+
+	ret << ".";
+
+	double tmp = val - (int)val; // remove int part
+	int tmp_int = 0;
+	for(int i = 0; i < nReal; i++)
+	{
+		tmp *= 10; // shift left
+		tmp_int = (int)(tmp);
+
+		ret << tmp_int;
+
+		tmp -= tmp_int; // remove int part
+	}
+	ret << "\0";
+
+	return ret.str();
+}
 
 /**
  * store the time as the last in the file
@@ -63,7 +103,8 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate)
 		struct_time = localtime(&timestamp);
 
 #ifdef EXPERIMENT
-		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%4.8f\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type, recog_rate);
+		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
+		type, get_const_size_string_from_float(recog_rate, 4, 8).c_str() /* make 4.8f */);
 #else
 		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d,%d,%4.8f\n", struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type, recog_rate);
 #endif
