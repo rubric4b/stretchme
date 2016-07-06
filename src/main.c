@@ -13,7 +13,7 @@
 #include "main.h"
 #include "logger.h"
 #include "sm_view.h"
-
+#include "sm_data.h"
 
 #include <time.h>
 
@@ -88,6 +88,7 @@ app_create(void *data)
 		If this function returns false, the application is terminated */
 	appdata_s *ad = data;
 
+	ad->ex_type = get_experiment_type();
 	create_base_gui(ad);
 
 	return true;

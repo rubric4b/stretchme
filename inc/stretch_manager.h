@@ -1,8 +1,11 @@
 #ifndef __STRETCH_MANAGER_H__
 #define __STRETCH_MANAGER_H__
 
+#include "main.h"
 #include "stretch_interface.h"
 #include "sm_sensor.h"
+
+#include <Ecore.h>
 
 #include "singleton.hpp"
 
@@ -34,6 +37,8 @@ private:
 	// sensor
 	sm_Sensor m_accel;
 
+	Experiment_Type m_exType;
+	Ecore_Timer* m_timer; // timer for experiment 1. i.e., operating with timer instead of sensor based hmm
 
 private:
 	//typedef void (*Sensor_Cb)(const sm_Sensor &sensor);

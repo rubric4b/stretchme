@@ -70,14 +70,14 @@ int get_awareness_level_from_data(double diff);
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type);
-	
+bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate);
+
 /**
  * store the current time as the last in the file
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type);
+bool store_last_time_with_current(LOG_TYPE type, double recog_rate);
 
 
 /**
@@ -87,6 +87,14 @@ bool store_last_time_with_current(LOG_TYPE type);
  * @return counts
  */
 int get_counts_in_today(LOG_TYPE type);
+
+/**
+ * get experiment type
+ * This function checks the experiment type via file config ONCE.
+ *
+ * @return Experiment_Type
+ */
+Experiment_Type get_experiment_type();
 
 
 #ifdef __cplusplus

@@ -35,6 +35,14 @@
 
 #define ICON_DIR "/opt/usr/apps/org.tizen.stretchme/res/images"
 
+typedef enum
+{
+	EXPERIMENT_1,	// reminder only
+	EXPERIMENT_2,	// reminder + motion recognition
+	EXPERIMENT_3,	// reminder + motion recognition + gamification
+	EXPERIMENT_MAX
+}Experiment_Type;
+
 typedef struct appdata {
 	Evas_Object *nf;
 	Evas_Object *label;
@@ -49,6 +57,7 @@ typedef struct appdata {
 
 	char* training_prefix;
 
+	Experiment_Type ex_type;
 	// view
 //	Ecore_Timer * fold_timer;
 //	Eina_Bool is_stretch_success;
@@ -60,6 +69,9 @@ extern "C" {
 
 void app_get_resource(const char *edj_file_in, char *edj_path_out, int edj_path_max);
 void vibrate(int duration, int feedback);
+
+
+#define EXPERIMENT
 
 #ifdef __cplusplus
 }

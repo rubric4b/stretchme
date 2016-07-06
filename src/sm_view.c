@@ -121,8 +121,11 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 				}
 				else if(result == STRETCH_FAIL)
 				{
-					// go to fail view
-					Fail_Strecth_cb(data, NULL, NULL);
+					if(ad->ex_type != EXPERIMENT_1)
+					{
+						// go to fail view
+						Fail_Strecth_cb(data, NULL, NULL);
+					}
 				}
 				break;
 
@@ -140,7 +143,10 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 					// store the result at app_data
 //					ad->is_stretch_success = EINA_FALSE;
 					// go to fail view
-					Fail_Strecth_cb(data, NULL, NULL);
+					if(ad->ex_type != EXPERIMENT_1)
+					{
+						Fail_Strecth_cb(data, NULL, NULL);
+					}
 				}
 				break;
 
@@ -299,7 +305,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
 	 // save the time when stretching is started!
-	 store_last_time_with_current(ST_TRIAL);
+	 store_last_time_with_current(ST_TRIAL, 0.0f);
 
 	if(!ad->is_training) {
 		// stretching result checking
@@ -467,6 +473,12 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	int achieve = get_counts_in_today(ST_SUCCESS);
 	DBG("achieve count = %d\n", achieve);
 
+	if(ad->ex_type != EXPERIMENT_3)
+	{
+		// if no gamification, just show full progress
+		achieve = 4;
+	}
+
 	switch(achieve)
 	{
 
@@ -496,8 +508,9 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	Success_image = elm_image_add(layout);
 	elm_object_style_set(Success_image, "center");
 
-	if(achieve > 3)
+	if(ad->ex_type == EXPERIMENT_3 && achieve > 3)
 	{
+		// TODO: make virtual points if possible
 		elm_image_file_set(Success_image, ICON_DIR "/success_with_medal.png", NULL);
 	}
 	else
@@ -534,7 +547,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_SUCCESS);
+	store_last_time_with_current(ST_SUCCESS, 0.0f); // TODO: fill real recognition rate
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -603,7 +616,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_FAIL);
+	store_last_time_with_current(ST_FAIL, 0.0f); // TODO: fill recognition rate
 
 }
 

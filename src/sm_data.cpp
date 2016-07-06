@@ -1,10 +1,19 @@
 #include <fstream>
 
+#include "main.h"
 #include "sm_data.h"
 #include "logger.h"
 
 #define DATA_FILE_PATH "/opt/usr/media/stretching_data.txt"
-#define DATA_LINE_LENGTH 22
+#define EX_TYPE_LEN 1
+#define TIME_LEN 19
+#define TYPE_LEN 1
+#define RATE_LEN (4+1+8) // 1234.12345678
+#define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + RATE_LEN + 1)
+
+#define EXPERIMENT_TYPE1_FILE_PATH "/opt/usr/media/stretchme.ex1"
+#define EXPERIMENT_TYPE2_FILE_PATH "/opt/usr/media/stretchme.ex2"
+#define EXPERIMENT_TYPE3_FILE_PATH "/opt/usr/media/stretchme.ex3"
 
 static char* util_strtok(char* str, const char* delim, char** nextp)
 {
@@ -40,7 +49,7 @@ static char* util_strtok(char* str, const char* delim, char** nextp)
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type)
+bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate)
 {
 	// open file
 	std::ofstream out_file;
@@ -48,12 +57,16 @@ bool store_last_time(time_t timestamp, LOG_TYPE type)
 
 	if (out_file.is_open() && out_file.good())
 	{
-		char buf[25];
+		char buf[DATA_LINE_LENGTH+1];
 
 		struct tm* struct_time;
 		struct_time = localtime(&timestamp);
 
-		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d,%d\n", struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type);
+#ifdef EXPERIMENT
+		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%4.8f\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type, recog_rate);
+#else
+		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d,%d,%4.8f\n", struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type, recog_rate);
+#endif
 		out_file << buf;
 
 //		std::cout << "write : " << buf;
@@ -74,12 +87,12 @@ bool store_last_time(time_t timestamp, LOG_TYPE type)
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type)
+bool store_last_time_with_current(LOG_TYPE type, double recog_rate)
 {
 	time_t current_time;
 	time(&current_time);
 
-	return store_last_time(current_time, type);
+	return store_last_time(current_time, type, recog_rate);
 }
 
 /**
@@ -109,12 +122,15 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 			std::string line;
 			std::getline(in_file, line);
 			int line_length = (int)line.length() +1;
-			in_file.seekg(-line_length, std::ios::cur);
+			in_file.seekg(-line_length, std::ios::cur); // move to begin of the line
 
 			char *word1, *word2, *wordPtr;
 			char* pline = strdup(line.c_str()); // make char* from const char*
 
 			// parsing time string
+#ifdef EXPERIMENT
+			word1 = util_strtok(pline+2, ",", &wordPtr); // ex type
+#endif
 			word1 = util_strtok(pline, ",", &wordPtr); // time
 			// parsing type string
 			word2 = util_strtok(NULL, ",", &wordPtr); // type
@@ -127,6 +143,9 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 				char* ret = strptime(word1, "%Y-%m-%d %H:%M:%S", &tm);
 
 				*timestamp = mktime(&tm);
+
+				free(pline);
+				in_file.close();
 
 				return true;
 			}
@@ -183,6 +202,9 @@ int get_counts_in_today(LOG_TYPE type)
 			char* pline = strdup(line.c_str()); // make char* from const char*
 
 			// parsing time string
+#ifdef EXPERIMENT
+			word1 = util_strtok(pline+2, ",", &wordPtr); // ex type
+#endif
 			word1 = util_strtok(pline, ",", &wordPtr); // time
 			// parsing type string
 			word2 = util_strtok(NULL, ",", &wordPtr); // type
@@ -275,5 +297,53 @@ int get_awareness_level_from_data(double diff)
 
 	return 0;
 }
+
+Experiment_Type get_experiment_type()
+{
+	static Experiment_Type ext = EXPERIMENT_MAX;
+
+	if(ext == EXPERIMENT_MAX)
+	{
+		std::ifstream ex_file;
+
+		// file open
+		ex_file.open(EXPERIMENT_TYPE1_FILE_PATH, std::ios::in | std::ios::binary);
+
+		if (ex_file.is_open() && ex_file.good())
+		{
+			ext = EXPERIMENT_1;
+			ex_file.close();
+		}
+		else
+		{
+			// file open
+			ex_file.open(EXPERIMENT_TYPE2_FILE_PATH, std::ios::in | std::ios::binary);
+
+			if (ex_file.is_open() && ex_file.good())
+			{
+				ext = EXPERIMENT_2;
+				ex_file.close();
+			}
+			else
+			{
+#if 0
+				// file open
+				ex_file.open(EXPERIMENT_TYPE3_FILE_PATH, std::ios::in | std::ios::binary);
+
+				if (ex_file.is_open() && ex_file.good())
+				{
+					ext = EXPERIMENT_3;
+					ex_file.close();
+				}
+#else
+				ext = EXPERIMENT_3; // in default
+#endif
+			}
+		}
+	}
+
+	return ext;
+}
+
 
 

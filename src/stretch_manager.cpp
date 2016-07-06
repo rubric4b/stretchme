@@ -1,3 +1,4 @@
+#include "main.h"
 #include "sm_sensor.h"
 #include "stretch_manager.h"
 #include "sm_hmm/hmm_manager.h"
@@ -18,6 +19,16 @@ typedef unsigned char bool;
 using namespace std;
 using namespace glm;
 
+#if 0
+// TODO: need to operate the stretching manager by timer instead of sensor based hmm
+static Eina_Bool _stretching_timer_cb(void *data)
+{
+//	stretch_Manager* mgr = static_cast<stretch_Manager*>(data);
+
+	return ECORE_CALLBACK_CANCEL;
+}
+#endif
+
 void stretch_Manager::init() {
 	DBG("stretch_Manager::init()\n");
 	m_sensitivity = 0.5f;
@@ -34,12 +45,15 @@ void stretch_Manager::release() {
 }
 
 void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void *data) {
+	appdata_s *ad = (appdata_s *)data;
+
 	DBG("stretch_Manager::start() - conf[mode,type,state] = %d,%d,%d\n", conf.mode, conf.type, conf.state);
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
 		m_resultCbFunc(m_stConf, STRETCH_CANCEL, m_resultCbData);
 	}
 
+	m_exType = ad->ex_type;
 	m_stConf = conf;
 	m_resultCbFunc = func;
 	m_resultCbData = data;
@@ -48,6 +62,13 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	// turn on the sensor
 	m_accel.register_Callback(sensorCb, this);
 	m_accel.start();
+
+#if 0
+	if(m_exType == EXPERIMENT_1)
+	{
+		m_timer = ecore_timer_add(2.5f, _stretching_timer_cb, this);
+	}
+#endif
 
 }
 
@@ -110,6 +131,14 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 //						stretch_result = STRETCH_SUCCESS; //TESTCODE!!
 					}
 				}
+
+#if 0 //EXPERIMENT == 1
+				if (sensor.m_timestamp > 2500) {
+					callback_flag = true;
+					stretch_result = STRETCH_SUCCESS;
+				}
+#endif
+
 					break;
 
 				case STRETCH_STATE_HOLD : {
@@ -132,8 +161,8 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
-
 				}
+
 					break;
 
 				case STRETCH_STATE_FOLD : {
@@ -173,6 +202,13 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						}
 //						stretch_result = STRETCH_SUCCESS; //TESTCODE!!
 					}
+
+#if 0 //EXPERIMENT == 1
+					if (sensor.m_timestamp > 2500) {
+						callback_flag = true;
+						stretch_result = STRETCH_SUCCESS;
+					}
+#endif
 				}
 					break;
 
@@ -246,20 +282,5 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
