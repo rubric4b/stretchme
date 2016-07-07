@@ -50,7 +50,7 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	DBG("stretch_Manager::start() - conf[mode,type,state] = %d,%d,%d\n", conf.mode, conf.type, conf.state);
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
-		m_resultCbFunc(m_stConf, STRETCH_CANCEL, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
 	}
 
 	m_exType = ad->ex_type;
@@ -93,7 +93,7 @@ void stretch_Manager::stop() {
 
 	if(m_isProgress && m_resultCbFunc) {
 		//m_isProgress = false;
-		m_resultCbFunc(m_stConf, STRETCH_CANCEL, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
 	}
 
 
@@ -111,6 +111,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	StretchResult stretch_result = STRETCH_FAIL;
 	bool callback_flag(false);
 	static vec3 ob_hold(0);
+	static double prob = 0.0f;
 
 	hMgr.set_CurrentType(m_stConf.type);
 
@@ -122,7 +123,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 					if(hMgr.is_End() || sensor.m_timestamp > 30000) {
 						callback_flag = true;
-						double prob = hMgr.get_Probability();
+						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
 
 						if(-prob < hMgr.get_Threshold() && prob != 0) {
@@ -194,7 +195,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 					if (hMgr.is_End() || sensor.m_timestamp > 30000) {
 						callback_flag = true;
-						double prob = hMgr.get_Probability();
+						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n", sensor.m_timestamp, prob);
 
 						if (-prob < hMgr.get_Threshold() && prob != 0) {
@@ -278,8 +279,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		m_isProgress = false;
 		hMgr.reset_Model_Performing();
 
-		m_resultCbFunc(m_stConf, stretch_result, m_resultCbData);
-
+		m_resultCbFunc(m_stConf, stretch_result, prob, m_resultCbData);
 	}
 }
 

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "stretch_interface.h"
 
 #ifndef bool
 #define bool int
@@ -31,8 +32,6 @@ typedef enum
 	ST_SUCCESS,
 	ST_FAIL
 }LOG_TYPE;
-
-
 
 /**
  * get the last stretching time from stored file
@@ -70,14 +69,14 @@ int get_awareness_level_from_data(double diff);
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate);
+bool store_last_time(time_t timestamp, LOG_TYPE type, StretchType stt, double recog_rate);
 
 /**
  * store the current time as the last in the file
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type, double recog_rate);
+bool store_last_time_with_current(LOG_TYPE type, StretchType stt, double recog_rate);
 
 
 /**

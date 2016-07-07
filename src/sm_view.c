@@ -16,8 +16,8 @@
 static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 
-static void Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
-static void Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info);
+static void Success_Strecth_cb(void *data, double prob);
+static void Fail_Strecth_cb(void *data, double prob);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
 
 
@@ -102,13 +102,13 @@ static void emit_current_time_to_watchapp(void *data, char* key)
 
 }
 
-static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *data)
+static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double prob, void *data)
 {
 	appdata_s *ad = data;
 
 	stretching_stop();
 
-	DBG("Stretch_Result_cb:conf[mode,type,state]=%d,%d,%d, result(%d)\n", conf.mode, conf.type, conf.state, result);
+	DBG("Stretch_Result_cb:conf[mode,type,state]=%d,%d,%d, result : %d (%f)\n", conf.mode, conf.type, conf.state, result, prob);
 
 	if(conf.mode == STRETCH_MODE_EVAL) {
 		switch(conf.state)
@@ -124,7 +124,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 					if(ad->ex_type != EXPERIMENT_1)
 					{
 						// go to fail view
-						Fail_Strecth_cb(data, NULL, NULL);
+						Fail_Strecth_cb(data, prob);
 					}
 				}
 				break;
@@ -145,7 +145,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 					// go to fail view
 					if(ad->ex_type != EXPERIMENT_1)
 					{
-						Fail_Strecth_cb(data, NULL, NULL);
+						Fail_Strecth_cb(data, prob);
 					}
 				}
 				break;
@@ -163,7 +163,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 					}else if(ad->stretch_sequence == 1){
 						ad->stretch_sequence = 0;
 */
-						Success_Strecth_cb(data, NULL, NULL);
+						Success_Strecth_cb(data, prob);
 
 						return;
 //					}
@@ -172,7 +172,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, void *da
 				}
 				else if(result == STRETCH_FAIL)
 				{
-					Fail_Strecth_cb(data, NULL, NULL);
+					Fail_Strecth_cb(data, prob);
 				}
 				break;
 
@@ -242,6 +242,15 @@ set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 }*/
 
 
+static Eina_Bool ex1_timer_cb(void* data)
+{
+	struct appdata *ad = data;
+
+	// TODO: make timer based operation for experiment 1
+
+	return ECORE_CALLBACK_DONE;
+}
+
 // Entrance the stretching - Now testing here for adding label
 void
 Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
@@ -305,11 +314,17 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
 	 // save the time when stretching is started!
-	 store_last_time_with_current(ST_TRIAL, 534.00805836589365f);
+	 store_last_time_with_current(ST_TRIAL, st_current_config.type, 0.0f);
 
 	if(!ad->is_training) {
 		// stretching result checking
 		stretching_start(st_current_config, Stretch_Result_cb, ad);
+
+		if(ad->ex_type == EXPERIMENT_1)
+		{
+			ad->ex1_timer = ecore_timer_add(2.5f, ex1_timer_cb, ad);
+		}
+
 	} else {
 		streching_data_gathering(ad);
 	}
@@ -449,7 +464,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 // Success
 static void
-Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
+Success_Strecth_cb(void *data, double prob)
 {
 	struct appdata *ad = data;
 	Evas_Object *layout, *bg, *Success_image, *button;
@@ -547,7 +562,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_SUCCESS, 12.0f); // TODO: fill real recognition rate
+	store_last_time_with_current(ST_SUCCESS, st_current_config.type, prob); // TODO: fill real recognition rate
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -559,7 +574,7 @@ Success_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 
 // Fail
 static void
-Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
+Fail_Strecth_cb(void *data, double prob)
 {
 	struct appdata *ad = data;
 	Evas_Object *layout, *Fail_image, *button, *bg;
@@ -616,7 +631,7 @@ Fail_Strecth_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_FAIL, 0.0007f); // TODO: fill recognition rate
+	store_last_time_with_current(ST_FAIL, st_current_config.type, prob); // TODO: fill recognition rate
 
 }
 

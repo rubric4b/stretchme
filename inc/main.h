@@ -58,6 +58,7 @@ typedef struct appdata {
 	char* training_prefix;
 
 	Experiment_Type ex_type;
+	Ecore_Timer *ex1_timer; // ex1 only use timer to operate.
 	// view
 //	Ecore_Timer * fold_timer;
 //	Eina_Bool is_stretch_success;

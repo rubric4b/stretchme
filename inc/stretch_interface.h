@@ -54,7 +54,7 @@ typedef enum
     STRETCH_CANCEL // canceled by another request
 }StretchResult;
 
-typedef void (*Stretching_Result_Cb)(StretchConfig conf, StretchResult result, void *data);
+typedef void (*Stretching_Result_Cb)(StretchConfig conf, StretchResult result, double prob, void *data);
 
 /**
  * Sensitivity 0.0 ~ 1.0

@@ -9,8 +9,11 @@
 #define EX_TYPE_LEN 1
 #define TIME_LEN 19
 #define TYPE_LEN 1
-#define RATE_LEN (4+1+8) // 1234.12345678
-#define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + RATE_LEN + 1)
+#define ST_TYPE_LEN 1
+#define RATE_INT_LEN 5
+#define RATE_REAL_LEN 8
+#define RATE_LEN (RATE_INT_LEN+1+RATE_REAL_LEN) // 12345.12345678
+#define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + ST_TYPE_LEN + 1 + RATE_LEN + 1)
 
 #define EXPERIMENT_TYPE1_FILE_PATH "/opt/usr/media/stretchme.ex1"
 #define EXPERIMENT_TYPE2_FILE_PATH "/opt/usr/media/stretchme.ex2"
@@ -43,18 +46,29 @@ static char* util_strtok(char* str, const char* delim, char** nextp)
     return ret;
 }
 
+/**
+ * val : Float value
+ * nInt : number of digit for integer part. if the val is less than zero, 1 slot (char) should be consumed by 'minus'
+ * nReal : number of digit for real part.
+ */
 static std::string get_const_size_string_from_float(double val, int nInt, int nReal)
 {
 	std::ostringstream ret;
 
 	int num_digit_of_int = 1;
-	int int_of_val = (int)val;
+	int int_of_val = abs((int)val);
 
 	while(1)
 	{
 		int_of_val /= 10;
 		if(int_of_val < 1)
 			break;
+		num_digit_of_int++;
+	}
+
+	if(val < 0)
+	{
+		// one slot should be consumed by '-'
 		num_digit_of_int++;
 	}
 
@@ -69,6 +83,12 @@ static std::string get_const_size_string_from_float(double val, int nInt, int nR
 
 	double tmp = val - (int)val; // remove int part
 	int tmp_int = 0;
+
+	if(val < 0)
+	{
+		tmp = -tmp;
+	}
+
 	for(int i = 0; i < nReal; i++)
 	{
 		tmp *= 10; // shift left
@@ -80,6 +100,8 @@ static std::string get_const_size_string_from_float(double val, int nInt, int nR
 	}
 	ret << "\0";
 
+	DBG("#### RET_STR : [%s]", ret.str().c_str());
+
 	return ret.str();
 }
 
@@ -89,7 +111,7 @@ static std::string get_const_size_string_from_float(double val, int nInt, int nR
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate)
+bool store_last_time(time_t timestamp, LOG_TYPE type, StretchType stt, double recog_rate)
 {
 	// open file
 	std::ofstream out_file;
@@ -102,12 +124,8 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate)
 		struct tm* struct_time;
 		struct_time = localtime(&timestamp);
 
-#ifdef EXPERIMENT
-		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
-		type, get_const_size_string_from_float(recog_rate, 4, 8).c_str() /* make 4.8f */);
-#else
-		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d,%d,%4.8f\n", struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec, type, recog_rate);
-#endif
+		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
+		type, stt, get_const_size_string_from_float(recog_rate, RATE_INT_LEN, RATE_REAL_LEN).c_str() /* make 5.8f */);
 		out_file << buf;
 
 //		std::cout << "write : " << buf;
@@ -128,12 +146,12 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, double recog_rate)
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type, double recog_rate)
+bool store_last_time_with_current(LOG_TYPE type, StretchType stt, double recog_rate)
 {
 	time_t current_time;
 	time(&current_time);
 
-	return store_last_time(current_time, type, recog_rate);
+	return store_last_time(current_time, type, stt, recog_rate);
 }
 
 /**
@@ -169,10 +187,7 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 			char* pline = strdup(line.c_str()); // make char* from const char*
 
 			// parsing time string
-#ifdef EXPERIMENT
-			word1 = util_strtok(pline+2, ",", &wordPtr); // ex type
-#endif
-			word1 = util_strtok(pline, ",", &wordPtr); // time
+			word1 = util_strtok(pline+2, ",", &wordPtr); // time
 			// parsing type string
 			word2 = util_strtok(NULL, ",", &wordPtr); // type
 			int st_type = atoi(word2);
@@ -183,12 +198,18 @@ bool get_stored_last_time(time_t* timestamp, LOG_TYPE type)
 				struct tm tm;
 				char* ret = strptime(word1, "%Y-%m-%d %H:%M:%S", &tm);
 
+				DBG("last time for %d type : %s", type, word1);
+
 				*timestamp = mktime(&tm);
 
 				free(pline);
 				in_file.close();
 
 				return true;
+			}
+			else
+			{
+				DBG("No last %d type log");
 			}
 
 			free(pline);
@@ -243,10 +264,7 @@ int get_counts_in_today(LOG_TYPE type)
 			char* pline = strdup(line.c_str()); // make char* from const char*
 
 			// parsing time string
-#ifdef EXPERIMENT
-			word1 = util_strtok(pline+2, ",", &wordPtr); // ex type
-#endif
-			word1 = util_strtok(pline, ",", &wordPtr); // time
+			word1 = util_strtok(pline+2, ",", &wordPtr); // time
 			// parsing type string
 			word2 = util_strtok(NULL, ",", &wordPtr); // type
 			int st_type = atoi(word2);

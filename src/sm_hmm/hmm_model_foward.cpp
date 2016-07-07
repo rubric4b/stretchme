@@ -19,7 +19,8 @@ using namespace std;
 unsigned int Hmm_Forward::FORWARD_NB_STATE         = 4;
 unsigned int Hmm_Forward::FORWARD_TS_DIMENSION     = 7;
 unsigned int Hmm_Forward::FORWARD_WINDOW_SIZE      = 1;
-double       Hmm_Forward::FORWARD_THRESHOLD        = 14;
+//double       Hmm_Forward::FORWARD_THRESHOLD        = 14;
+double       Hmm_Forward::FORWARD_THRESHOLD        = 13;
 
 Hmm_Forward::Hmm_Forward() :
     m_observationCnt(0),
