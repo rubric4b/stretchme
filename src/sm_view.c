@@ -246,7 +246,32 @@ static Eina_Bool ex1_timer_cb(void* data)
 {
 	struct appdata *ad = data;
 
-	// TODO: make timer based operation for experiment 1
+	if(st_current_config.state == STRETCH_STATE_UNFOLD)
+	{
+		// go to hold view
+		Hold_Stretch_cb(data, NULL, NULL);
+
+		// new timer during 5 sec
+		ecore_timer_del(ad->ex1_timer);
+		ad->ex1_timer = ecore_timer_add(5.0f, ex1_timer_cb, ad);
+	}
+	else if(st_current_config.state == STRETCH_STATE_HOLD)
+	{
+		// change view to unfold animation
+		Fold_Stretch_cb(data, NULL, NULL);
+
+		// new timer during 2 sec
+		ecore_timer_del(ad->ex1_timer);
+		ad->ex1_timer = ecore_timer_add(3.0f, ex1_timer_cb, ad);
+	}
+	else if(st_current_config.state == STRETCH_STATE_FOLD)
+	{
+		ecore_timer_del(ad->ex1_timer);
+		ad->ex1_timer = NULL;
+
+		// change view to success
+		Success_Strecth_cb(data, 0.0f);
+	}
 
 	return ECORE_CALLBACK_DONE;
 }
@@ -314,15 +339,18 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
 	 // save the time when stretching is started!
-	 store_last_time_with_current(ST_TRIAL, st_current_config.type, 0.0f);
+	 store_last_time_with_current(ST_TRIAL, 0, st_current_config.type, 0.0f);
 
 	if(!ad->is_training) {
-		// stretching result checking
-		stretching_start(st_current_config, Stretch_Result_cb, ad);
 
 		if(ad->ex_type == EXPERIMENT_1)
 		{
-			ad->ex1_timer = ecore_timer_add(2.5f, ex1_timer_cb, ad);
+			ad->ex1_timer = ecore_timer_add(3.0f, ex1_timer_cb, ad);
+		}
+		else
+		{
+			// stretching result checking
+			stretching_start(st_current_config, Stretch_Result_cb, ad);
 		}
 
 	} else {
@@ -390,7 +418,10 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	stretching_start(st_current_config, Stretch_Result_cb, ad);
+	if(ad->ex_type != EXPERIMENT_1)
+	{
+		stretching_start(st_current_config, Stretch_Result_cb, ad);
+	}
 }
 
 // Folding step of the stretching
@@ -458,7 +489,10 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	stretching_start(st_current_config, Stretch_Result_cb, ad);
+	if(ad->ex_type != EXPERIMENT_1)
+	{
+		stretching_start(st_current_config, Stretch_Result_cb, ad);
+	}
 
 }
 
@@ -485,33 +519,35 @@ Success_Strecth_cb(void *data, double prob)
 	bg = elm_image_add(layout);
 	elm_object_style_set(bg, "center");
 
+	// daily goal achievement
 	int achieve = get_counts_in_today(ST_SUCCESS);
 	DBG("achieve count = %d\n", achieve);
 
-	if(ad->ex_type != EXPERIMENT_3)
+	if(ad->ex_type == EXPERIMENT_3)
+	{
+		switch(achieve)
+		{
+			case 0:
+				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_20p.png", NULL);
+			break;
+			case 1:
+				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_40p.png", NULL);
+			break;
+			case 2:
+				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_60p.png", NULL);
+			break;
+			case 3:
+				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_80p.png", NULL);
+			break;
+			default:
+				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
+			break;
+		}
+	}
+	else
 	{
 		// if no gamification, just show full progress
-		achieve = 4;
-	}
-
-	switch(achieve)
-	{
-
-		case 0:
-			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_20p.png", NULL);
-		break;
-		case 1:
-			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_40p.png", NULL);
-		break;
-		case 2:
-			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_60p.png", NULL);
-		break;
-		case 3:
-			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_80p.png", NULL);
-		break;
-		default:
-			elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
-		break;
+		elm_image_file_set(bg, ICON_DIR "/Circle_White_15px.png", NULL);
 	}
 
 	evas_object_color_set(bg, 35, 202, 224, 255); // blue
@@ -558,11 +594,10 @@ Success_Strecth_cb(void *data, double prob)
 	usleep(1000*100); // 100 ms
 	vibrate(100, 99);
 
-
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_SUCCESS, st_current_config.type, prob); // TODO: fill real recognition rate
+	store_last_time_with_current(ST_SUCCESS, achieve, st_current_config.type, prob);
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -631,8 +666,7 @@ Fail_Strecth_cb(void *data, double prob)
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_FAIL, st_current_config.type, prob); // TODO: fill recognition rate
-
+	store_last_time_with_current(ST_FAIL, 0, st_current_config.type, prob);
 }
 
 // Reward

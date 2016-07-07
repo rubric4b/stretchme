@@ -9,11 +9,12 @@
 #define EX_TYPE_LEN 1
 #define TIME_LEN 19
 #define TYPE_LEN 1
+#define ACHIEVE_COUNT 1
 #define ST_TYPE_LEN 1
 #define RATE_INT_LEN 5
 #define RATE_REAL_LEN 8
 #define RATE_LEN (RATE_INT_LEN+1+RATE_REAL_LEN) // 12345.12345678
-#define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + ST_TYPE_LEN + 1 + RATE_LEN + 1)
+#define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + ACHIEVE_COUNT + 1 + ST_TYPE_LEN + 1 + RATE_LEN + 1)
 
 #define EXPERIMENT_TYPE1_FILE_PATH "/opt/usr/media/stretchme.ex1"
 #define EXPERIMENT_TYPE2_FILE_PATH "/opt/usr/media/stretchme.ex2"
@@ -111,7 +112,7 @@ static std::string get_const_size_string_from_float(double val, int nInt, int nR
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type, StretchType stt, double recog_rate)
+bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate)
 {
 	// open file
 	std::ofstream out_file;
@@ -124,8 +125,8 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, StretchType stt, double re
 		struct tm* struct_time;
 		struct_time = localtime(&timestamp);
 
-		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
-		type, stt, get_const_size_string_from_float(recog_rate, RATE_INT_LEN, RATE_REAL_LEN).c_str() /* make 5.8f */);
+		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
+		type, achieve_count, stt, get_const_size_string_from_float(recog_rate, RATE_INT_LEN, RATE_REAL_LEN).c_str() /* make 5.8f */);
 		out_file << buf;
 
 //		std::cout << "write : " << buf;
@@ -146,12 +147,12 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, StretchType stt, double re
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type, StretchType stt, double recog_rate)
+bool store_last_time_with_current(LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate)
 {
 	time_t current_time;
 	time(&current_time);
 
-	return store_last_time(current_time, type, stt, recog_rate);
+	return store_last_time(current_time, type, achieve_count, stt, recog_rate);
 }
 
 /**
