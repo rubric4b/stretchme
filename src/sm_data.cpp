@@ -125,8 +125,8 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, Stretch
 		struct tm* struct_time;
 		struct_time = localtime(&timestamp);
 
-		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%d,%s\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
-		type, achieve_count, stt, get_const_size_string_from_float(recog_rate, RATE_INT_LEN, RATE_REAL_LEN).c_str() /* make 5.8f */);
+		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%d,%14.8f\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
+		type, achieve_count, stt, recog_rate /* make 5.8f */);
 		out_file << buf;
 
 //		std::cout << "write : " << buf;
