@@ -19,11 +19,12 @@ typedef unsigned char bool;
 using namespace std;
 using namespace glm;
 
-#if 0
+#if 1
 // TODO: need to operate the stretching manager by timer instead of sensor based hmm
 static Eina_Bool _stretching_timer_cb(void *data)
 {
-//	stretch_Manager* mgr = static_cast<stretch_Manager*>(data);
+	stretch_Manager* mgr = static_cast<stretch_Manager*>(data);
+	mgr.timerCb();
 
 	return ECORE_CALLBACK_CANCEL;
 }
@@ -63,14 +64,31 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	m_accel.register_Callback(sensorCb, this);
 	m_accel.start();
 
-#if 0
+#if 1
 	if(m_exType == EXPERIMENT_1)
 	{
-		m_timer = ecore_timer_add(2.5f, _stretching_timer_cb, this);
+		if(conf.state == STRETCH_STATE_UNFOLD)
+		{
+			m_timer = ecore_timer_add(2.5f, _stretching_timer_cb, this);
+		}
+		else if(conf.state == STRETCH_STATE_HOLD)
+		{
+			m_timer = ecore_timer_add(5.0f, _stretching_timer_cb, this);
+		}
+		else if(conf.state == STRETCH_STATE_FOLD)
+		{
+			m_timer = ecore_timer_add(2.0f, _stretching_timer_cb, this);
+		}
 	}
 #endif
 
 }
+
+void stretch_Manager::timerCb()
+{
+	m_resultCbFunc(m_stConf, mResult, mProb, m_resultCbData);
+}
+
 
 stretch_Manager::stretch_Manager() :
 	m_stConf(),
@@ -279,7 +297,15 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		m_isProgress = false;
 		hMgr.reset_Model_Performing();
 
-		m_resultCbFunc(m_stConf, stretch_result, prob, m_resultCbData);
+		if(m_exType == EXPERIMENT_1)
+		{
+			mResult = stretch_result;
+			mProb = prob;
+		}
+		else
+		{
+			m_resultCbFunc(m_stConf, stretch_result, prob, m_resultCbData);
+		}
 	}
 }
 

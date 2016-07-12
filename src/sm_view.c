@@ -114,23 +114,20 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 		switch(conf.state)
 		{
 			case STRETCH_STATE_UNFOLD:
-				if(result == STRETCH_SUCCESS)
+				if(result == STRETCH_SUCCESS || ad->ex_type == EXPERIMENT_1)
 				{
 					// go to hold view
 					Hold_Stretch_cb(data, NULL, NULL);
 				}
 				else if(result == STRETCH_FAIL)
 				{
-					if(ad->ex_type != EXPERIMENT_1)
-					{
-						// go to fail view
-						Fail_Strecth_cb(data, prob);
-					}
+					// go to fail view
+					Fail_Strecth_cb(data, prob);
 				}
 				break;
 
 			case STRETCH_STATE_HOLD :
-				if(result == STRETCH_SUCCESS)
+				if(result == STRETCH_SUCCESS || ad->ex_type == EXPERIMENT_1)
 				{
 					// store the result at app_data
 //					ad->is_stretch_success = EINA_TRUE;
@@ -143,15 +140,12 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 					// store the result at app_data
 //					ad->is_stretch_success = EINA_FALSE;
 					// go to fail view
-					if(ad->ex_type != EXPERIMENT_1)
-					{
-						Fail_Strecth_cb(data, prob);
-					}
+					Fail_Strecth_cb(data, prob);
 				}
 				break;
 
 			case STRETCH_STATE_FOLD :
-				if(result == STRETCH_SUCCESS)
+				if(result == STRETCH_SUCCESS || ad->ex_type == EXPERIMENT_1)
 				{
 
 					/*if(ad->stretch_sequence == 0){
@@ -343,11 +337,13 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if(!ad->is_training) {
 
+/*
 		if(ad->ex_type == EXPERIMENT_1)
 		{
 			ad->ex1_timer = ecore_timer_add(3.0f, ex1_timer_cb, ad);
 		}
 		else
+*/
 		{
 			// stretching result checking
 			stretching_start(st_current_config, Stretch_Result_cb, ad);
@@ -418,7 +414,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	if(ad->ex_type != EXPERIMENT_1)
+//	if(ad->ex_type != EXPERIMENT_1)
 	{
 		stretching_start(st_current_config, Stretch_Result_cb, ad);
 	}
@@ -489,7 +485,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	// exit app by "back"
 	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
 
-	if(ad->ex_type != EXPERIMENT_1)
+//	if(ad->ex_type != EXPERIMENT_1)
 	{
 		stretching_start(st_current_config, Stretch_Result_cb, ad);
 	}

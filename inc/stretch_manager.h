@@ -22,6 +22,8 @@ public:
 	void release();
 	void eval(const sm_Sensor &sensor);
 
+	void timerCb();
+
 private:
 	StretchConfig m_stConf;
 
@@ -39,6 +41,10 @@ private:
 
 	Experiment_Type m_exType;
 	Ecore_Timer* m_timer; // timer for experiment 1. i.e., operating with timer instead of sensor based hmm
+
+	// for ex1
+	double mProb;
+	StretchResult mResult;
 
 private:
 	//typedef void (*Sensor_Cb)(const sm_Sensor &sensor);
