@@ -24,7 +24,7 @@ using namespace glm;
 static Eina_Bool _stretching_timer_cb(void *data)
 {
 	stretch_Manager* mgr = static_cast<stretch_Manager*>(data);
-	mgr.timerCb();
+	mgr->timerCb();
 
 	return ECORE_CALLBACK_CANCEL;
 }
@@ -44,6 +44,10 @@ void stretch_Manager::release() {
 	m_accel.stop();
 	m_accel.release();
 }
+
+#define UNFOLD_DURATION	2.5f
+#define HOLD_DURATION	5.0f
+#define FOLD_DURATION	2.0f
 
 void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void *data) {
 	appdata_s *ad = (appdata_s *)data;
@@ -67,17 +71,27 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 #if 1
 	if(m_exType == EXPERIMENT_1)
 	{
+		if(m_timer)
+		{
+			ecore_timer_del(m_timer);
+			m_timer = NULL;
+		}
+
 		if(conf.state == STRETCH_STATE_UNFOLD)
 		{
-			m_timer = ecore_timer_add(2.5f, _stretching_timer_cb, this);
+		DBG("log reset");
+			mProb = 0.0f;
+			mResult = STRETCH_FAIL;
+
+			m_timer = ecore_timer_add(UNFOLD_DURATION + 0.1f, _stretching_timer_cb, this);
 		}
 		else if(conf.state == STRETCH_STATE_HOLD)
 		{
-			m_timer = ecore_timer_add(5.0f, _stretching_timer_cb, this);
+			m_timer = ecore_timer_add(HOLD_DURATION + 0.1f, _stretching_timer_cb, this);
 		}
 		else if(conf.state == STRETCH_STATE_FOLD)
 		{
-			m_timer = ecore_timer_add(2.0f, _stretching_timer_cb, this);
+			m_timer = ecore_timer_add(FOLD_DURATION + 0.1f, _stretching_timer_cb, this);
 		}
 	}
 #endif
@@ -139,7 +153,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching( sensor.m_currKData );
 
-					if(hMgr.is_End() || sensor.m_timestamp > 30000) {
+					if(hMgr.is_End() || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
 						callback_flag = true;
 						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
@@ -173,10 +187,11 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						if (theta > radians(10.0) && !isnan(theta)) {
 							callback_flag = true;
 							stretch_result = STRETCH_FAIL;
+							DBG("log : hold fail");
 						}
 					}
 
-					if(sensor.m_timestamp > 5000) {
+					if(sensor.m_timestamp > (HOLD_DURATION * 1000)) {
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -190,7 +205,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					}*/
 
 //					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
-					if (sensor.m_timestamp > 2000) {
+					if (sensor.m_timestamp > (FOLD_DURATION * 1000)) {
 						DBG("fold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
@@ -211,10 +226,10 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching(sensor.m_currKData);
 
-					if (hMgr.is_End() || sensor.m_timestamp > 30000) {
+					if (hMgr.is_End() || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
 						callback_flag = true;
 						prob = hMgr.get_Probability();
-						DBG("%4d log p = %5f\n", sensor.m_timestamp, prob);
+						DBG("%4d log p = %5f(t : %f)\n", sensor.m_timestamp, prob, hMgr.get_Threshold());
 
 						if (-prob < hMgr.get_Threshold() && prob != 0) {
 							stretch_result = STRETCH_SUCCESS;
@@ -244,10 +259,11 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						if (theta > radians(10.0) && !isnan(theta)) {
 							callback_flag = true;
 							stretch_result = STRETCH_FAIL;
+							DBG("log : hold fail");
 						}
 					}
 
-					if (sensor.m_timestamp > 5000) {
+					if (sensor.m_timestamp > (HOLD_DURATION * 1000)) {
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -261,7 +277,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					}*/
 
 //					if (hMgr.get_End() || sensor.m_timestamp > 5000) {
-					if (sensor.m_timestamp > 2000) {
+					if (sensor.m_timestamp > (FOLD_DURATION * 1000)) {
 						DBG("fold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
@@ -299,6 +315,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 		if(m_exType == EXPERIMENT_1)
 		{
+			DBG("log : result (%d), p(%f)", stretch_result, prob);
 			mResult = stretch_result;
 			mProb = prob;
 		}
