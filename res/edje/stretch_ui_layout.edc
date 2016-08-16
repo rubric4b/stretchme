@@ -249,7 +249,7 @@ collections {
       styles {
          style {
             name: "result_text";
-            base: "font=Tizen:style=Regular text_class=tizen font_size=32 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-2 wrap=mixed";
+            base: "font=Tizen:style=Regular text_class=tizen font_size=25 align=center color=#FFFFFFFF ellipsis=1.0 linegap=-2 wrap=mixed";
             tag: "br" "\n";
          }
       }

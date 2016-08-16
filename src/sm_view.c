@@ -516,23 +516,23 @@ Success_Strecth_cb(void *data, double prob)
 	elm_object_style_set(bg, "center");
 
 	// daily goal achievement
-	int achieve = get_counts_in_today(ST_SUCCESS);
+	int achieve = get_counts_in_today(ST_SUCCESS) + 1;
 	DBG("achieve count = %d\n", achieve);
 
 	if(ad->ex_type == EXPERIMENT_3)
 	{
 		switch(achieve)
 		{
-			case 0:
+			case 1:
 				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_20p.png", NULL);
 			break;
-			case 1:
+			case 2:
 				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_40p.png", NULL);
 			break;
-			case 2:
+			case 3:
 				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_60p.png", NULL);
 			break;
-			case 3:
+			case 4:
 				elm_image_file_set(bg, ICON_DIR "/Circle_White_15px_80p.png", NULL);
 			break;
 			default:
@@ -555,10 +555,54 @@ Success_Strecth_cb(void *data, double prob)
 	Success_image = elm_image_add(layout);
 	elm_object_style_set(Success_image, "center");
 
-	if(ad->ex_type == EXPERIMENT_3 && achieve > 3)
+	if(ad->ex_type == EXPERIMENT_3 && achieve >= DAILY_GOAL_COUNT)
 	{
-		// TODO: make virtual points if possible
-		elm_image_file_set(Success_image, ICON_DIR "/success_with_medal.png", NULL);
+		switch(get_daily_goal_count_in_week())
+		{
+			case 0:
+				ERR("Never come here : achievement count error");
+				elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "Success!!");
+
+				break;
+			case 1:
+				elm_image_file_set(Success_image, ICON_DIR "/success_with_medal_bronze.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "Get SILVER tomorrow!");
+
+				break;
+			case 2:
+				elm_image_file_set(Success_image, ICON_DIR "/success_with_medal_silver.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "Get GOLD tomorrow!");
+				break;
+			case 3:
+				elm_image_file_set(Success_image, ICON_DIR "/success_with_medal_gold.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "Get CROWN tomorrow!");
+				break;
+			case 4:
+				elm_image_file_set(Success_image, ICON_DIR "/success_with_medal_crown.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "Get STAR tomorrow!");
+				break;
+			case 5:
+			default:
+				elm_image_file_set(Success_image, ICON_DIR "/success_with_medal_crown2.png", NULL);
+
+				// text
+				elm_object_part_text_set(layout, "text", "KING of stretch!!");
+
+				break;
+
+			break;
+		}
 	}
 	else
 	{
@@ -567,9 +611,6 @@ Success_Strecth_cb(void *data, double prob)
 
 	evas_object_show(Success_image);
 	elm_object_part_content_set(layout, "elm.swallow.content", Success_image);
-
-	// text
-	elm_object_part_text_set(layout, "text", "Success!!");
 
 	// Add button
 	button = elm_button_add(layout);
@@ -744,16 +785,16 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 		if(ad->stretch_sequence == 0) {  //arm_up
 			snprintf(buff, sizeof(buff),
 					 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
-							 "팔을 위로 뻗어주세요</font_size><br> "
-							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+							"팔을 위로 뻗어주세요</font_size><br> "
+							"<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
 					 ad->training_cnt);
 			LABEL_TEXT = buff;
 			GUIDE_ICON = ICON_DIR "/up_stretching.png";
 		}else if(ad->stretch_sequence == 1){ //forward
 			snprintf(buff, sizeof(buff),
 					 "<align=center><font_size=38><font color=#FF0000>Trial %d / 3</font color><br>"
-							 "팔을 앞으로 뻗어주세요</font_size><br> "
-							 "<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
+							"팔을 앞으로 뻗어주세요</font_size><br> "
+							"<font_size=30 color=#999999>3번 5초간 기록됩니다.</font_size></align>",
 					 ad->training_cnt);
 			LABEL_TEXT = buff;
 			GUIDE_ICON = ICON_DIR "/forward_stretching.png";

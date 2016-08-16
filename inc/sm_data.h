@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+#define DAILY_GOAL_COUNT 5 /* over 5 */
+
 typedef enum
 {
 	ST_TRIAL = 0,
@@ -86,6 +88,12 @@ bool store_last_time_with_current(LOG_TYPE type, int achieve_count, StretchType 
  * @return counts
  */
 int get_counts_in_today(LOG_TYPE type);
+
+/*
+ * check how many times to success for achievement of daily goal in a week
+ * (from monday to sunday)
+ */
+int get_daily_goal_count_in_week();
 
 /**
  * get experiment type

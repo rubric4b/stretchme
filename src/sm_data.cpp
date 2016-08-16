@@ -303,6 +303,125 @@ int get_counts_in_today(LOG_TYPE type)
 	return ret_cnt;
 }
 
+
+/**
+ * get the number of stretching from stored file with type
+ *
+ * @param[in] type LOG_TYPE
+ * @return true if success
+ */
+static int get_data_counts(LOG_TYPE type, time_t input_time)
+{
+	int ret_cnt(0);
+	std::ifstream in_file;
+	struct tm dday_tm;
+
+	dday_tm = *localtime(&input_time); //convert time_t to tm struct
+
+	// file open
+	in_file.open(DATA_FILE_PATH, std::ios::in | std::ios::binary);
+
+	if (in_file.is_open() && in_file.good())
+	{
+		// go to end of the file
+		in_file.seekg(0, in_file.end);
+
+		// read line reversely
+		while (in_file.tellg() > 1)
+		{
+			in_file.seekg(-DATA_LINE_LENGTH, std::ios::cur);
+
+			std::string line;
+			std::getline(in_file, line);
+			int line_length = (int)line.length() +1;
+			in_file.seekg(-line_length, std::ios::cur);
+
+			char *word1, *word2, *wordPtr;
+			char* pline = strdup(line.c_str()); // make char* from const char*
+
+			// parsing time string
+			word1 = util_strtok(pline+2, ",", &wordPtr); // time
+			// parsing type string
+			word2 = util_strtok(NULL, ",", &wordPtr); // type
+			int st_type = atoi(word2);
+
+			if(st_type == type)
+			{
+				// make timestamp from time formatted string
+				DBG("%s\n", word1);
+				struct tm log_tm;
+				char* ret = strptime(word1, "%Y-%m-%d %H:%M:%S", &log_tm);
+
+				// skip until meet dday
+				if(dday_tm.tm_mday < log_tm.tm_mday)
+					continue;
+				// break when the log is over than dday
+				else if(dday_tm.tm_mday > log_tm.tm_mday)
+					break;
+
+				time_t log_time = mktime(&log_tm);
+				if (difftime(input_time, log_time) >= 3500 || ret_cnt == 0 ) {
+					input_time = log_time;
+
+					// increase count
+					ret_cnt++;
+				}
+			}
+
+			free(pline);
+		}
+
+		in_file.close();
+	}
+	else
+	{
+		ERR("%s file open failed\n", DATA_FILE_PATH);
+		return false;
+	}
+
+	return ret_cnt;
+}
+
+/*
+ * check how many times to success for achievement of daily goal in a week
+ * (from monday to sunday)
+ */
+int get_daily_goal_count_in_week()
+{
+	time_t current_time;
+	struct tm current_tm;
+
+	time(&current_time); //get current time
+	current_tm = *localtime(&current_time); //convert time_t to tm struct
+
+	int ret = 0;
+	int loop_count = current_tm.tm_wday;
+	if(loop_count == 0 /* sunday */)
+		loop_count = 7;
+
+	time_t tmp_time;
+	struct tm tmp_tm;
+
+	for(int i = 0; i < loop_count; i++)
+	{
+
+		struct tm wish_time_tm;
+		time_t wish_time = current_time - i*(60*60*24);
+
+		int day_count = get_data_counts(ST_SUCCESS, wish_time);
+
+		if(day_count >= DAILY_GOAL_COUNT)
+		{
+			ret++;
+		}
+
+		wish_time_tm = *localtime(&wish_time);
+		DBG("daily success count : %d (date : %d), result %d\n", day_count, wish_time_tm.tm_mday, ret);
+	}
+
+	return ret;
+}
+
 /**
  * get elapsed time from the last stretching time to current
  *

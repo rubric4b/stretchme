@@ -34,10 +34,10 @@ void vibrate(int duration, int feedback)
 
 	if(device_haptic_open(0, &haptic_handle) == DEVICE_ERROR_NONE) {
 
-		LOGI("Connection to vibrator established");
+		dlog_print(DLOG_DEBUG, LOG_TAG, "Connection to vibrator established");
 
 		if(device_haptic_vibrate(haptic_handle, duration, feedback, &effect_handle) == DEVICE_ERROR_NONE) {
-			LOGI("Device vibrates!");
+			dlog_print(DLOG_ERROR, LOG_TAG, "Device vibrates!");
 		}
 	}
 }
