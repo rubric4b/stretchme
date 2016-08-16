@@ -41,7 +41,7 @@ void HA_Forward::reset() {
 
 }
 
-bool HA_Forward::get_Observation(const vec3 curr_observation, std::vector<float> &observation) {
+bool HA_Forward::get_Observation(const vec3 &curr_observation, std::vector<float> &observation) {
 
     if(observation.size() != Hmm_Forward::FORWARD_TS_DIMENSION) {
         ERR("observation size is not the same with Hmm_Forward::FORWARD_TS_DIMENSION!\n");
@@ -78,7 +78,7 @@ bool HA_Forward::get_Observation(std::vector<float> &curr_observation, std::vect
     return get_Observation(curr, observation);
 }
 
-bool HA_Forward::analyze(const glm::vec3 curr_observation) {
+bool HA_Forward::analyze(const vec3 &curr_observation) {
     if(!is_prev) {
         m_prev_obseravtion = curr_observation;
         is_prev = true;
@@ -140,6 +140,11 @@ bool HA_Forward::analyze(const glm::vec3 curr_observation) {
 
     return false;
 
+}
+
+bool HA_Forward::set_Observation(const glm::vec3 &curr_observation) {
+    //임시
+	return false;
 }
 
 

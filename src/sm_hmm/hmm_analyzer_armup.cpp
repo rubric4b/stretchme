@@ -41,7 +41,7 @@ void HA_ArmUp::reset() {
 
 }
 
-bool HA_ArmUp::get_Observation(const vec3 curr_observation, std::vector<float> &observation) {
+bool HA_ArmUp::get_Observation(const vec3 &curr_observation, std::vector<float> &observation) {
 
     if(observation.size() != Hmm_ArmUp::ARM_UP_TS_DIMENSION) {
         ERR("observation size is not the same with Hmm_ArmUp::ARM_UP_TS_DIMENSION!\n");
@@ -78,7 +78,7 @@ bool HA_ArmUp::get_Observation(std::vector<float> &curr_observation, std::vector
     return get_Observation(curr, observation);
 }
 
-bool HA_ArmUp::analyze(const glm::vec3 curr_observation) {
+bool HA_ArmUp::analyze(const vec3 &curr_observation) {
     if(!is_prev) {
         m_prev_obseravtion = curr_observation;
         is_prev = true;
@@ -138,6 +138,11 @@ bool HA_ArmUp::analyze(const glm::vec3 curr_observation) {
 
     return false;
 
+}
+
+bool HA_ArmUp::set_Observation(const glm::vec3 &curr_observation) {
+    // not impled!
+	return false;
 }
 
 
