@@ -158,12 +158,12 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching( sensor.m_currKData );
 
-					if(hMgr.is_End() || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
+					if(hMgr.is_End()){// || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
 						callback_flag = true;
 						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
 
-						if(-prob < hMgr.get_Threshold() && prob != 0) {
+						if(prob > hMgr.get_Threshold() && prob != 0) {
 							stretch_result = STRETCH_SUCCESS;
 						}
 //						stretch_result = STRETCH_SUCCESS; //TESTCODE!!

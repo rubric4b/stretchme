@@ -7,9 +7,10 @@
 #include "sm_hmm/hmm_manager.h"
 #include "sm_hmm/hmm_model_armup.h"
 #include "sm_hmm/hmm_model_forward.h"
+#include "sm_hmm/hmm_model_test.h"
 #include "logger.h"
 
-using namespace std;
+using glm::vec3;
 
 Hmm_Manager::Hmm_Manager() :
         m_currType(STRETCH_TYPE_ARM_UP),
@@ -23,7 +24,7 @@ Hmm_Manager::~Hmm_Manager() {
 
 //    delete m_models[STRETCH_TYPE_ARM_UP];
 //    delete m_models[STRETCH_TYPE_ARM_FORWARD];
-    for(int i=0; i<m_models.size(); i++)
+    for(int i=0; i < m_models.size(); i++)
     {
         if(m_models[i])
             delete m_models[i];
@@ -62,7 +63,9 @@ void Hmm_Manager::reset_All_Model_Performing() {
 }
 
 void Hmm_Manager::init_Manager() {
-    m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
+//    m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
+//    m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
+	m_models[STRETCH_TYPE_ARM_UP] = new Hmm_Test();
     m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
 
     m_models[STRETCH_TYPE_ARM_FORWARD] = new Hmm_Forward();
