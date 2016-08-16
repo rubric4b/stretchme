@@ -36,7 +36,7 @@ private:
 
 protected:
     Singleton() { };
-    virtual ~Singleton() { release_Instance(); };
+    virtual ~Singleton() { };
 
 };
 

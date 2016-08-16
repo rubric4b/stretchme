@@ -24,6 +24,7 @@
 #include <dlog.h>
 
 #define DLOG(prio, fmt, arg...) dlog_print(prio, LOG_TAG, "%s(%d) > " fmt, __func__, __LINE__, ##arg)
+#define LOGI(fmt, arg...) DLOG(DLOG_DEBUG, fmt, ##arg)
 #define DBG(fmt, arg...) DLOG(DLOG_DEBUG, fmt, ##arg)
 #define ERR(fmt, arg...) DLOG(DLOG_ERROR, fmt, ##arg)
 

@@ -3,8 +3,6 @@
 
 #include <glm/glm.hpp>
 
-using namespace glm;
-
 // default prediction level
 static const float DEFAULT_PREDICTION_LEVEL = 0.00001;
 

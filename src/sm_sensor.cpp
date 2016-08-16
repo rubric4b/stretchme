@@ -1,6 +1,8 @@
 #include "sm_sensor.h"
 #include "logger.h"
 
+using glm::vec3;
+
 sm_Sensor::sm_Sensor(sensor_type_e sensor_type,
 					 sensor_event_cb event_cb_func,
 					 void* event_cb_data,

@@ -6,7 +6,6 @@
 #define __HMM_MODEL_ARM_UP_H__
 
 #include "hmm_model.h"
-#include "hmm_analyzer_armup.h"
 
 class Hmm_ArmUp : public Hmm_Model {
 public:
