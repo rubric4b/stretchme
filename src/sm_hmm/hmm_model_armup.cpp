@@ -47,7 +47,7 @@ Hmm_ArmUp::Hmm_ArmUp() :
                 if(ent->d_type == 8) {
                     stringstream file;;
                     file << path.str() << ent->d_name;
-                    record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts, m_analyzer);
+                    record_training_set_from_file(m_analyzer, file.str().c_str(), USER_PATH, index, ARM_UP_TS_DIMENSION, ts);
                     index++;
                     DBG("index %d, %s\n", index, ent->d_name);
                 }
@@ -138,7 +138,7 @@ bool Hmm_ArmUp::retrain_child() {
             if(ent->d_type == 8) {
                 stringstream file;;
                 file << path.str() << ent->d_name;
-                record_training_set_from_file(file.str().c_str(), USER_PATH, index, ts, m_analyzer);
+                record_training_set_from_file(m_analyzer, file.str().c_str(), USER_PATH, index, ARM_UP_TS_DIMENSION, ts);
                 index++;
                 DBG("index %d, %s\n", index, ent->d_name);
             }
@@ -158,7 +158,7 @@ bool Hmm_ArmUp::retrain_child() {
 
     //record training set
     for(int i=0; i<3; i++) {
-        record_training_set_from_file(arm_up_training_set[i], USER_PATH, index, ts, m_analyzer);
+        record_training_set_from_file(m_analyzer, arm_up_training_set[i], USER_PATH, index, ARM_UP_TS_DIMENSION, ts);
         index++;
     }
 
