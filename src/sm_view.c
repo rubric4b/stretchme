@@ -25,6 +25,17 @@ static StretchConfig st_current_config = { STRETCH_MODE_NONE, STRETCH_TYPE_NONE,
 
 #define STRETCHING_DATA_FILEPATH "/opt/usr/share/stretching.json"
 
+static Eina_Bool display_lock_release_timer_cb(void* data)
+{
+	struct appdata *ad = data;
+
+	DBG("display lock release timer expired");
+	device_power_release_lock(POWER_LOCK_DISPLAY);
+	ad->display_lock_timer = NULL;
+
+	return ECORE_CALLBACK_DONE;
+}
+
 static void write_stretching_data_to_json_file(unsigned int current_time)
 {
 #if 1
@@ -180,7 +191,16 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 static Eina_Bool
 naviframe_pop_cb(void *data, Elm_Object_Item *it)
 {
+	appdata_s *ad = data;
+
 	stretch_manager_release();
+	if(ad->display_lock_timer)
+	{
+		DBG("deleted display lock release timer");
+		ecore_timer_del(ad->display_lock_timer);
+		ad->display_lock_timer = NULL;
+	}
+
 	device_power_release_lock(POWER_LOCK_DISPLAY);
 	ui_app_exit();
 	return EINA_FALSE;
@@ -328,12 +348,12 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
-	 device_power_request_lock(POWER_LOCK_DISPLAY, 0);
+	device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
-	 // save the time when stretching is started!
-	 store_last_time_with_current(ST_TRIAL, 0, st_current_config.type, 0.0f);
+	// save the time when stretching is started!
+	store_last_time_with_current(ST_TRIAL, 0, st_current_config.type, 0.0f);
 
 	if(!ad->is_training) {
 
@@ -412,7 +432,7 @@ Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	DBG("%s(%d)\n", __FUNCTION__, __LINE__);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 //	if(ad->ex_type != EXPERIMENT_1)
 	{
@@ -483,7 +503,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 //	if(ad->ex_type != EXPERIMENT_1)
 	{
@@ -600,13 +620,16 @@ Success_Strecth_cb(void *data, double prob)
 				elm_object_part_text_set(layout, "text", "KING of stretch!!");
 
 				break;
-
-			break;
 		}
 	}
 	else
 	{
 		elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
+
+		char msg[20];
+		snprintf(msg, sizeof(msg), "Success! (%d/%d)", achieve, DAILY_GOAL_COUNT);
+		// text
+		elm_object_part_text_set(layout, "text", msg);
 	}
 
 	evas_object_show(Success_image);
@@ -625,13 +648,15 @@ Success_Strecth_cb(void *data, double prob)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 	vibrate(100, 99);
 	usleep(1000*100); // 100 ms
 	vibrate(100, 99);
 
-	device_power_release_lock(POWER_LOCK_DISPLAY);
+
+	DBG("request to display lock release");
+	ad->display_lock_timer = ecore_timer_add(5.0f, display_lock_release_timer_cb, ad);
 
 	// save the time when stretching is done!
 	store_last_time_with_current(ST_SUCCESS, achieve, st_current_config.type, prob);
@@ -696,11 +721,12 @@ Fail_Strecth_cb(void *data, double prob)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 	vibrate(700, 99);
 
-	device_power_release_lock(POWER_LOCK_DISPLAY);
+	DBG("request to display lock release");
+	ad->display_lock_timer = ecore_timer_add(5.0f, display_lock_release_timer_cb, ad);
 
 	// save the time when stretching is done!
 	store_last_time_with_current(ST_FAIL, 0, st_current_config.type, prob);
@@ -740,7 +766,7 @@ Reward_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 }
 
 void
@@ -883,7 +909,7 @@ Stretch_Guide_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app by "back"
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 	hmm_init();
 
@@ -1013,7 +1039,7 @@ create_main_view(appdata_s *ad)
 	elm_naviframe_item_title_enabled_set(nf_it, false, true);
 
 	// exit app when the 1st depth is poped
-	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, NULL);
+	elm_naviframe_item_pop_cb_set(nf_it, naviframe_pop_cb, ad);
 
 }
 
