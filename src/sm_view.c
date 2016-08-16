@@ -927,7 +927,8 @@ static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	DBG("_button_unpressed_cb : is_training = %d\n", ad->is_training);
 	if(!ad->is_training) {
-		ad->stretch_sequence = (unsigned short) (random() % 2);
+//		ad->stretch_sequence = (unsigned short) (random() % 2);
+		ad->stretch_sequence = (unsigned short) 0; // 잠깐 고정
 		Stretch_Guide_cb(data, NULL, NULL);
 //		Success_Strecth_cb(data, NULL, NULL);
 	}
