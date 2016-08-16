@@ -21,10 +21,9 @@ bool write_hmm_to_file(const std::string &file_name, const xmm::HMM &model);
 
 bool read_hmm_from_file(const std::string &file_name, xmm::HMM &model);
 
-void record_training_set_from_file(const std::string &file_name,
-                                   PathType type,
-                                   int ts_phrase_index,
-                                   xmm::TrainingSet &ts,
-                                   Hmm_Analyzer *analyzer);
+void record_training_set_from_file(Hmm_Analyzer *analyzer, const std::string &file_name, PathType type, int ts_phrase_index,
+								   int ts_dim, xmm::TrainingSet &ts);
+
+void set_observ_from_file(Hmm_Analyzer *analyzer, const std::string &file_name, PathType type);
 
 #endif //__FILE_HANDLER_H__
