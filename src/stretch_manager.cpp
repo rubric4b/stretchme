@@ -109,8 +109,13 @@ stretch_Manager::stretch_Manager() :
 	m_lastMatchingRate(0),
 	m_sensitivity(0),
 	m_resultCbFunc(NULL),
+	m_resultCbData(NULL),
 	m_isProgress(false),
-	m_accel(SENSOR_ACCELEROMETER)
+	m_accel(SENSOR_ACCELEROMETER),
+	m_exType(),
+	m_timer(NULL),
+	mProb(0.0),
+	mResult()
 {
 	const static StretchConfig init_conf = {STRETCH_MODE_NONE, STRETCH_TYPE_NONE, STRETCH_STATE_NONE};
 	m_stConf = init_conf;
