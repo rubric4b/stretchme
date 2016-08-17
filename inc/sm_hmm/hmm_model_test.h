@@ -13,7 +13,6 @@ class HA_Test;
 class Hmm_Test : public Hmm_Model {
 public:
 	static const unsigned int TEST_NB_STATE;
-	static const unsigned int TEST_TS_DIMENSION;
 	static const unsigned int TEST_WINDOW_SIZE;
 	static const double TEST_THRESHOLD;
 
