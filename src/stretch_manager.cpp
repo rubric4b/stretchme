@@ -52,7 +52,7 @@ void stretch_Manager::release() {
 void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void *data) {
 	appdata_s *ad = (appdata_s *)data;
 
-	DBG("stretch_Manager::start() - conf[mode,type,state] = %d,%d,%d\n", conf.mode, conf.type, conf.state);
+	DBG("exType[%d] conf[mode,type,state] = %d,%d,%d\n", ad->ex_type, conf.mode, conf.type, conf.state);
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
 		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
@@ -112,7 +112,7 @@ stretch_Manager::stretch_Manager() :
 	m_resultCbData(NULL),
 	m_isProgress(false),
 	m_accel(SENSOR_ACCELEROMETER),
-	m_exType(),
+	m_exType(EXPERIMENT_MAX),
 	m_timer(NULL),
 	mProb(0.0),
 	mResult()
@@ -126,10 +126,11 @@ stretch_Manager::~stretch_Manager() {
 }
 
 void stretch_Manager::stop() {
-	m_accel.pause();
+	DBG("stop config[%d,%d,%d]",m_stConf.mode, m_stConf.state, m_stConf.type);
+	m_accel.stop();
 
 	if(m_isProgress && m_resultCbFunc) {
-		//m_isProgress = false;
+		m_isProgress = false;
 		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
 	}
 
@@ -197,6 +198,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					}
 
 					if(sensor.m_timestamp > (HOLD_DURATION * 1000)) {
+						DBG("hold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -269,6 +271,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 					}
 
 					if (sensor.m_timestamp > (HOLD_DURATION * 1000)) {
+						DBG("hold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
 						stretch_result = STRETCH_SUCCESS;
 					}
@@ -306,11 +309,12 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	}
 
 	if(callback_flag) {
-		if(stretch_result == STRETCH_FAIL || m_stConf.state == STRETCH_STATE_FOLD) {
+		/*if(stretch_result == STRETCH_FAIL || m_stConf.state == STRETCH_STATE_FOLD) {
 			m_accel.stop();
 		}else{
 			m_accel.pause();
-		}
+		}*/
+		m_accel.stop();
 
 		m_accel.register_Callback(NULL, NULL);
 		ob_hold = vec3(0);
