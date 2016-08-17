@@ -15,6 +15,9 @@ public:
 		DIR_X,
 		DIR_Y,
 		DIR_Z,
+		DIFF_X,
+		DIFF_Y,
+		DIFF_Z,
 		LENGTH,
 		TRAINSET_DIM
 	} ob_Dim;

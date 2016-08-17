@@ -1,15 +1,16 @@
 #include "sm_hmm/hmm_analyzer_test.h"
-#include "sm_hmm/hmm_model_test.h"
 
+#include <algorithm>
+#include "sm_hmm/hmm_model_test.h"
 #include "logger.h"
 #include "glm/gtc/quaternion.hpp"
 
 
-#define MOVING_THRESHOLD 0.5
+#define MOVING_THRESHOLD 1
 #define MOVING_THRESHOLD_CNT 30
-#define MOVING_WINDOW 70
+#define MOVING_WINDOW 15
 
-const unsigned int HA_Test::INTERPOLATION_COUNT = 200;
+const unsigned int HA_Test::INTERPOLATION_COUNT = 100;
 
 using glm::vec3;
 using glm::quat;
@@ -90,7 +91,7 @@ bool HA_Test::get_Observation(vector<float> &curr_observation, vector<float> &ob
 
 
 /// return 움직이면 true, 안움직이면 false
-bool HA_Test::analyze(const vec3 &curr_observation) {
+bool HA_Test::analyze(const glm::vec3 &curr_observation) {
 
 	m_windowQueue.push(curr_observation);
 
@@ -103,12 +104,11 @@ bool HA_Test::analyze(const vec3 &curr_observation) {
 	quat rot = get_rotation_between(post, curr_observation);
 	vec3 rot_euler = glm::eulerAngles(rot);
 //	LOGI("length %f    %f", length(rot_euler), length(vec3(glm::radians(1.0))));
-	if (length(rot_euler) > length(vec3(glm::radians(5.0)))
-		&& diff > MOVING_THRESHOLD) {
-		return true;
-	}
 
-	return false;
+
+
+	return !m_isInitMove ? ((length(rot_euler) > length(vec3(glm::radians(10.0)))) && (diff > 0.1))
+						 : (length(rot_euler) > length(vec3(glm::radians(3.0))));
 
 }
 
@@ -138,6 +138,9 @@ bool HA_Test::set_Observation(const glm::vec3 &curr_observation) {
 	}
 
 	if (m_stayCnt > MOVING_WINDOW) {
+		for (int i = 0; i < MOVING_WINDOW; i++) {
+			m_observations.pop_back();
+		}
 		LOGI("move cnt [ %d ]", m_observations.size());
 		m_isStay = true;
 	}
@@ -155,7 +158,7 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 	observations.reserve(INTERPOLATION_COUNT);
 	float total_size = static_cast<float>(m_observations.size());
 	float step_size = (total_size - 1.0f) / static_cast<float>(INTERPOLATION_COUNT - 1);
-	float min_len(9.8f), max_len(9.8f);
+//	float min_len(9.8f), max_len(9.8f);
 	m_observations.push_back(m_observations.back()); // add last value for n+1 index
 
 	for (float idx = 0.f; idx < total_size; idx += step_size) {
@@ -163,38 +166,62 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		unsigned int n = static_cast<unsigned int> (glm::floor(idx));
 		vec3 v = lerp(m_observations.at(n), m_observations.at(n + 1), t);
 		float v_len = glm::length(v);
-		min_len = glm::min(min_len, v_len);
-		max_len = glm::max(max_len, v_len);
+//		min_len = glm::min(min_len, v_len);
+//		max_len = glm::max(max_len, v_len);
 		observations.push_back(v);
 //		LOGI("n[%d], v [ %8.6f, %8.6f, %8.6f ]", n, v.x, v.y, v.z);
 	}
 
-	LOGI("interpolation result : size [ %d ], min [ %f ], max [ %f ]", observations.size(), min_len, max_len);
+	LOGI("interpolation result : size [ %d ], min [ %f ], max [ %f ]", observations.size(), 0, 0);
 
-	vec3 base_v = observations.front();
+	vec3 base_v = observations.front(); //get the base observation vector
 	quat rot_to_g = get_rotation_between(base_v, GRAVITY_DIR);
+//	float mid = (min_len + max_len) / 2.f;
+//	float val_len = max_len - mid;
 
 	vector<vec3>::iterator iter = observations.begin();
-	for (; iter != observations.end(); iter++) {
+	vec3 prev = *iter;
+	for (; iter != observations.end(); prev = *iter++) {
 		ob_Container container = {0,};
-		float it_len = length(*iter);
-		it_len = (it_len - min_len) / (max_len - min_len);
-
 		quat v = apply_rotation(rot_to_g, *iter);
 		v.w = 0;
 		v = glm::normalize(v);
+//		vec3 v = *iter;
+//		vec3 v = glm::eulerAngles(get_rotation_between(*iter, GRAVITY_DIR));
 		container.observ[DIR_X] = v.x;
 		container.observ[DIR_Y] = v.y;
 		container.observ[DIR_Z] = v.z;
-		container.observ[LENGTH] = it_len;
+		container.observ[DIFF_X] = iter->x - prev.x;
+		container.observ[DIFF_Y] = iter->y - prev.y;
+		container.observ[DIFF_Z] = iter->z - prev.z;
+
+		container.observ[LENGTH] = length(*iter);
 		out_observ.push_back(container);
+/*
+		LOGI("container vec [%f,%f,%f,%f]",
+			 out_observ.back().observ[DIR_X],
+			 out_observ.back().observ[DIR_Y],
+			 out_observ.back().observ[DIR_Z],
+			 out_observ.back().observ[LENGTH]
+		);
+*/
 	}
+
+//	VecData(out_observ.rbegin(), out_observ.rend()).swap(out_observ);
+
 
 	LOGI("front [%f, %f, %f, %f], size [ %d ]",
 		 out_observ.front().observ[DIR_X],
 		 out_observ.front().observ[DIR_Y],
 		 out_observ.front().observ[DIR_Z],
 		 out_observ.front().observ[LENGTH], out_observ.size());
+
+	LOGI("back [%f, %f, %f, %f], size [ %d ]",
+		 out_observ.back().observ[DIR_X],
+		 out_observ.back().observ[DIR_Y],
+		 out_observ.back().observ[DIR_Z],
+		 out_observ.back().observ[LENGTH], out_observ.size());
+
 
 	return true;
 }
