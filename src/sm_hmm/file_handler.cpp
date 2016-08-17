@@ -235,7 +235,7 @@ set_observ_from_file(Hmm_Analyzer *analyzer,
 		curr.z = atof(word);
 		m_kFilter.Step(curr, curr_k_filtered);
 
-		analyzer->set_Observation(curr);
+		analyzer->set_Observation(curr_k_filtered);
 
 		line_cnt++;
 	}
