@@ -377,8 +377,8 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 static void Hold_Stretch_Anim_Finish_Cb(void *data, Evas_Object *obj)
 {
-	if(st_current_config.state == STRETCH_STATE_HOLD)
-		Fold_Stretch_cb(data, NULL, NULL);
+	/*if(st_current_config.state == STRETCH_STATE_HOLD)
+		Fold_Stretch_cb(data, NULL, NULL);*/
 }
 
 // Peak of the stretching - Holding posture
