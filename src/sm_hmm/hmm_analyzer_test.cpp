@@ -105,8 +105,8 @@ bool HA_Test::analyze(const glm::vec3 &curr_observation) {
 
 
 
-	return !m_isInitMove ? ((length(rot_euler) > length(vec3(glm::radians(10.0)))) && (diff > 0.1))
-						 : (length(rot_euler) > length(vec3(glm::radians(3.0))));
+	return !m_isInitMove ? ((length(rot_euler) > length(vec3(glm::radians(7.0)))) && (diff > 0.2))
+						 : (length(rot_euler) > length(vec3(glm::radians(2.0))));
 
 }
 
@@ -128,10 +128,12 @@ bool HA_Test::set_Observation(const glm::vec3 &curr_observation) {
 	if (m_isInitMove) {
 		m_observations.push_back(curr_observation); //움직임이 모두 담김.
 
-		if (is_move) {
-			m_stayCnt = 0;
-		} else {
-			m_stayCnt++;
+		if(m_observations.size() > 50) {
+			if (is_move) {
+				m_stayCnt = 0;
+			} else {
+				m_stayCnt++;
+			}
 		}
 	}
 
@@ -156,7 +158,6 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 	observations.reserve(INTERPOLATION_COUNT);
 	float total_size = static_cast<float>(m_observations.size());
 	float step_size = (total_size - 1.0f) / static_cast<float>(INTERPOLATION_COUNT - 1);
-//	float min_len(9.8f), max_len(9.8f);
 	m_observations.push_back(m_observations.back()); // add last value for n+1 index
 
 	for (float idx = 0.f; idx < total_size; idx += step_size) {
@@ -164,8 +165,6 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		unsigned int n = static_cast<unsigned int> (glm::floor(idx));
 		vec3 v = lerp(m_observations.at(n), m_observations.at(n + 1), t);
 		float v_len = glm::length(v);
-//		min_len = glm::min(min_len, v_len);
-//		max_len = glm::max(max_len, v_len);
 		observations.push_back(v);
 //		LOGI("n[%d], v [ %8.6f, %8.6f, %8.6f ]", n, v.x, v.y, v.z);
 	}
@@ -174,9 +173,8 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 
 	vec3 base_v = observations.front(); //get the base observation vector
 	quat rot_to_g = get_rotation_between(base_v, GRAVITY_DIR);
-//	float mid = (min_len + max_len) / 2.f;
-//	float val_len = max_len - mid;
 
+	double test_diff_len(0);
 	vector<vec3>::iterator iter = observations.begin();
 	vec3 prev = *iter;
 	for (; iter != observations.end(); prev = *iter++) {
@@ -184,6 +182,7 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		quat v = apply_rotation(rot_to_g, *iter);
 		v.w = 0;
 		v = glm::normalize(v);
+		test_diff_len += length(base_v - *iter);
 //		vec3 v = *iter;
 //		vec3 v = glm::eulerAngles(get_rotation_between(*iter, GRAVITY_DIR));
 		container.observ[DIR_X] = v.x;
@@ -192,9 +191,9 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		container.observ[DIFF_X] = iter->x - prev.x;
 		container.observ[DIFF_Y] = iter->y - prev.y;
 		container.observ[DIFF_Z] = iter->z - prev.z;
-
 		container.observ[LENGTH] = length(*iter);
 		out_observ.push_back(container);
+
 /*
 		LOGI("container vec [%f,%f,%f,%f]",
 			 out_observ.back().observ[DIR_X],
@@ -205,7 +204,10 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 */
 	}
 
-//	VecData(out_observ.rbegin(), out_observ.rend()).swap(out_observ);
+	ob_Container empty = {0,};
+	if(test_diff_len < 300) {
+		VecData(50, empty).swap(out_observ);
+	}
 
 
 	LOGI("front [%f, %f, %f, %f], size [ %d ]",
@@ -219,6 +221,8 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		 out_observ.back().observ[DIR_Y],
 		 out_observ.back().observ[DIR_Z],
 		 out_observ.back().observ[LENGTH], out_observ.size());
+
+	LOGI("test_diff_len [ %f ]", test_diff_len);
 
 
 	return true;
