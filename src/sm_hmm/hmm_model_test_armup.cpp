@@ -11,8 +11,9 @@
 #include "sm_hmm/file_handler.h"
 #include "logger.h"
 
-#define TEST_MODEL_FILENAME "xmm_test.hmm"
+#define TEST_MODEL_FILENAME "xmm_test_armup.hmm"
 #define TRAINING_FILE_PATH "/opt/usr/media/"
+#define ARMUP_DATA_FILE_PATH "data/armup/"
 
 using glm::vec3;
 using std::vector;
@@ -39,8 +40,7 @@ Hmm_Test_Armup::Hmm_Test_Armup() :
 		DIR *dir;
 		struct dirent *ent;
 		std::stringstream path;
-		const string DATA_DIR = "data/armup/";
-		path << app_get_resource_path() << DATA_DIR;
+		path << app_get_resource_path() << ARMUP_DATA_FILE_PATH;
 		if ((dir = opendir(path.str().c_str())) != NULL) {
 			/* print all the files and directories within directory */
 			int index(0);
@@ -164,8 +164,7 @@ bool Hmm_Test_Armup::retrain_child() {
 	DIR *dir;
 	struct dirent *ent;
 	std::stringstream path;
-	const string DATA_DIR = "data/armup/";
-	path << app_get_resource_path() << DATA_DIR;
+	path << app_get_resource_path() << ARMUP_DATA_FILE_PATH;
 	if ((dir = opendir(path.str().c_str())) != NULL) {
 		/* print all the files and directories within directory */
 		int index(0);
