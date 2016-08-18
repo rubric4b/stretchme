@@ -10,7 +10,7 @@
 
 class HA_Test;
 
-class Hmm_Test : public Hmm_Model {
+class Hmm_Test_Armup : public Hmm_Model {
 public:
 	static const unsigned int TEST_NB_STATE;
 	static const unsigned int TEST_WINDOW_SIZE;
@@ -18,12 +18,12 @@ public:
 
 
 public:
-	Hmm_Test();
+	Hmm_Test_Armup();
 
-	virtual ~Hmm_Test();
+	virtual ~Hmm_Test_Armup();
 
 private: //can't use copy constructor
-	Hmm_Test(const Hmm_Test &src);
+	Hmm_Test_Armup(const Hmm_Test_Armup &src);
 
 public:
 	virtual bool is_PerformingDone_child() override;

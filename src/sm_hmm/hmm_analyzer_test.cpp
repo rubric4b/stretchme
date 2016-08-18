@@ -1,7 +1,7 @@
 #include "sm_hmm/hmm_analyzer_test.h"
 
 #include <algorithm>
-#include "sm_hmm/hmm_model_test.h"
+#include "sm_hmm/hmm_model_test_armup.h"
 #include "logger.h"
 #include "glm/gtc/quaternion.hpp"
 

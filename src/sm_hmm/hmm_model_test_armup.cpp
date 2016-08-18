@@ -1,7 +1,7 @@
 //
 // Created by hobbang5 on 2016-08-16.
 //
-#include "sm_hmm/hmm_model_test.h"
+#include "sm_hmm/hmm_model_test_armup.h"
 
 #include <app.h>
 #include <dirent.h>
@@ -19,11 +19,11 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-const unsigned int Hmm_Test::TEST_NB_STATE = 5;
-const unsigned int Hmm_Test::TEST_WINDOW_SIZE = 1;
-const double       Hmm_Test::TEST_THRESHOLD = 2;
+const unsigned int Hmm_Test_Armup::TEST_NB_STATE = 5;
+const unsigned int Hmm_Test_Armup::TEST_WINDOW_SIZE = 1;
+const double       Hmm_Test_Armup::TEST_THRESHOLD = 2;
 
-Hmm_Test::Hmm_Test() :
+Hmm_Test_Armup::Hmm_Test_Armup() :
 		m_hmm(),
 		m_testAnalyzer(NULL),
 		m_isPerforming(false),
@@ -100,7 +100,7 @@ Hmm_Test::Hmm_Test() :
 
 }
 
-Hmm_Test::~Hmm_Test() {
+Hmm_Test_Armup::~Hmm_Test_Armup() {
 	if (m_analyzer)
 		delete m_analyzer;
 
@@ -108,11 +108,11 @@ Hmm_Test::~Hmm_Test() {
 	m_testAnalyzer = NULL;
 }
 
-bool Hmm_Test::is_PerformingDone_child() {
+bool Hmm_Test_Armup::is_PerformingDone_child() {
 	return m_analyzer->is_End();
 }
 
-double Hmm_Test::get_Probability_child() {
+double Hmm_Test_Armup::get_Probability_child() {
 	DBG("observation cnt = %d", m_observationCnt);
 
 	/// To do
@@ -132,7 +132,7 @@ double Hmm_Test::get_Probability_child() {
 	return (m_observationCnt < 30) ? 0 : m_hmm.results_log_likelihood;
 }
 
-double Hmm_Test::perform_Stretching_child(const vec3 &curr_observation) {
+double Hmm_Test_Armup::perform_Stretching_child(const vec3 &curr_observation) {
 	/// To do
 	// 여기에 기록 및 normalize 준비
 
@@ -147,7 +147,7 @@ double Hmm_Test::perform_Stretching_child(const vec3 &curr_observation) {
 	return 0;
 }
 
-bool Hmm_Test::reset_child() {
+bool Hmm_Test_Armup::reset_child() {
 	m_observationCnt = 0;
 	m_isPerforming = false;
 	m_hmm.performance_init();
@@ -156,7 +156,7 @@ bool Hmm_Test::reset_child() {
 	return true;
 }
 
-bool Hmm_Test::retrain_child() {
+bool Hmm_Test_Armup::retrain_child() {
 
 	//get observations from files
 	vector<HA_Test::VecData> all_observations;

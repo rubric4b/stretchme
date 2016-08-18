@@ -7,7 +7,7 @@
 #include "sm_hmm/hmm_manager.h"
 #include "sm_hmm/hmm_model_armup.h"
 #include "sm_hmm/hmm_model_forward.h"
-#include "sm_hmm/hmm_model_test.h"
+#include "sm_hmm/hmm_model_test_armup.h"
 #include "logger.h"
 
 using glm::vec3;
@@ -65,7 +65,7 @@ void Hmm_Manager::reset_All_Model_Performing() {
 void Hmm_Manager::init_Manager() {
 //    m_models[STRETCH_TYPE_ARM_UP] = new Hmm_ArmUp();
 //    m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
-	m_models[STRETCH_TYPE_ARM_UP] = new Hmm_Test();
+	m_models[STRETCH_TYPE_ARM_UP] = new Hmm_Test_Armup();
     m_analyzers[STRETCH_TYPE_ARM_UP] = m_models[STRETCH_TYPE_ARM_UP]->get_Analyzer();
 
     m_models[STRETCH_TYPE_ARM_FORWARD] = new Hmm_Forward();
