@@ -47,7 +47,6 @@ public:
 	virtual void reset() override;
 
 private:
-	bool is_prev;
 	bool m_isInitMove; // for the first moving
 	bool m_isStay;
 	int m_moveCnt;

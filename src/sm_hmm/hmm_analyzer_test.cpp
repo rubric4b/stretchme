@@ -44,7 +44,6 @@ inline quat apply_rotation(const quat &lhs_rot, const vec3 &rhs_vec) {
 }
 
 HA_Test::HA_Test() :
-		is_prev(false),
 		m_isInitMove(false),
 		m_isStay(false),
 		m_moveCnt(0),
@@ -58,7 +57,6 @@ HA_Test::~HA_Test() {}
 
 void HA_Test::reset() {
 	DBG("HA_Test::reset()\n");
-	is_prev = false;
 	m_isInitMove = false;
 	m_isStay = false;
 	m_moveCnt = 0;
