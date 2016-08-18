@@ -238,7 +238,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f(t : %f)\n", sensor.m_timestamp, prob, hMgr.get_Threshold());
 
-						if (-prob < hMgr.get_Threshold() && prob != 0) {
+						if (prob > hMgr.get_Threshold() && prob != 0) {
 							stretch_result = STRETCH_SUCCESS;
 						}
 //						stretch_result = STRETCH_SUCCESS; //TESTCODE!!
