@@ -155,8 +155,11 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	hMgr.set_CurrentType(m_stConf.type);
 
 	switch (m_stConf.type) {
-		case STRETCH_TYPE_ARM_UP : {
-			switch(m_stConf.state) {
+		case STRETCH_TYPE_ARM_UP :
+		case STRETCH_TYPE_ARM_FORWARD :
+		{
+			switch(m_stConf.state)
+			{
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching( sensor.m_currKData );
 					if((m_exType == EXPERIMENT_1) ?
@@ -230,7 +233,9 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		}
 			break;
 
-		case STRETCH_TYPE_ARM_FORWARD : {
+#if 0
+		case STRETCH_TYPE_ARM_FORWARD :
+		{
 
 			switch (m_stConf.state) {
 				case STRETCH_STATE_UNFOLD : {
@@ -298,16 +303,12 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 				default: //switch STATE
 					break;
-
-
 			}
-			break;
-
-			default:  //switch TYPE
-
-					break;
-
 		}
+			break;
+#endif
+			default:  //switch TYPE
+				break;
 
 	}
 
