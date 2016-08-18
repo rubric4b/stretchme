@@ -121,6 +121,7 @@ double Hmm_Test_Forward::get_Probability_child() {
 	ob_data.reserve(HA_Test::INTERPOLATION_COUNT);
 
 	m_testAnalyzer->calculate_Observation(ob_data);
+	backup_MotionData();
 
 	HA_Test::VecDataIter iter = ob_data.begin();
 	for (; iter != ob_data.end(); iter++) {
@@ -240,4 +241,15 @@ bool Hmm_Test_Forward::retrain_child() {
 	return true;
 }
 
+void Hmm_Test_Forward::backup_MotionData() {
+	m_backupLerpObservs.clear();
+	m_backupLerpObservs.reserve(m_testAnalyzer->get_LerpObservation().size() * 3);
+	std::vector<glm::vec3>::const_iterator cIter = m_testAnalyzer->get_LerpObservation().begin();
+	for( ; cIter != m_testAnalyzer->get_LerpObservation().end(); cIter++) {
+		m_backupLerpObservs.push_back(cIter->x);
+		m_backupLerpObservs.push_back(cIter->y);
+		m_backupLerpObservs.push_back(cIter->z);
+	}
+	DBG("motion data backup. size[%d]", m_backupLerpObservs.size());
+}
 
