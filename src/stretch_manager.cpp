@@ -45,7 +45,7 @@ void stretch_Manager::release() {
 	m_accel.release();
 }
 
-#define UNFOLD_DURATION	2.5f
+#define EX1_UNFOLD_DURATION	2.5f
 #define HOLD_DURATION	5.0f
 #define FOLD_DURATION	2.0f
 
@@ -55,7 +55,7 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	DBG("exType[%d] conf[mode,type,state] = %d,%d,%d\n", ad->ex_type, conf.mode, conf.type, conf.state);
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
-		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData, NULL, 0);
 	}
 
 	m_exType = ad->ex_type;
@@ -68,7 +68,7 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 	m_accel.register_Callback(sensorCb, this);
 	m_accel.start();
 
-#if 1
+#if 0
 	if(m_exType == EXPERIMENT_1)
 	{
 		if(m_timer)
@@ -100,7 +100,7 @@ void stretch_Manager::start(StretchConfig conf, Stretching_Result_Cb func, void 
 
 void stretch_Manager::timerCb()
 {
-	m_resultCbFunc(m_stConf, mResult, mProb, m_resultCbData);
+	m_resultCbFunc(m_stConf, mResult, mProb, m_resultCbData, NULL, 0);
 }
 
 
@@ -131,7 +131,7 @@ void stretch_Manager::stop() {
 
 	if(m_isProgress && m_resultCbFunc) {
 		m_isProgress = false;
-		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData);
+		m_resultCbFunc(m_stConf, STRETCH_CANCEL, 0.0f, m_resultCbData, NULL, 0);
 	}
 
 
@@ -150,6 +150,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 	bool callback_flag(false);
 	static vec3 ob_hold(0);
 	static double prob = 0.0f;
+	static bool hold_fail_flag(false);
 
 	hMgr.set_CurrentType(m_stConf.type);
 
@@ -158,8 +159,9 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 			switch(m_stConf.state) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching( sensor.m_currKData );
-
-					if(hMgr.is_End()){// || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
+					if((m_exType == EXPERIMENT_1) ?
+					   (sensor.m_timestamp > EX1_UNFOLD_DURATION * 1000) :
+					   (hMgr.is_End() || sensor.m_timestamp > 8000)) {
 						callback_flag = true;
 						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f\n",sensor.m_timestamp, prob);
@@ -191,16 +193,17 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 						double theta = acos(dot(cur_norm, pre_norm));
 
 						if (theta > radians(10.0) && !isnan(theta)) {
-							callback_flag = true;
-							stretch_result = STRETCH_FAIL;
+							hold_fail_flag = true;
 							DBG("log : hold fail");
 						}
 					}
 
-					if(sensor.m_timestamp > (HOLD_DURATION * 1000)) {
+					if((m_exType == EXPERIMENT_1) ?
+					   (sensor.m_timestamp > HOLD_DURATION * 1000) :
+					   (hold_fail_flag || sensor.m_timestamp > HOLD_DURATION * 1000)) {
 						DBG("hold time stamp %d\n", sensor.m_timestamp);
 						callback_flag = true;
-						stretch_result = STRETCH_SUCCESS;
+						stretch_result = hold_fail_flag ? STRETCH_FAIL : STRETCH_SUCCESS;
 					}
 				}
 
@@ -233,7 +236,7 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 				case STRETCH_STATE_UNFOLD : {
 					hMgr.perform_Stretching(sensor.m_currKData);
 
-					if (hMgr.is_End() || sensor.m_timestamp > (UNFOLD_DURATION * 1000)) {
+					if (hMgr.is_End() || sensor.m_timestamp > (EX1_UNFOLD_DURATION * 1000)) {
 						callback_flag = true;
 						prob = hMgr.get_Probability();
 						DBG("%4d log p = %5f(t : %f)\n", sensor.m_timestamp, prob, hMgr.get_Threshold());
@@ -318,11 +321,15 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 
 		m_accel.register_Callback(NULL, NULL);
 		ob_hold = vec3(0);
+		hold_fail_flag = false;
 
 		m_isProgress = false;
 		hMgr.reset_Model_Performing();
 
-		if(m_exType == EXPERIMENT_1)
+		m_resultCbFunc(m_stConf, stretch_result, prob, m_resultCbData,
+					   hMgr.get_MotionData(), hMgr.get_MotionCount());
+
+		/*if(m_exType == EXPERIMENT_1)
 		{
 			DBG("log : result (%d), p(%f)", stretch_result, prob);
 			mResult = stretch_result;
@@ -330,8 +337,8 @@ void stretch_Manager::eval(const sm_Sensor &sensor) {
 		}
 		else
 		{
-			m_resultCbFunc(m_stConf, stretch_result, prob, m_resultCbData);
-		}
+
+		}*/
 	}
 }
 

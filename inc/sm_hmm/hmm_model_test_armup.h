@@ -36,6 +36,16 @@ public:
 
 	virtual bool retrain_child() override;
 
+	const float *const get_MotionData() override {
+		return &m_backupLerpObservs[0];
+	}
+
+	int get_MotionCount() override {
+		return m_backupLerpObservs.size() / 3;
+	}
+
+	void backup_MotionData() override;
+
 private:
 	// Hidden markov model using XMM lib
 	xmm::HMM m_hmm;
@@ -44,6 +54,7 @@ private:
 	// flag for performing
 	bool m_isPerforming;
 	int m_observationCnt;
+	std::vector<float> m_backupLerpObservs;
 
 };
 

@@ -49,7 +49,8 @@ HA_Test::HA_Test() :
 		m_moveCnt(0),
 		m_stayCnt(0),
 		m_windowQueue(),
-		m_observations() {
+		m_observations(),
+		m_lerpObservs() {
 	m_observations.reserve(800);
 }
 
@@ -64,6 +65,7 @@ void HA_Test::reset() {
 	queue<vec3> empty;
 	std::swap(m_windowQueue, empty);
 	m_observations.clear();
+	m_lerpObservs.clear();
 }
 
 bool HA_Test::get_Observation(const vec3 &curr_observation, vector<float> &observation) {
@@ -154,8 +156,7 @@ inline vec3 lerp(const vec3 &lhs, const vec3 &rhs, float t) {
 
 bool HA_Test::calculate_Observation(VecData &out_observ) {
 	// interpolation step
-	vector<vec3> observations;
-	observations.reserve(INTERPOLATION_COUNT);
+	m_lerpObservs.reserve(INTERPOLATION_COUNT + 10);
 	float total_size = static_cast<float>(m_observations.size());
 	float step_size = (total_size - 1.0f) / static_cast<float>(INTERPOLATION_COUNT - 1);
 	m_observations.push_back(m_observations.back()); // add last value for n+1 index
@@ -165,19 +166,19 @@ bool HA_Test::calculate_Observation(VecData &out_observ) {
 		unsigned int n = static_cast<unsigned int> (glm::floor(idx));
 		vec3 v = lerp(m_observations.at(n), m_observations.at(n + 1), t);
 		float v_len = glm::length(v);
-		observations.push_back(v);
+		m_lerpObservs.push_back(v);
 //		LOGI("n[%d], v [ %8.6f, %8.6f, %8.6f ]", n, v.x, v.y, v.z);
 	}
 
-	LOGI("interpolation result : size [ %d ], min [ %f ], max [ %f ]", observations.size(), 0, 0);
+	LOGI("interpolation result : size [ %d ], min [ %f ], max [ %f ]", m_lerpObservs.size(), 0, 0);
 
-	vec3 base_v = observations.front(); //get the base observation vector
+	vec3 base_v = m_lerpObservs.front(); //get the base observation vector
 	quat rot_to_g = get_rotation_between(base_v, GRAVITY_DIR);
 
 	double test_diff_len(0);
-	vector<vec3>::iterator iter = observations.begin();
+	vector<vec3>::iterator iter = m_lerpObservs.begin();
 	vec3 prev = *iter;
-	for (; iter != observations.end(); prev = *iter++) {
+	for (; iter != m_lerpObservs.end(); prev = *iter++) {
 		ob_Container container = {0,};
 		quat v = apply_rotation(rot_to_g, *iter);
 		v.w = 0;

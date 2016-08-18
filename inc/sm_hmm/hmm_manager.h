@@ -63,6 +63,19 @@ public:
     bool get_End(StretchType type);
     bool get_End();
 
+    // get motion data
+    const float* const get_MotionData() {
+        return m_models[m_currType]->get_MotionData();
+    }
+
+    int get_MotionCount() {
+        return m_models[m_currType]->get_MotionCount();
+    }
+
+	void backup_MotionData() {
+		m_models[m_currType]->backup_MotionData();
+	}
+
 
 private:
     void init_Manager();

@@ -16,8 +16,8 @@
 static void Hold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 static void Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info);
 
-static void Success_Strecth_cb(void *data, double prob);
-static void Fail_Strecth_cb(void *data, double prob);
+static void Success_Strecth_cb(void *data, double prob, const float *const motion_data, int motion_cnt);
+static void Fail_Strecth_cb(void *data, double prob, const float *const motion_data, int motion_cnt);
 static void Reward_cb(void *data, Evas_Object *obj, void *event_info);
 
 
@@ -113,7 +113,8 @@ static void emit_current_time_to_watchapp(void *data, char* key)
 
 }
 
-static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double prob, void *data)
+static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double prob, void *data,
+							  const float *const motion_data, int motion_cnt)
 {
 	appdata_s *ad = data;
 
@@ -133,7 +134,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 				else if(result == STRETCH_FAIL)
 				{
 					// go to fail view
-					Fail_Strecth_cb(data, prob);
+					Fail_Strecth_cb(data, prob, motion_data, motion_cnt);
 				}
 				break;
 
@@ -151,7 +152,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 					// store the result at app_data
 //					ad->is_stretch_success = EINA_FALSE;
 					// go to fail view
-					Fail_Strecth_cb(data, prob);
+					Fail_Strecth_cb(data, prob, motion_data, motion_cnt);
 				}
 				break;
 
@@ -168,7 +169,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 					}else if(ad->stretch_sequence == 1){
 						ad->stretch_sequence = 0;
 */
-						Success_Strecth_cb(data, prob);
+					Success_Strecth_cb(data, prob, motion_data, motion_cnt);
 
 						return;
 //					}
@@ -177,7 +178,7 @@ static void Stretch_Result_cb(StretchConfig conf, StretchResult result, double p
 				}
 				else if(result == STRETCH_FAIL)
 				{
-					Fail_Strecth_cb(data, prob);
+					Fail_Strecth_cb(data, prob, motion_data, motion_cnt);
 				}
 				break;
 
@@ -256,7 +257,7 @@ set_clicked_cb(void *data, Evas_Object *obj, void *event_info)
 }*/
 
 
-static Eina_Bool ex1_timer_cb(void* data)
+static Eina_Bool ex1_timer_cb(void *data, const float *const motion_data, int motion_cnt)
 {
 	struct appdata *ad = data;
 
@@ -267,7 +268,7 @@ static Eina_Bool ex1_timer_cb(void* data)
 
 		// new timer during 5 sec
 		ecore_timer_del(ad->ex1_timer);
-		ad->ex1_timer = ecore_timer_add(5.0f, ex1_timer_cb, ad);
+		ad->ex1_timer = ecore_timer_add(5.0f, NULL, 0);
 	}
 	else if(st_current_config.state == STRETCH_STATE_HOLD)
 	{
@@ -276,7 +277,7 @@ static Eina_Bool ex1_timer_cb(void* data)
 
 		// new timer during 2 sec
 		ecore_timer_del(ad->ex1_timer);
-		ad->ex1_timer = ecore_timer_add(3.0f, ex1_timer_cb, ad);
+		ad->ex1_timer = ecore_timer_add(3.0f, NULL, 0);
 	}
 	else if(st_current_config.state == STRETCH_STATE_FOLD)
 	{
@@ -284,7 +285,7 @@ static Eina_Bool ex1_timer_cb(void* data)
 		ad->ex1_timer = NULL;
 
 		// change view to success
-		Success_Strecth_cb(data, 0.0f);
+		Success_Strecth_cb(data, 0.0f, motion_data, motion_cnt);
 	}
 
 	return ECORE_CALLBACK_DONE;
@@ -353,7 +354,7 @@ Start_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 	device_power_request_lock(POWER_LOCK_DISPLAY, 0);
 
 	// save the time when stretching is started!
-	store_last_time_with_current(ST_TRIAL, 0, st_current_config.type, 0.0f);
+	store_last_time_with_current(ST_TRIAL, 0, st_current_config.type, 0.0f, NULL, 0);
 
 	if(!ad->is_training) {
 
@@ -514,7 +515,7 @@ Fold_Stretch_cb(void *data, Evas_Object *obj, void *event_info)
 
 // Success
 static void
-Success_Strecth_cb(void *data, double prob)
+Success_Strecth_cb(void *data, double prob, const float *const motion_data, int motion_cnt)
 {
 	struct appdata *ad = data;
 	Evas_Object *layout, *bg, *Success_image, *button;
@@ -659,7 +660,7 @@ Success_Strecth_cb(void *data, double prob)
 	ad->display_lock_timer = ecore_timer_add(5.0f, display_lock_release_timer_cb, ad);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_SUCCESS, achieve, st_current_config.type, prob);
+	store_last_time_with_current(ST_SUCCESS, achieve, st_current_config.type, prob, motion_data, motion_cnt);
 
 	// send the success time to stretchtime watch app
 	emit_current_time_to_watchapp(ad, "last_success_time");
@@ -671,7 +672,7 @@ Success_Strecth_cb(void *data, double prob)
 
 // Fail
 static void
-Fail_Strecth_cb(void *data, double prob)
+Fail_Strecth_cb(void *data, double prob, const float *const motion_data, int motion_cnt)
 {
 	struct appdata *ad = data;
 	Evas_Object *layout, *Fail_image, *button, *bg;
@@ -729,7 +730,7 @@ Fail_Strecth_cb(void *data, double prob)
 	ad->display_lock_timer = ecore_timer_add(5.0f, display_lock_release_timer_cb, ad);
 
 	// save the time when stretching is done!
-	store_last_time_with_current(ST_FAIL, 0, st_current_config.type, prob);
+	store_last_time_with_current(ST_FAIL, 0, st_current_config.type, prob, motion_data, motion_cnt);
 }
 
 // Reward

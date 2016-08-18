@@ -43,6 +43,10 @@ public:
 
 	bool calculate_Observation(VecData &out_observ);
 
+	std::vector<glm::vec3> &get_LerpObservation() {
+		return m_lerpObservs;
+	}
+
 	virtual bool is_End() override;
 	virtual void reset() override;
 
@@ -54,6 +58,7 @@ private:
 
 	std::queue<glm::vec3> m_windowQueue;
 	std::vector<glm::vec3> m_observations;
+	std::vector<glm::vec3> m_lerpObservs;
 
 };
 

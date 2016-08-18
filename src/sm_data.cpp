@@ -13,12 +13,16 @@
 #define ST_TYPE_LEN 1
 #define RATE_INT_LEN 5
 #define RATE_REAL_LEN 8
-#define RATE_LEN (RATE_INT_LEN+1+RATE_REAL_LEN) // 12345.12345678
+#define RATE_LEN (RATE_INT_LEN+1+RATE_REAL_LEN) // 12345.12345678  : %14.8f
 #define DATA_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + ACHIEVE_COUNT + 1 + ST_TYPE_LEN + 1 + RATE_LEN + 1)
+#define MOTION_DATA_LEN (RATE_LEN+1+RATE_LEN+1+RATE_LEN) // glm::vec3 acceleration : x,y,z
+#define MOTION_LINE_LENGTH (EX_TYPE_LEN + 1 + TIME_LEN + 1 + TYPE_LEN + 1 + ACHIEVE_COUNT + 1 + ST_TYPE_LEN + 1 + MOTION_DATA_LEN + 1)
 
 #define EXPERIMENT_TYPE1_FILE_PATH "/opt/usr/media/stretchme.ex1"
 #define EXPERIMENT_TYPE2_FILE_PATH "/opt/usr/media/stretchme.ex2"
 #define EXPERIMENT_TYPE3_FILE_PATH "/opt/usr/media/stretchme.ex3"
+
+#define EXPERIMENT_MOTION_FILE_PATH "/opt/usr/media/stretchme_motion.csv"
 
 static char* util_strtok(char* str, const char* delim, char** nextp)
 {
@@ -112,18 +116,18 @@ static std::string get_const_size_string_from_float(double val, int nInt, int nR
  * @param[in] timestamp time to store in file
  * @return true if file writing was succeeded
  */
-bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate)
+bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate,
+					 const float *const data, int data_cnt)
 {
 	// open file
 	std::ofstream out_file;
 	out_file.open(DATA_FILE_PATH, std::ios::out | std::ofstream::app | std::ios::binary);
+	struct tm* struct_time;
+	struct_time = localtime(&timestamp);
 
-	if (out_file.is_open() && out_file.good())
+	if (out_file.is_open() && out_file.good()) // LOG FILE HANDLING
 	{
 		char buf[DATA_LINE_LENGTH+1];
-
-		struct tm* struct_time;
-		struct_time = localtime(&timestamp);
 
 		snprintf(buf, sizeof(buf), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%d,%14.8f\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
 		type, achieve_count, stt, recog_rate /* make 5.8f */);
@@ -135,8 +139,32 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, Stretch
 	}
 	else
 	{
-        ERR("%s file open failed\n", DATA_FILE_PATH);
+		ERR("logfile[%s] open failed\n", DATA_FILE_PATH);
 		return false;
+	}
+
+	if(data) // LOG MOTION DATA
+	{
+		out_file.open(EXPERIMENT_MOTION_FILE_PATH, std::ios::out | std::ofstream::app | std::ios::binary);
+		if(out_file.is_open() && out_file.good())
+		{
+			for(int idx=0; idx < data_cnt; idx++) {
+				char buff[MOTION_LINE_LENGTH+1];
+				snprintf(buff, sizeof(buff), "%d,%04d-%02d-%02d %02d:%02d:%02d,%d,%d,%d,%14.8f,%14.8f,%14.8f\n", get_experiment_type() + 1, struct_time->tm_year + 1900, struct_time->tm_mon + 1, struct_time->tm_mday, struct_time->tm_hour, struct_time->tm_min, struct_time->tm_sec,
+						 type, achieve_count, stt, data[idx*3 + 0], data[idx*3 + 1], data[idx*3 + 2] /* make 5.8f */);
+				out_file << buff;
+
+			}
+			out_file.close();
+			DBG("log %d motion data", data_cnt);
+		}
+		else
+		{
+			ERR("motion log file[%s] open failed\n", EXPERIMENT_MOTION_FILE_PATH);
+
+		}
+
+
 	}
 
 	return true;
@@ -147,12 +175,13 @@ bool store_last_time(time_t timestamp, LOG_TYPE type, int achieve_count, Stretch
  *
  * @return true if file writing was succeeded
  */
-bool store_last_time_with_current(LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate)
+bool store_last_time_with_current(LOG_TYPE type, int achieve_count, StretchType stt, double recog_rate,
+								  const float *const data, int data_cnt)
 {
 	time_t current_time;
 	time(&current_time);
 
-	return store_last_time(current_time, type, achieve_count, stt, recog_rate);
+	return store_last_time(current_time, type, achieve_count, stt, recog_rate, data, data_cnt);
 }
 
 /**

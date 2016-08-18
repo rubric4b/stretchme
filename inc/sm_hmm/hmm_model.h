@@ -52,6 +52,10 @@ public:
     bool retrain();
     virtual bool retrain_child() = 0;
 
+    virtual const float* const get_MotionData() { return NULL; };
+    virtual int get_MotionCount() { return 0; };
+    virtual void backup_MotionData() { }
+
 protected:
     // the number of transition states
     unsigned int m_nbState;
