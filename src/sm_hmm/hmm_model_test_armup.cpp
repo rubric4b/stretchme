@@ -33,8 +33,8 @@ Hmm_Test_Armup::Hmm_Test_Armup() :
 	m_testAnalyzer = new HA_Test();
 	m_analyzer = m_testAnalyzer;
 
-//	if(!read_hmm_from_file(TEST_MODEL_FILENAME, m_hmm)) {
-	if (true) {
+	if(!read_hmm_from_file(TEST_MODEL_FILENAME, m_hmm)) {
+//	if (true) {
 		//get observations from files
 		vector<HA_Test::VecData> all_observations;
 
