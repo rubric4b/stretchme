@@ -22,7 +22,7 @@ using std::stringstream;
 
 const unsigned int Hmm_Test_Armup::TEST_NB_STATE = 5;
 const unsigned int Hmm_Test_Armup::TEST_WINDOW_SIZE = 1;
-const double       Hmm_Test_Armup::TEST_THRESHOLD = 2;
+const double       Hmm_Test_Armup::TEST_THRESHOLD = 0.0f;
 
 Hmm_Test_Armup::Hmm_Test_Armup() :
 		m_hmm(),
