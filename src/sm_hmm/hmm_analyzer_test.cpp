@@ -151,21 +151,21 @@ bool HA_Test::set_Observation(const glm::vec3 &curr_observation) {
 }
 
 inline vec3 lerp(const vec3 &lhs, const vec3 &rhs, float t) {
-	return lhs * t + rhs * (1.f - t);
+	return lhs * (1.f - t) + rhs * t;
 }
 
 bool HA_Test::calculate_Observation(VecData &out_observ) {
 	// interpolation step
-	m_lerpObservs.reserve(INTERPOLATION_COUNT + 10);
+	m_lerpObservs.reserve(INTERPOLATION_COUNT);
 	float total_size = static_cast<float>(m_observations.size());
 	float step_size = (total_size - 1.0f) / static_cast<float>(INTERPOLATION_COUNT - 1);
 	m_observations.push_back(m_observations.back()); // add last value for n+1 index
 
-	for (float idx = 0.f; idx < total_size; idx += step_size) {
-		float t = idx - glm::floor(idx);
-		unsigned int n = static_cast<unsigned int> (glm::floor(idx));
+	for (int idx = 0; idx < INTERPOLATION_COUNT; idx++) {
+		float up_idx = step_size * idx;
+		float t = up_idx - glm::floor(up_idx); // weight
+		unsigned int n = static_cast<unsigned int> (glm::floor(up_idx));
 		vec3 v = lerp(m_observations.at(n), m_observations.at(n + 1), t);
-		float v_len = glm::length(v);
 		m_lerpObservs.push_back(v);
 //		LOGI("n[%d], v [ %8.6f, %8.6f, %8.6f ]", n, v.x, v.y, v.z);
 	}
