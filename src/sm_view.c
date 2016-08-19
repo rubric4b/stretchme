@@ -537,7 +537,9 @@ Success_Strecth_cb(void *data, double prob, const float *const motion_data, int 
 	elm_object_style_set(bg, "center");
 
 	// daily goal achievement
-	int achieve = get_counts_in_today(ST_SUCCESS) + 1;
+	int achieve = get_counts_in_today(ST_SUCCESS);
+	if(achieve == 0)
+		achieve = 1; // for the 1st success
 	DBG("achieve count = %d\n", achieve);
 
 	if(ad->ex_type == EXPERIMENT_3)
@@ -628,7 +630,15 @@ Success_Strecth_cb(void *data, double prob, const float *const motion_data, int 
 		elm_image_file_set(Success_image, ICON_DIR "/Success_Picto.png", NULL);
 
 		char msg[20];
-		snprintf(msg, sizeof(msg), "Success! (%d/%d)", achieve, DAILY_GOAL_COUNT);
+		if(ad->ex_type == EXPERIMENT_3)
+		{
+			snprintf(msg, sizeof(msg), "Success! (%d/%d)", achieve, DAILY_GOAL_COUNT);
+		}
+		else
+		{
+			snprintf(msg, sizeof(msg), "Success!");
+		}
+
 		// text
 		elm_object_part_text_set(layout, "text", msg);
 	}
@@ -731,6 +741,9 @@ Fail_Strecth_cb(void *data, double prob, const float *const motion_data, int mot
 
 	// save the time when stretching is done!
 	store_last_time_with_current(ST_FAIL, 0, st_current_config.type, prob, motion_data, motion_cnt);
+
+	// make ramdom stretching for retry action
+	ad->stretch_sequence = (unsigned short) (random() % 2);
 }
 
 // Reward
@@ -928,8 +941,17 @@ static void button_unpressed_cb(void *data, Evas_Object *button, void *ev) {
 	appdata_s *ad = data;
 	DBG("_button_unpressed_cb : is_training = %d\n", ad->is_training);
 	if(!ad->is_training) {
-//		ad->stretch_sequence = (unsigned short) (random() % 2);
-		ad->stretch_sequence = (unsigned short) 0; // 잠깐 고정
+
+		int achieve = get_counts_in_today(ST_SUCCESS);
+		if(achieve < 1)
+		{
+			ad->stretch_sequence = 1; // forward
+		}
+		else
+		{
+			ad->stretch_sequence = (unsigned short) (random() % 2);
+		}
+
 		Stretch_Guide_cb(data, NULL, NULL);
 //		Success_Strecth_cb(data, NULL, NULL);
 	}
